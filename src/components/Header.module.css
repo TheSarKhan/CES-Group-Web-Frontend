@@ -1,0 +1,129 @@
+.header {
+  position: relative;
+  z-index: 30;
+  background: var(--ink);
+  color: var(--fg-light);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0 0 auto 0;
+  background: transparent;
+}
+
+.bar {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.nav {
+  display: flex;
+  gap: clamp(20px, 2.4vw, 32px);
+}
+
+.navLink {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--fg-light);
+  transition: color 0.2s ease;
+}
+
+.navLink:hover {
+  color: var(--gold-hover);
+}
+
+.navLink[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  height: 2px;
+  background: var(--gold);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cta {
+  min-height: 44px;
+  padding: 0 20px;
+  font-size: 15px;
+}
+
+.burger {
+  display: none;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line-dark);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--fg-light);
+  cursor: pointer;
+}
+
+.panel {
+  position: fixed;
+  inset: var(--header-h) 0 0 0;
+  z-index: 29;
+  background: var(--ink);
+  padding-block: 24px 40px;
+  overflow-y: auto;
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.mList {
+  list-style: none;
+  margin: 0 0 32px;
+  padding: 0;
+}
+
+.mLink {
+  display: flex;
+  align-items: center;
+  min-height: 64px;
+  border-bottom: 1px solid var(--line-dark);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  color: var(--fg-light);
+}
+
+.mLink:hover {
+  color: var(--gold-hover);
+}
+
+@media (max-width: 1023px) {
+  .nav {
+    display: none;
+  }
+  .burger {
+    display: inline-flex;
+  }
+  .overlay:has(.panelOpen) {
+    background: var(--ink);
+  }
+}
+
+@media (max-width: 479px) {
+  .cta {
+    display: none;
+  }
+}

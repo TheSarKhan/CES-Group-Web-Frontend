@@ -1,0 +1,33 @@
+.intro {
+  position: relative;
+  overflow: hidden;
+}
+
+.grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 480px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 24px;
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: 7fr 5fr;
+    gap: 64px;
+    align-items: end;
+  }
+}

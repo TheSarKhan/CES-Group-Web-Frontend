@@ -1,0 +1,80 @@
+.waves {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+}
+
+.track svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.a {
+  animation: drift 48s linear infinite;
+}
+
+.b {
+  animation: drift 72s linear infinite reverse;
+}
+
+@keyframes drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.base {
+  stroke: #d9d6ce;
+  stroke-width: 1;
+}
+
+.base2 {
+  stroke: #e2dfd7;
+  stroke-width: 1;
+}
+
+.accent {
+  stroke: var(--gold);
+  stroke-width: 1.5;
+}
+
+.accent2 {
+  stroke: var(--gold);
+  stroke-opacity: 0.55;
+  stroke-width: 1;
+}
+
+.dark {
+  opacity: 0.5;
+}
+
+.dark .base,
+.dark .base2 {
+  stroke: var(--line-dark);
+}
+
+@media (max-width: 767px) {
+  .track {
+    width: 400%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .a,
+  .b {
+    animation: none;
+  }
+}

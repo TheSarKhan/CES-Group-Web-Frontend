@@ -1,0 +1,46 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--white);
+  text-decoration: none;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+.mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  background: var(--fg-light);
+  display: grid;
+  place-items: center;
+}
+
+.mark span {
+  width: 12px;
+  height: 12px;
+  background: var(--gold);
+}
+
+.ces {
+  font-weight: 800;
+}
+
+.group {
+  font-weight: 500;
+  color: #d8d4ca;
+}
+
+.dark {
+  color: var(--ink);
+}
+
+.dark .mark {
+  background: var(--ink);
+}
+
+.dark .group {
+  color: var(--muted);
+}

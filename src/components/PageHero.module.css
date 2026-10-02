@@ -1,0 +1,20 @@
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--ink);
+  color: var(--fg-light);
+  padding: clamp(56px, 9vw, 112px) 0 clamp(56px, 8vw, 96px);
+}
+
+.inner {
+  position: relative;
+  display: grid;
+  gap: 24px;
+}
+
+.lead {
+  max-width: 640px;
+  font-size: var(--fs-lead);
+  line-height: 1.6;
+  color: var(--muted-dark);
+}
