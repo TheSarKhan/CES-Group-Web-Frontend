@@ -102,7 +102,6 @@ export const stats = [
   { value: "120+", label: "icarəyə hazır texnika" },
   { value: "25+", label: "korporativ müştəri" },
   { value: "15+", label: "dizayn layihəsi" },
-  { value: "100%", label: "sığortalı texnika parkı" },
 ];
 
 /** Diqqət: şəkillər müvəqqəti stok fotolardır — real layihə fotoları ilə əvəz edin. */

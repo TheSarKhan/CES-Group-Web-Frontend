@@ -3,10 +3,9 @@
   color: var(--fg-light);
 }
 
-/* ---------- Masaüstü X hero ---------- */
+/* ---------- X hero ---------- */
 .x {
   position: relative;
-  display: none;
   height: clamp(640px, 100svh, 960px);
   overflow: hidden;
   isolation: isolate;
@@ -215,114 +214,63 @@
   color: var(--gold);
 }
 
-/* ---------- Kartlar (mobil / toxunma) ---------- */
-.cards {
-  padding: calc(var(--header-h) + 16px) 0 40px;
-}
-
-.mTitle {
-  margin-bottom: 20px;
-  font-size: 32px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--white);
-}
-
-.grid {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-
-.card {
-  position: relative;
-  display: block;
-  aspect-ratio: 16 / 11;
-  overflow: hidden;
-  border-radius: var(--radius);
-  background: var(--ink-3);
-  text-decoration: none;
-  color: var(--ink);
-}
-
-.cardImg {
-  object-fit: cover;
-  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-
-.panel {
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 4px;
-  background: var(--white);
-  transition: background-color 0.25s ease;
-}
-
-.panelText {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.panelName {
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
-
-.panelField {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--muted);
-}
-
-.card:hover .cardImg {
-  transform: scale(1.05);
-}
-
-.card:hover .panel,
-.card:focus-visible .panel {
-  background: var(--gold);
-}
-
-.card:hover .panelField {
-  color: var(--ink);
-}
-
-@media (min-width: 600px) {
-  .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-  .card {
-    aspect-ratio: 1 / 1;
-  }
-  .mTitle {
-    font-size: 40px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .card {
-    aspect-ratio: 16 / 10;
-  }
-}
-
-@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+/* ---------- Mobil ---------- */
+@media (max-width: 767px) {
   .x {
-    display: block;
+    height: max(560px, 100svh);
   }
-  .cards {
-    display: none;
+
+  .label {
+    gap: 4px;
+    max-width: 42vw;
+  }
+
+  .label_top {
+    top: calc(var(--header-h) + 3%);
+  }
+
+  .label_bottom {
+    bottom: 5%;
+  }
+
+  /* Yan yazılar rombla toqquşmasın deyə mərkəzdən bir az yuxarıda */
+  .label_left,
+  .label_right {
+    max-width: 34vw;
+    top: calc(50% - 64px);
+  }
+
+  .label_left {
+    left: 16px;
+  }
+
+  .label_right {
+    right: 16px;
+  }
+
+  .name {
+    font-size: 18px;
+  }
+
+  .field {
+    font-size: 12px;
+  }
+
+  .go {
+    margin-top: 2px;
+    font-size: 12px;
+  }
+
+  .diamond {
+    width: 92px;
+    height: 92px;
+  }
+
+  .brand {
+    font-size: 21px;
+  }
+
+  .brand span {
+    font-size: 8px;
   }
 }
