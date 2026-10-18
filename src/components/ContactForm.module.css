@@ -18,7 +18,7 @@
 
 .field label {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .field input,
@@ -61,7 +61,7 @@
 
 .error {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: #b3261e;
 }
 
@@ -82,7 +82,7 @@
 
 .status {
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   color: #2f6b3a;
 }
 

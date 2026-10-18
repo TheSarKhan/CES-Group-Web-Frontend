@@ -10,7 +10,19 @@ import styles from "./Header.module.css";
 
 export function Header({ overlay = false }: { overlay?: boolean }) {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+
+  // Aşağı scroll edəndə navbar fon alır və bir az kiçilir
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    const raf = window.requestAnimationFrame(onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -26,7 +38,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
   const isActive = (href: string) => (href === "/" ? pathname === "/" : !href.includes("#") && pathname.startsWith(href));
 
   return (
-    <header className={`${styles.header} ${overlay ? styles.overlay : ""}`}>
+    <header className={`${styles.header} ${overlay ? styles.overlay : ""} ${scrolled ? styles.scrolled : ""}`}>
       <div className={`container ${styles.bar}`}>
         <Logo />
         <nav className={styles.nav} aria-label="Əsas menyu">

@@ -13,7 +13,7 @@ export default function HomePage() {
   return (
     <>
       <Header overlay />
-      <main id="main">
+      <main id="main" className="home">
         <Hero />
         <Intro />
         <Synergy />

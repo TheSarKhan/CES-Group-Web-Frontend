@@ -1,12 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { companies, type CompanyId } from "@/content/site";
 import { ArrowUpRight } from "./Icons";
 import styles from "./Hero.module.css";
 
-const POSITIONS = ["top", "right", "bottom", "left"] as const;
 const HOVER_QUERY = "(hover: hover) and (pointer: fine)";
 const REDUCED_QUERY = "(prefers-reduced-motion: reduce)";
 const CYCLE_MS = 4500;
@@ -87,27 +86,30 @@ export function Hero() {
   const onEnter = (id: CompanyId) => (e: PointerEvent) => {
     if (e.pointerType === "mouse") setActive(id);
   };
+  // Panellər arasında keçəndə video sönüb-yanmasın deyə yalnız sıradan çıxanda sıfırlanır
   const onLeave = (e: PointerEvent) => {
     if (e.pointerType === "mouse") setActive(null);
   };
 
   return (
     <section id="sirketler" className={styles.hero} aria-label="CES Group şirkətləri">
-      <div ref={root} className={styles.x} data-active={active ?? undefined}>
+      <h1 className="sr-only">CES Group</h1>
+      <div
+        ref={root}
+        className={styles.row}
+        data-active={active ?? undefined}
+        style={{ "--n": companies.length } as CSSProperties}
+        onPointerLeave={onLeave}
+      >
+        {/* Masaüstündə aktiv şirkətin videosu bütün sıra boyunca, mobildə öz panelində oynayır */}
         {companies.map((c, i) => (
-          <div key={c.id} className={`${styles.layer} ${styles[POSITIONS[i]]} ${styles.photo}`} data-on={active === c.id || undefined}>
-            <Image src={c.image} alt="" fill priority sizes="100vw" className={styles.img} />
-            <div className={styles.dim} />
-          </div>
-        ))}
-
-        {companies.map((c) => (
           <video
             key={c.id}
             ref={(el) => {
               videos.current[c.id] = el;
             }}
             className={styles.video}
+            style={{ "--i": i } as CSSProperties}
             data-on={active === c.id || undefined}
             poster={c.image}
             muted
@@ -122,48 +124,29 @@ export function Hero() {
           </video>
         ))}
 
-        <div className={styles.videoDim} aria-hidden="true" />
-
-        <svg className={styles.lines} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <line x1="0" y1="0" x2="100" y2="100" vectorEffect="non-scaling-stroke" />
-          <line x1="100" y1="0" x2="0" y2="100" vectorEffect="non-scaling-stroke" />
-        </svg>
-
-        {companies.map((c, i) => (
-          <div
-            key={c.id}
-            className={`${styles.label} ${styles[`label_${POSITIONS[i]}`]}`}
-            data-dim={(active && active !== c.id) || undefined}
-            aria-hidden="true"
-          >
-            <span className={styles.name}>{c.name}</span>
-            <span className={styles.field}>{c.field}</span>
-            <span className={styles.go}>
-              Sayta keç <ArrowUpRight size={14} />
-            </span>
-          </div>
-        ))}
-
         {companies.map((c, i) => (
           <a
             key={c.id}
             href={c.url}
-            className={`${styles.layer} ${styles[POSITIONS[i]]} ${styles.hit}`}
+            className={styles.panel}
+            data-on={active === c.id || undefined}
             aria-label={`${c.name} — ${c.field}. Sayta keç`}
             onPointerEnter={onEnter(c.id)}
-            onPointerLeave={onLeave}
             onFocus={() => setActive(c.id)}
             onBlur={() => setActive(null)}
-          />
+          >
+            <Image src={c.image} alt="" fill priority sizes="(max-width: 767px) 100vw, 25vw" className={styles.img} />
+            <span className={styles.shade} aria-hidden="true" />
+            <span className={styles.label} aria-hidden="true">
+              <span className={styles.index}>{String(i + 1).padStart(2, "0")}</span>
+              <span className={styles.name}>{c.name}</span>
+              <span className={styles.field}>{c.field}</span>
+              <span className={styles.go}>
+                Sayta keç <ArrowUpRight size={14} />
+              </span>
+            </span>
+          </a>
         ))}
-
-        <div className={styles.diamond}>
-          <div className={styles.diamondInner}>
-            <h1 className={styles.brand}>
-              CES<span>Group</span>
-            </h1>
-          </div>
-        </div>
       </div>
     </section>
   );

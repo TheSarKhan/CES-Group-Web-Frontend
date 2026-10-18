@@ -1,5 +1,5 @@
 .wrap {
-  background: var(--white);
+  background: var(--paper);
   border-top: 1px solid var(--line);
 }
 
@@ -39,7 +39,7 @@
 
 .name {
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .links {
@@ -47,7 +47,7 @@
   flex-wrap: wrap;
   gap: 0 24px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .links a {

@@ -1,12 +1,10 @@
 import Link from "next/link";
-import { Waves } from "./Waves";
 import { ArrowRight } from "./Icons";
 import styles from "./Intro.module.css";
 
 export function Intro() {
   return (
     <section className={`section ${styles.intro}`}>
-      <Waves />
       <div className={`container ${styles.grid}`}>
         <h2 className="h1">
           Layihələndiririk.
