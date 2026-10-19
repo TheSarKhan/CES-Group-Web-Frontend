@@ -1,0 +1,85 @@
+name: Deploy frontend
+
+# Auto-deploys to the VPS on every push to main, and can be run manually.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never run two deploys at once; let an in-flight one finish.
+concurrency:
+  group: deploy-cesgroup-frontend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Lint and typecheck
+        run: |
+          npm ci
+          npm run lint
+          npm run typecheck
+
+      - name: Set up SSH key
+        run: |
+          if [ -z "${{ secrets.SSH_HOST }}" ] || [ -z "${{ secrets.SSH_USER }}" ] || [ -z "${{ secrets.SSH_KEY }}" ]; then
+            echo "::error::Missing repository secret(s). Set SSH_HOST, SSH_USER and SSH_KEY under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+      - name: Pull and rebuild on server
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
+          SHA: ${{ github.sha }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new "$USER@$HOST" "
+            set -e
+            cd /var/www/cesgroup
+            git fetch -q origin main
+            git reset -q --hard $SHA
+            flock /tmp/cesgroup-deploy.lock docker compose up -d --build
+            docker image prune -f
+          "
+
+      - name: Smoke check
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new "$USER@$HOST" '
+            for i in $(seq 1 15); do
+              code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3010/)
+              if [ "$code" = "200" ]; then
+                echo "frontend OK ($code)"; exit 0
+              fi
+              echo "waiting for frontend... ($i: $code)"; sleep 4
+            done
+            echo "frontend did not respond in time"; exit 1
+          '
+
+      - name: Notify Telegram
+        if: always()
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          STATUS: ${{ job.status }}
+        run: |
+          if [ -z "$TG_TOKEN" ]; then echo "No Telegram secret set, skipping notification."; exit 0; fi
+          if [ "$STATUS" = "success" ]; then ICON="✅"; else ICON="❌"; fi
+          SHA="${{ github.sha }}"
+          TEXT=$(printf '%s CES Group frontend deploy: %s\nRepo: %s\nBranch: %s\nCommit: %s\nBy: %s\nSite: https://cesgroup.az' "$ICON" "$STATUS" "${{ github.repository }}" "${{ github.ref_name }}" "${SHA:0:7}" "${{ github.actor }}")
+          curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TG_CHAT}" \
+            --data-urlencode "text=${TEXT}" -o /dev/null
