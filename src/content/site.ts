@@ -70,9 +70,10 @@ export const companies: Company[] = [
     field: "Memarlıq və dizayn",
     description: "İnteryer, eksteryer və landşaft dizaynı. Konsepsiyadan işçi layihəyə qədər.",
     url: "https://architect.cesgroup.az",
-    image: "/media/ces-architect-city-hd.jpg",
-    imageAlt: "Gecə şəhərində müasir şüşə qüllələr",
-    video: "/media/video/vid-architect-city",
+    image: "/media/ces-architect-towers-hd.jpg",
+    focus: "72% 50%",
+    imageAlt: "Aşağıdan görünən müasir şüşə göydələnlər",
+    video: "/media/video/vid-architect-towers",
   },
   {
     id: "construction",
