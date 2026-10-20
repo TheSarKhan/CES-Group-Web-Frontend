@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "az_AZ",
     siteName: "CES Group",
-    images: [{ url: "/media/ces-equipment.jpg", width: 1400, height: 933 }],
+    images: [{ url: "/media/ces-equipment-crane.jpg", width: 1280, height: 720 }],
   },
   alternates: { canonical: "/" },
 };

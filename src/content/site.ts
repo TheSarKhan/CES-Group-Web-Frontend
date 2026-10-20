@@ -52,8 +52,8 @@ export const companies: Company[] = [
     description:
       "Avtokran, forklift, ekskavator və hündürlük səbətləri. Sertifikatlı operator və çatdırılma ilə.",
     url: "https://equipment.cesgroup.az",
-    image: "/media/ces-equipment.jpg",
-    imageAlt: "Tikinti sahəsində sarı mobil kran",
+    image: "/media/ces-equipment-crane.jpg",
+    imageAlt: "Tikinti sahəsində mobil kran, havadan görünüş",
     video: "/media/video/vid-equipment-crane",
     phone: "+994 51 290 42 80",
     email: "sales@ces.com.az",
