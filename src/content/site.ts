@@ -13,6 +13,10 @@ export type Company = {
   url: string;
   image: string;
   imageAlt: string;
+  /** Hero panelində şəklin hansı hissəsinin görünəcəyi (CSS object-position), məs. "50% 70%" */
+  focus?: string;
+  /** Videonun posteri (video yüklənənə qədər). Verilməsə, panel şəkli istifadə olunur */
+  poster?: string;
   /** Videonun yolu, uzantısız: həm .mp4, həm .webm faylı olmalıdır */
   video: string;
   phone?: string;
@@ -52,8 +56,10 @@ export const companies: Company[] = [
     description:
       "Avtokran, forklift, ekskavator və hündürlük səbətləri. Sertifikatlı operator və çatdırılma ilə.",
     url: "https://equipment.cesgroup.az",
-    image: "/media/ces-equipment-crane-hd.jpg",
-    imageAlt: "Tikinti sahəsində mobil kran, havadan görünüş",
+    image: "/media/ces-equipment-forklift-hd.jpg",
+    focus: "50% 70%",
+    poster: "/media/video/vid-equipment-crane-hd-poster.jpg",
+    imageAlt: "CES-in qırmızı yüksək yüklü forklifti",
     video: "/media/video/vid-equipment-crane-hd",
     phone: "+994 51 290 42 80",
     email: "sales@ces.com.az",
@@ -64,9 +70,9 @@ export const companies: Company[] = [
     field: "Memarlıq və dizayn",
     description: "İnteryer, eksteryer və landşaft dizaynı. Konsepsiyadan işçi layihəyə qədər.",
     url: "https://architect.cesgroup.az",
-    image: "/media/ces-architect-office-hd.jpg",
+    image: "/media/ces-architect-office-v2-hd.jpg",
     imageAlt: "Loft üslubunda müasir ofis interyeri",
-    video: "/media/video/vid-architect-office",
+    video: "/media/video/vid-architect-office-v2",
   },
   {
     id: "construction",

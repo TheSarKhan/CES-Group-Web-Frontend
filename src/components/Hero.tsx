@@ -111,7 +111,7 @@ export function Hero() {
             className={styles.video}
             style={{ "--i": i } as CSSProperties}
             data-on={active === c.id || undefined}
-            poster={c.image}
+            poster={c.poster ?? c.image}
             muted
             loop
             playsInline
@@ -136,7 +136,7 @@ export function Hero() {
             onBlur={() => setActive(null)}
           >
             {/* Panel dar olsa da şəkil 100svh hündürlüyündə (cover) göstərilir, ona görə sizes ENİNƏ görə yox, hündürlüyə görə verilir; əks halda 384px-lik şəkil böyüdülüb bulanır */}
-            <Image src={c.image} alt="" fill priority quality={85} sizes="(max-width: 767px) 100vw, 180vh" className={styles.img} />
+            <Image src={c.image} alt="" fill priority quality={85} sizes="(max-width: 767px) 100vw, 180vh" className={styles.img} style={c.focus ? { objectPosition: c.focus } : undefined} />
             <span className={styles.shade} aria-hidden="true" />
             <span className={styles.label} aria-hidden="true">
               <span className={styles.index}>{String(i + 1).padStart(2, "0")}</span>
