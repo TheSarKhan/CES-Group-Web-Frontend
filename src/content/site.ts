@@ -54,7 +54,7 @@ export const companies: Company[] = [
     url: "https://equipment.cesgroup.az",
     image: "/media/ces-equipment-crane-hd.jpg",
     imageAlt: "Tikinti sahəsində mobil kran, havadan görünüş",
-    video: "/media/video/vid-equipment-crane",
+    video: "/media/video/vid-equipment-crane-hd",
     phone: "+994 51 290 42 80",
     email: "sales@ces.com.az",
   },
