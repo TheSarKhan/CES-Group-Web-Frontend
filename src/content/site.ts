@@ -51,7 +51,7 @@ export const companies: Company[] = [
     field: "Ağır texnika icarəsi",
     description:
       "Avtokran, forklift, ekskavator və hündürlük səbətləri. Sertifikatlı operator və çatdırılma ilə.",
-    url: "https://ces.com.az",
+    url: "https://equipment.cesgroup.az",
     image: "/media/ces-equipment.jpg",
     imageAlt: "Tikinti sahəsində sarı mobil kran",
     video: "/media/video/vid-equipment",
