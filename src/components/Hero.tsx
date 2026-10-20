@@ -135,7 +135,8 @@ export function Hero() {
             onFocus={() => setActive(c.id)}
             onBlur={() => setActive(null)}
           >
-            <Image src={c.image} alt="" fill priority sizes="(max-width: 767px) 100vw, 25vw" className={styles.img} />
+            {/* Panel dar olsa da şəkil 100svh hündürlüyündə (cover) göstərilir, ona görə sizes ENİNƏ görə yox, hündürlüyə görə verilir; əks halda 384px-lik şəkil böyüdülüb bulanır */}
+            <Image src={c.image} alt="" fill priority quality={85} sizes="(max-width: 767px) 100vw, 180vh" className={styles.img} />
             <span className={styles.shade} aria-hidden="true" />
             <span className={styles.label} aria-hidden="true">
               <span className={styles.index}>{String(i + 1).padStart(2, "0")}</span>
