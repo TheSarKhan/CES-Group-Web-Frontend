@@ -1,41 +1,91 @@
-.grid {
-  list-style: none;
-  margin: clamp(32px, 4vw, 48px) 0 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+.marquee {
+  position: relative;
+  width: 100%;
+  margin-top: clamp(32px, 4vw, 48px);
+  padding-block: 28px;
+  overflow: hidden;
+  border-block: 1px solid var(--line);
+  /* Kənarlar yumşaq solur, loqolar tədricən girib çıxır */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
 }
 
-.cell {
-  height: clamp(80px, 8vw, 104px);
-  padding: 12px;
-  display: grid;
-  place-items: center;
-  text-align: center;
+.track {
+  display: flex;
+  align-items: center;
+  --gap: 20px;
+  gap: var(--gap);
+  width: max-content;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  animation: scroll 60s linear infinite;
+  will-change: transform;
+}
+
+.marquee:hover .track {
+  animation-play-state: paused;
+}
+
+@keyframes scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    /* İkinci surətin əvvəli birincinin əvvəlinə düşür: boşluğun yarısı qədər düzəliş */
+    transform: translateX(calc(-50% - var(--gap) / 2));
+  }
+}
+
+.chip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 180px;
+  height: 84px;
+  padding: 16px 22px;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 12px;
   background: var(--white);
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--muted);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.chip:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -16px rgba(0, 0, 0, 0.35);
 }
 
 .logo {
   width: auto;
-  max-height: 56px;
+  height: auto;
+  max-width: 100%;
+  max-height: 46px;
   object-fit: contain;
 }
 
-@media (min-width: 640px) {
-  .grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
+@media (max-width: 700px) {
+  .track {
+    --gap: 14px;
+  }
+  .chip {
+    width: 150px;
+    height: 74px;
+    padding: 14px 18px;
   }
 }
 
-@media (min-width: 1024px) {
-  .grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+  /* Hərəkətsiz rejimdə yalnız bir surət görünür */
+  .chip[aria-hidden="true"] {
+    display: none;
   }
 }

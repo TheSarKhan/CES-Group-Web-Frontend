@@ -85,6 +85,6 @@ Telegram üçün: @BotFather-dən bot yaradın, botu qrupa əlavə edin, `TELEGR
 - [ ] `public/media/*` içindəki stok foto və videoları (Unsplash/Pexels, pulsuz lisenziya) real şirkət materialları ilə əvəz edin. Xüsusilə layihə fotoları real olmalıdır.
 - [ ] `site.ts`-dəki `[...]` placeholder-ləri doldurun: ünvan, qrup emaili/telefonu, şirkət əlaqələri, tarixçə illəri, sosial şəbəkə linkləri.
 - [ ] Rəsmi CES Group loqosunu `src/components/Logo.tsx`-də əvəz edin.
-- [ ] Müştəri loqolarını `public/media/clients/` qovluğuna qoyub `site.ts`-də `logo` sahəsinə yazın.
+- [ ] Müştəri loqoları Equipment saytından köçürülüb (`public/media/clients/`, `site.ts`-də `clients`). Equipment-də siyahı dəyişəndə burada da yeniləyin.
 - [ ] Məxfilik siyasəti və istifadə şərtləri səhifələri.
 - [ ] Xəbərlər və Karyera bölmələri admin panel (Spring Boot) hazır olandan sonra əlavə olunacaq.

@@ -118,14 +118,33 @@ export const projects = [
   { title: "Qarabağ infrastrukturu", company: "CES Equipment", image: "/media/proj-karabakh.jpg", alt: "Dağ vadisində yol tikintisi" },
 ];
 
-/** Loqo faylları gələndə `logo` sahəsinə yol yazın, məs. "/media/clients/kolin.png" */
-export const clients: { name: string; logo?: string }[] = [
-  { name: "Sinerji Proje" },
-  { name: "Kolin İnşaat" },
-  { name: "A+A Group" },
-  { name: "SOCAR" },
-  { name: "[Müştəri loqosu]" },
-  { name: "[Müştəri loqosu]" },
+/** Equipment saytındakı müştərilərlə eynidir (sıra da eyni). Loqolar public/media/clients/ qovluğundadır. */
+export const clients: { name: string; logo: string }[] = [
+  { name: "Sinerji Proje", logo: "/media/clients/sinerji.jpg" },
+  { name: "Kolin İnşaat", logo: "/media/clients/kolin.png" },
+  { name: "A+A Group", logo: "/media/clients/aa-group.png" },
+  { name: "Giltex", logo: "/media/clients/giltex.jpg" },
+  { name: "AZCD Group", logo: "/media/clients/azcd-group.png" },
+  { name: "Azbadam", logo: "/media/clients/azbadam.jpg" },
+  { name: "Equipment Rental Services", logo: "/media/clients/ers.jpg" },
+  { name: "Ege Yapı", logo: "/media/clients/ege-yapi.png" },
+  { name: "Road and Construction", logo: "/media/clients/road-construction.jpg" },
+  { name: "Workplace Interiors", logo: "/media/clients/workplace.jpg" },
+  { name: "Evakuator.az", logo: "/media/clients/evakuator.jpg" },
+  { name: "İdeal TM", logo: "/media/clients/ideal-tm.png" },
+  { name: "Electro Industries", logo: "/media/clients/electro.png" },
+  { name: "Azertexnolayn", logo: "/media/clients/azertexnolayn.jpg" },
+  { name: "Minera", logo: "/media/clients/minera.png" },
+  { name: "Grand Agro", logo: "/media/clients/grand-agro.jpg" },
+  { name: "PMD Projects", logo: "/media/clients/pmd-projects.jpg" },
+  { name: "İkma Services", logo: "/media/clients/ikma.jpg" },
+  { name: "Evrascon", logo: "/media/clients/evrascon.jpg" },
+  { name: "Met-Ak", logo: "/media/clients/met-ak.png" },
+  { name: "UPS", logo: "/media/clients/ups.png" },
+  { name: "Qala Group", logo: "/media/clients/qala-group.jpg" },
+  { name: "Sun Beverage", logo: "/media/clients/sun-beverage.jpg" },
+  { name: "Starmining", logo: "/media/clients/starmining.jpg" },
+  { name: "Azlift Pro", logo: "/media/clients/azlift-pro.png" },
 ];
 
 export const about = {
