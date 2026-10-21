@@ -1,0 +1,190 @@
+@keyframes progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.section {
+  padding-block: clamp(64px, 8vw, 80px);
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.heading {
+  margin-bottom: clamp(40px, 5vw, 48px);
+  padding-inline: 24px;
+  text-align: center;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 5.5rem;
+  align-items: start;
+  gap: 12px;
+  padding-right: 16px;
+}
+
+.stage {
+  position: relative;
+}
+
+.main {
+  position: relative;
+  display: block;
+  height: 320px;
+  overflow: hidden;
+  background: rgba(30, 30, 33, 0.1);
+  color: var(--white);
+  text-decoration: none;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.7s ease-out;
+}
+
+.slideOn {
+  opacity: 1;
+}
+
+.img {
+  object-fit: cover;
+  transition: transform 0.7s ease-out;
+}
+
+.main:hover .img {
+  transform: scale(1.05);
+}
+
+.shade {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.caption {
+  position: absolute;
+  left: 20px;
+  right: 40%;
+  top: 25%;
+  display: block;
+}
+
+.captionKind {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.captionTitle {
+  display: block;
+  font-size: clamp(28px, 3.4vw, 48px);
+  font-weight: 300;
+  line-height: 1.1;
+}
+
+.track {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: rgba(251, 250, 247, 0.2);
+}
+
+.bar {
+  display: block;
+  height: 100%;
+  background: var(--white);
+  transform-origin: left;
+  animation: progress linear forwards;
+}
+
+/* Növbəti layihənin kartı: əsas şəklin sağ kənarından çıxıb sağ panelin üstünə keçir */
+.thumb {
+  position: absolute;
+  right: 0;
+  top: 18%;
+  width: 36%;
+  height: 62%;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background: rgba(30, 30, 33, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  transform: translateX(62%);
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.thumb:active {
+  transform: translateX(62%) scale(0.98);
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 320px;
+  text-align: right;
+}
+
+.count {
+  font-size: 12px;
+}
+
+.count span {
+  color: rgba(30, 30, 33, 0.3);
+}
+
+.all {
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  color: rgba(30, 30, 33, 0.7);
+  transition: color 0.2s ease;
+}
+
+.all:hover {
+  color: var(--ink);
+}
+
+@media (min-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr 16rem;
+    gap: 24px;
+    padding-right: clamp(24px, 4vw, 64px);
+  }
+  .main,
+  .side {
+    height: 448px;
+  }
+  .caption {
+    left: 32px;
+    right: auto;
+  }
+  .count,
+  .all {
+    font-size: 14px;
+  }
+  .thumb:hover {
+    transform: translateX(62%) scale(1.02);
+  }
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr 22rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    animation: none;
+    transform: scaleX(1);
+  }
+}

@@ -8,7 +8,8 @@ import styles from "./ContactForm.module.css";
 type Status = { kind: "idle" } | { kind: "sending" } | { kind: "ok" } | { kind: "error"; message: string };
 type FieldErrors = Partial<Record<"name" | "phone" | "email" | "company" | "message", string[]>>;
 
-export function ContactForm() {
+/** `company` verilərsə şirkət seçimi gizlənir və müraciət həmin şirkətə yönləndirilir (subdomain saytları) */
+export function ContactForm({ company }: { company?: (typeof COMPANY_OPTIONS)[number]["value"] }) {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [errors, setErrors] = useState<FieldErrors>({});
 
@@ -64,20 +65,24 @@ export function ContactForm() {
           <input id="email" name="email" type="email" autoComplete="email" aria-invalid={!!errors.email} aria-describedby={errors.email ? "email-error" : undefined} />
           {err("email")}
         </div>
-        <div className={styles.field}>
-          <label htmlFor="company">Hansı şirkətlə bağlıdır? *</label>
-          <select id="company" name="company" required defaultValue="">
-            <option value="" disabled>
-              Seçin
-            </option>
-            {COMPANY_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
+        {company ? (
+          <input type="hidden" name="company" value={company} />
+        ) : (
+          <div className={styles.field}>
+            <label htmlFor="company">Hansı şirkətlə bağlıdır? *</label>
+            <select id="company" name="company" required defaultValue="">
+              <option value="" disabled>
+                Seçin
               </option>
-            ))}
-          </select>
-          {err("company")}
-        </div>
+              {COMPANY_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            {err("company")}
+          </div>
+        )}
       </div>
       <div className={styles.field}>
         <label htmlFor="message">Mesaj *</label>

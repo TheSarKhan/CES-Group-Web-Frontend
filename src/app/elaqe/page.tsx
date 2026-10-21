@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import { Header } from "@/components/Header";
 import { PageHero } from "@/components/PageHero";
 import { ContactForm } from "@/components/ContactForm";
-import { CompanyContacts } from "@/components/ContactBlock";
+import { GroupContacts } from "@/components/ContactBlock";
 import { Footer } from "@/components/Footer";
-import { site } from "@/content/site";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -25,17 +24,11 @@ export default function ContactPage() {
               <h2 className={styles.title}>Müraciət forması</h2>
               <ContactForm />
             </div>
-            <aside className={styles.aside} aria-labelledby="companies-contacts">
-              <h2 id="companies-contacts" className={styles.title}>
-                Şirkətlərimiz
+            <aside className={styles.aside} aria-labelledby="contacts">
+              <h2 id="contacts" className={styles.title}>
+                Əlaqə məlumatları
               </h2>
-              <CompanyContacts />
-              <div className={styles.group}>
-                <h3 className={styles.groupTitle}>CES Group</h3>
-                <p>{site.address}</p>
-                <p>{site.email}</p>
-                <p>{site.phone}</p>
-              </div>
+              <GroupContacts />
             </aside>
           </div>
         </section>

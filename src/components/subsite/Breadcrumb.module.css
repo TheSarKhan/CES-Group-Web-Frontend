@@ -1,0 +1,35 @@
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(30, 30, 33, 0.5);
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav a {
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.nav a:hover,
+.current {
+  color: var(--ink);
+}
+
+.light {
+  color: rgba(251, 250, 247, 0.6);
+}
+
+.light a:hover,
+.light .current {
+  color: var(--white);
+}

@@ -1,0 +1,74 @@
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes charIn {
+  from {
+    opacity: 0;
+    transform: translateY(40%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.in {
+  opacity: 0;
+  animation: fadeUp 1s ease-out forwards;
+}
+
+.char {
+  display: inline-block;
+  opacity: 0;
+  animation: charIn 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+.zoom {
+  animation: zoom 14s ease-out forwards;
+  will-change: transform;
+}
+
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .in,
+  .char {
+    opacity: 1;
+    animation: none;
+  }
+  .zoom,
+  .marquee {
+    animation: none;
+  }
+}

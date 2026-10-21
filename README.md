@@ -29,14 +29,33 @@ src/
     haqqimizda/           Haqqımızda
     elaqe/                Əlaqə (forma)
     api/contact/route.ts  Formanın backend-i: email (SMTP) + Telegram
+    s/[site]/             construction.cesgroup.az və farmart.cesgroup.az saytları (aşağıya bax)
     sitemap.ts, robots.ts SEO
   components/             Header, Hero, Waves, Stats, Projects, Footer və s.
+  components/subsite/     Subdomain saytlarının komponentləri
   content/site.ts         BÜTÜN mətnlər, şirkətlər, rəqəmlər, layihələr, əlaqələr
+  content/subsites.ts     Construction və Farmart saytlarının mətnləri, xidmətləri, layihələri
+  proxy.ts                Host-a görə subdomain sorğularını /s/<sayt>-a yönləndirir
   lib/contact-schema.ts   Formanın validasiyası (zod)
 public/media/             Şəkillər və videolar
 ```
 
 Mətni dəyişmək üçün adətən yalnız `src/content/site.ts` faylını redaktə etmək kifayətdir. `[...]` ilə yazılmış dəyərlər placeholder-dir.
+
+## Subdomain saytları (Construction, Farmart)
+
+`construction.cesgroup.az` və `farmart.cesgroup.az` ayrı tətbiq deyil, bu layihənin özündədir. `src/proxy.ts` sorğunun `Host` başlığına baxıb onu `src/app/s/[site]/...` marşrutuna yazır (brauzerdə ünvan dəyişmir). `cesgroup.az/s/...` ünvanına birbaşa giriş 404 verir. Hero-da şirkətə klik `companies[].url` ilə subdomain-ə aparır.
+
+Hər sayt: ana səhifə, `/xidmetlerimiz` (+ detal), `/layihelerimiz` (+ detal), `/elaqe`. Dizayn CES Architecture saytı ilə eynidir. Məzmun `src/content/subsites.ts`-dədir, `[...]` placeholder-dir. Xidmət və layihə mətnləri müvəqqəti nümunədir, şəkillər `public/media/subsites/` və mövcud stok fotolardandır.
+
+Lokal baxış (Chrome/Firefox `*.localhost`-u özü həll edir):
+
+```bash
+npm run dev
+# http://construction.localhost:3000   http://farmart.localhost:3000
+```
+
+Serverdə: DNS-də `construction` və `farmart` A qeydləri, nginx-də `deploy/nginx-subdomains.conf` (hər ikisi `127.0.0.1:3010`-a proxy), sonra `certbot --nginx -d construction.cesgroup.az -d farmart.cesgroup.az`.
 
 ## Hero videoları
 

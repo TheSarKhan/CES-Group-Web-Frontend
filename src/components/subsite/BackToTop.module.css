@@ -1,0 +1,43 @@
+.btn {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(251, 250, 247, 0.4);
+  border-radius: 50%;
+  background: rgba(30, 30, 33, 0.8);
+  backdrop-filter: blur(8px);
+  color: var(--white);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(16px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.btn:hover {
+  background: var(--white);
+  color: var(--ink);
+}
+
+.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+@media (min-width: 768px) {
+  .btn {
+    right: 32px;
+    bottom: 32px;
+  }
+}

@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { companies } from "@/content/site";
+import { site } from "@/content/site";
 import { ArrowRight } from "./Icons";
+import { tel } from "@/lib/tel";
 import styles from "./ContactBlock.module.css";
-
-const tel = (p: string) => `tel:${p.replace(/[^\d+]/g, "")}`;
 
 export function ContactBlock() {
   return (
@@ -18,24 +17,32 @@ export function ContactBlock() {
             Müraciət göndər <ArrowRight />
           </Link>
         </div>
-        <CompanyContacts />
+        <GroupContacts />
       </div>
     </section>
   );
 }
 
-export function CompanyContacts() {
+/** Bütün şirkətlər üçün ortaq əlaqə məlumatı */
+export function GroupContacts() {
   return (
     <ul className={styles.list}>
-      {companies.map((c) => (
-        <li key={c.id} className={styles.row}>
-          <span className={styles.name}>{c.name}</span>
-          <span className={styles.links}>
-            {c.phone ? <a href={tel(c.phone)}>{c.phone}</a> : <span className={styles.todo}>[Telefon]</span>}
-            {c.email ? <a href={`mailto:${c.email}`}>{c.email}</a> : <span className={styles.todo}>[E-poçt]</span>}
-          </span>
-        </li>
-      ))}
+      <li className={styles.row}>
+        <span className={styles.name}>Ünvan</span>
+        <span className={styles.value}>{site.address}</span>
+      </li>
+      <li className={styles.row}>
+        <span className={styles.name}>Telefon</span>
+        <span className={styles.links}>
+          <a href={tel(site.phone)}>{site.phone}</a>
+        </span>
+      </li>
+      <li className={styles.row}>
+        <span className={styles.name}>E-poçt</span>
+        <span className={styles.links}>
+          <a href={`mailto:${site.email}`}>{site.email}</a>
+        </span>
+      </li>
     </ul>
   );
 }

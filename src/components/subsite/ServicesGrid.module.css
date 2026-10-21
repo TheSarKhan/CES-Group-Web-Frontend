@@ -1,0 +1,44 @@
+.row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.item {
+  min-width: 0;
+}
+
+.pano {
+  position: absolute;
+  inset: 0;
+  display: none;
+  overflow: hidden;
+  transition: opacity 1s ease-in-out;
+}
+
+.panoImg {
+  position: absolute;
+  inset-block: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+@media (min-width: 768px) {
+  .row {
+    display: flex;
+    gap: 4px;
+    height: 448px;
+  }
+  .item {
+    flex: 1;
+    height: 100%;
+  }
+  .item > a {
+    height: 100%;
+    aspect-ratio: auto;
+  }
+  .pano {
+    display: block;
+  }
+}

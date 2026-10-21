@@ -1,0 +1,112 @@
+.heading {
+  text-align: center;
+}
+
+.about {
+  max-width: 880px;
+  margin-inline: auto;
+  padding: clamp(80px, 10vw, 128px) 24px;
+  text-align: center;
+}
+
+.aboutText {
+  margin-top: 36px;
+  font-size: clamp(17px, 1.6vw, 21px);
+  line-height: 1.6;
+  color: rgba(30, 30, 33, 0.7);
+}
+
+.stats {
+  padding: clamp(64px, 8vw, 100px) clamp(24px, 4vw, 64px);
+  text-align: center;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  max-width: 880px;
+  margin: 56px auto 0;
+}
+
+.statLabel {
+  font-size: 14px;
+  color: rgba(30, 30, 33, 0.6);
+}
+
+.statValue {
+  margin-top: 8px;
+  font-size: clamp(32px, 4.6vw, 60px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.cta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(448px, 48vw, 544px);
+  padding: 24px;
+  overflow: hidden;
+  text-align: center;
+  color: var(--white);
+}
+
+.ctaImg {
+  object-fit: cover;
+}
+
+.ctaShade {
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 30, 33, 0.62);
+}
+
+.ctaBody {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 20px;
+}
+
+.ctaBody p {
+  max-width: 44ch;
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(251, 250, 247, 0.8);
+}
+
+@media (max-width: 640px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+.services {
+  padding: 0 clamp(24px, 4vw, 64px) clamp(64px, 8vw, 96px);
+}
+
+.servicesTitle {
+  margin-bottom: 40px;
+}
+
+.more {
+  margin-top: 32px;
+  text-align: right;
+}
+
+.more a {
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  color: rgba(30, 30, 33, 0.7);
+  transition: color 0.2s ease;
+}
+
+.more a:hover {
+  color: var(--ink);
+}

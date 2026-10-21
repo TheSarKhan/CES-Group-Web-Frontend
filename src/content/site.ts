@@ -19,8 +19,6 @@ export type Company = {
   poster?: string;
   /** Videonun yolu, uzantısız: həm .mp4, həm .webm faylı olmalıdır */
   video: string;
-  phone?: string;
-  email?: string;
 };
 
 export const site = {
@@ -29,9 +27,11 @@ export const site = {
   description:
     "CES Group memarlıq, tikinti, ağır texnika icarəsi və kənd təsərrüfatı sahələrində fəaliyyət göstərən dörd şirkəti bir araya gətirir.",
   founded: 2020,
-  address: "[Ünvan], Bakı, Azərbaycan",
-  email: "[info@cesgroup.az]",
-  phone: "[Qrupun telefonu]",
+  /** Bütün brendlərin (qrup, Equipment, Architect, Construction, Farmart) ortaq əlaqə məlumatı */
+  address: "Qaradağ ray, Salyan şossesi, Lökbatan yolu, 22A, Bakı",
+  mapQuery: "Construction Equipment Services MMC, Lökbatan yolu, Bakı",
+  email: "sales@ces.com.az",
+  phone: "+994 51 290 42 80",
   social: [
     { label: "Instagram", href: "#" },
     { label: "LinkedIn", href: "#" },
@@ -61,8 +61,6 @@ export const companies: Company[] = [
     poster: "/media/video/vid-equipment-crane-hd-poster.jpg",
     imageAlt: "CES-in qırmızı yüksək yüklü forklifti",
     video: "/media/video/vid-equipment-crane-hd",
-    phone: "+994 51 290 42 80",
-    email: "sales@ces.com.az",
   },
   {
     id: "architect",
@@ -91,7 +89,7 @@ export const companies: Company[] = [
     name: "Farmart",
     field: "Kənd təsərrüfatı",
     description: "Qrupun kənd təsərrüfatı istiqaməti.",
-    url: "https://farmart.az",
+    url: "https://farmart.cesgroup.az",
     image: "/media/farmart-hd.jpg",
     imageAlt: "Taxıl sahəsində kombayn",
     video: "/media/video/vid-farmart",
