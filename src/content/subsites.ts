@@ -4,6 +4,8 @@
  * Xidmət və layihə mətnləri müvəqqəti nümunədir, şəkillər mövcud stok foto və video kadrlarıdır.
  */
 
+import { subdomainUrl } from "@/lib/urls";
+
 export type SubSiteId = "construction" | "farmart";
 
 export type SubService = {
@@ -46,7 +48,7 @@ const MEDIA = "/media/subsites";
 const construction: SubSite = {
   id: "construction",
   name: "CES Construction",
-  url: "https://construction.cesgroup.az",
+  url: subdomainUrl("construction"),
   tagline: "Layihələri Təməldən Təhvilə Qədər Ucaldırıq",
   description:
     "CES Construction yaşayış və kommersiya tikintisi, infrastruktur və yol işləri, təmir-bitirmə və baş podrat xidmətləri göstərir.",
@@ -146,7 +148,7 @@ const construction: SubSite = {
 const farmart: SubSite = {
   id: "farmart",
   name: "Farmart",
-  url: "https://farmart.cesgroup.az",
+  url: subdomainUrl("farmart"),
   tagline: "Torpağın Gücü, Müasir Texnikanın Dəqiqliyi",
   description: "Farmart CES Group-un kənd təsərrüfatı istiqamətidir: bitkiçilik, aqrotexnika və məhsul təchizatı.",
   video: "/media/video/vid-farmart",

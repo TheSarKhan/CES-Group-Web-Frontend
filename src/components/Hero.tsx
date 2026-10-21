@@ -124,7 +124,7 @@ export function Hero() {
           </video>
         ))}
 
-        {companies.map((c, i) => (
+        {companies.map((c) => (
           <a
             key={c.id}
             href={c.url}
@@ -139,7 +139,6 @@ export function Hero() {
             <Image src={c.image} alt="" fill priority quality={85} sizes="(max-width: 767px) 100vw, 180vh" className={styles.img} style={c.focus ? { objectPosition: c.focus } : undefined} />
             <span className={styles.shade} aria-hidden="true" />
             <span className={styles.label} aria-hidden="true">
-              <span className={styles.index}>{String(i + 1).padStart(2, "0")}</span>
               <span className={styles.name}>{c.name}</span>
               <span className={styles.field}>{c.field}</span>
               <span className={styles.go}>

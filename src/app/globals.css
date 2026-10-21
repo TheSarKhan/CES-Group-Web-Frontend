@@ -20,7 +20,7 @@
   --gutter: clamp(16px, 4vw, 32px);
   --container: 1240px;
   --header-h: 80px;
-  --section-y: clamp(72px, 10vw, 120px);
+  --section-y: clamp(56px, 7vw, 88px);
 
   /* Başlıqlar medium ağırlıqda, amma böyük ölçüdə */
   --fs-h1: clamp(48px, 7.6vw, 112px);
@@ -229,12 +229,4 @@ textarea {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-}
-
-/* Ana səhifədə hər bölmə bir ekranı doldurur */
-.home > section {
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }

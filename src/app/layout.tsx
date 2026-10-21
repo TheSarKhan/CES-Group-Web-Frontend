@@ -27,7 +27,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="az">
+    <html lang="az" data-scroll-behavior="smooth">
       <body>
         <a href="#main" className="skip-link">
           Əsas məzmuna keç

@@ -3,6 +3,8 @@
  * `[...]` ilə yazılmış dəyərlər hələ təsdiqlənməyib və dəyişdirilməlidir.
  */
 
+import { externalUrls, siteUrl, subdomainUrl } from "@/lib/urls";
+
 export type CompanyId = "equipment" | "architect" | "construction" | "farmart";
 
 export type Company = {
@@ -23,7 +25,7 @@ export type Company = {
 
 export const site = {
   name: "CES Group",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://cesgroup.az",
+  url: siteUrl,
   description:
     "CES Group memarlıq, tikinti, ağır texnika icarəsi və kənd təsərrüfatı sahələrində fəaliyyət göstərən dörd şirkəti bir araya gətirir.",
   founded: 2020,
@@ -43,7 +45,7 @@ export const nav = [
   { label: "Ana səhifə", href: "/" },
   { label: "Haqqımızda", href: "/haqqimizda" },
   { label: "Şirkətlər", href: "/#sirketler" },
-  { label: "Layihələr", href: "/#layiheler" },
+  { label: "Layihələr", href: "/layiheler" },
   { label: "Əlaqə", href: "/elaqe" },
 ];
 
@@ -55,7 +57,7 @@ export const companies: Company[] = [
     field: "Ağır texnika icarəsi",
     description:
       "Avtokran, forklift, ekskavator və hündürlük səbətləri. Sertifikatlı operator və çatdırılma ilə.",
-    url: "https://equipment.cesgroup.az",
+    url: externalUrls.equipment,
     image: "/media/ces-equipment-forklift-hd.jpg",
     focus: "50% 70%",
     poster: "/media/video/vid-equipment-crane-hd-poster.jpg",
@@ -67,7 +69,7 @@ export const companies: Company[] = [
     name: "CES Architect",
     field: "Memarlıq və dizayn",
     description: "İnteryer, eksteryer və landşaft dizaynı. Konsepsiyadan işçi layihəyə qədər.",
-    url: "https://architect.cesgroup.az",
+    url: externalUrls.architect,
     image: "/media/ces-architect-villa-hd.jpg",
     focus: "38% 50%",
     imageAlt: "Bağ və hovuzlu daş fasadlı villa",
@@ -79,7 +81,7 @@ export const companies: Company[] = [
     field: "Tikinti və podrat",
     description:
       "Yaşayış və kommersiya tikintisi, infrastruktur və yol işləri, təmir-bitirmə, baş podrat.",
-    url: "https://construction.cesgroup.az",
+    url: subdomainUrl("construction"),
     image: "/media/ces-construction-hd.jpg",
     imageAlt: "İnşa olunan çoxmərtəbəli bina",
     video: "/media/video/vid-construction",
@@ -89,7 +91,7 @@ export const companies: Company[] = [
     name: "Farmart",
     field: "Kənd təsərrüfatı",
     description: "Qrupun kənd təsərrüfatı istiqaməti.",
-    url: "https://farmart.cesgroup.az",
+    url: subdomainUrl("farmart"),
     image: "/media/farmart-hd.jpg",
     imageAlt: "Taxıl sahəsində kombayn",
     video: "/media/video/vid-farmart",
@@ -109,13 +111,116 @@ export const stats = [
   { value: "15+", label: "dizayn layihəsi" },
 ];
 
-/** Diqqət: şəkillər müvəqqəti stok fotolardır — real layihə fotoları ilə əvəz edin. */
-export const projects = [
-  { title: "Formula 1 Azərbaycan Qran-prisi", company: "CES Equipment", image: "/media/proj-f1.jpg", alt: "Bakı şəhər küçəsi" },
-  { title: "COP29 Bakı", company: "CES Equipment", image: "/media/proj-cop29.jpg", alt: "Bakı bulvarı yuxarıdan" },
-  { title: "Port Baku", company: "CES Equipment", image: "/media/proj-portbaku.jpg", alt: "Bakıda yaşayış qüllələri" },
-  { title: "Crescent Mall", company: "CES Equipment", image: "/media/proj-crescent.jpg", alt: "Şüşə fasadlı göydələnlər" },
-  { title: "Qarabağ infrastrukturu", company: "CES Equipment", image: "/media/proj-karabakh.jpg", alt: "Dağ vadisində yol tikintisi" },
+export type Project = {
+  slug: string;
+  title: string;
+  company: string;
+  image: string;
+  alt: string;
+  category: string;
+  location: string;
+  /** Daxili səhifənin başlığı altındakı qısa təsvir */
+  summary: string;
+  body: string[];
+  /** `[...]` — layihə üzrə dəqiq məlumat təsdiqlənəndə doldurulacaq */
+  details: { label: string; value: string }[];
+};
+
+const TBD = "[...]";
+const projectDetails = (year: string, client: string) => [
+  { label: "Sifarişçi", value: client },
+  { label: "İl", value: year },
+  { label: "İstifadə olunan texnika", value: TBD },
+  { label: "Layihədə rolumuz", value: TBD },
+];
+
+/**
+ * Diqqət: şəkillər müvəqqəti stok fotolardır — real layihə fotoları ilə əvəz edin.
+ * Mətnlər ümumi kontekstdir; sifarişçi, il, texnika və rol `[...]` ilə qalıb, real məlumatla əvəz olunmalıdır.
+ */
+export const projects: Project[] = [
+  {
+    slug: "formula-1-azerbaycan-qran-prisi",
+    title: "Formula 1 Azərbaycan Qran-prisi",
+    company: "CES Equipment",
+    image: "/media/proj-f1.jpg",
+    alt: "Bakı şəhər küçəsi",
+    category: "Beynəlxalq tədbir",
+    location: "Bakı",
+    summary: "Bakının şəhər küçələrində keçirilən Formula 1 yarışı üçün texnika təminatı.",
+    body: [
+      "Formula 1 Azərbaycan Qran-prisi Bakının şəhər küçələrində keçirilir. Küçə trassı və tədbir infrastrukturu qısa müddətdə qurulur, yarışdan sonra isə şəhər öz adi rejiminə qaytarılır.",
+      "Belə layihələrdə texnikanın vaxtında çatdırılması, hündürlükdə və sıx şəhər mühitində təhlükəsiz işləməsi həlledici əhəmiyyət daşıyır. CES Equipment bu istiqamətdə texnika təminatı ilə iştirak edib.",
+    ],
+    details: projectDetails(TBD, TBD),
+  },
+  {
+    slug: "cop29-baki",
+    title: "COP29 Bakı",
+    company: "CES Equipment",
+    image: "/media/proj-cop29.jpg",
+    alt: "Bakı bulvarı yuxarıdan",
+    category: "Beynəlxalq tədbir",
+    location: "Bakı",
+    summary: "BMT-nin iqlim konfransı COP29 üçün texnika təminatı.",
+    body: [
+      "BMT-nin İqlim Dəyişikliyi üzrə Çərçivə Konvensiyasının tərəflər konfransı (COP29) 2024-cü ilin noyabrında Bakıda keçirildi. Tədbir yüzlərlə nümayəndə heyətini bir araya gətirdi və sıx hazırlıq qrafiki tələb etdi.",
+      "Miqyaslı tədbirlərdə quraşdırma və hazırlıq işləri dəqiq cədvəllə aparılır. CES Equipment bu layihədə texnika təminatı ilə iştirak edib.",
+    ],
+    details: projectDetails("2024", TBD),
+  },
+  {
+    slug: "port-baku",
+    title: "Port Baku",
+    company: "CES Equipment",
+    image: "/media/proj-portbaku.jpg",
+    alt: "Bakıda yaşayış qüllələri",
+    category: "Yaşayış və kommersiya",
+    location: "Bakı",
+    summary: "Bakıdakı Port Baku kompleksi üçün hündürlük və yükqaldırma texnikası.",
+    body: [
+      "Port Baku Bakının mərkəzində yerləşən yaşayış və kommersiya kompleksidir. Belə çoxmərtəbəli obyektlərdə fasad, montaj və yükdaşıma işləri hündürlük və yükqaldırma texnikası olmadan mümkün deyil.",
+      "CES Equipment bu layihədə texnika təminatı ilə iştirak edib.",
+    ],
+    details: projectDetails(TBD, TBD),
+  },
+  {
+    slug: "crescent-mall",
+    title: "Crescent Mall",
+    company: "CES Equipment",
+    image: "/media/proj-crescent.jpg",
+    alt: "Şüşə fasadlı göydələnlər",
+    category: "Kommersiya",
+    location: "Bakı",
+    summary: "Bakıdakı Crescent Mall ticarət mərkəzi üçün texnika təminatı.",
+    body: [
+      "Ticarət mərkəzlərinin tikintisi və təchizatı işlərində ağır konstruksiyaların qaldırılması, yüklərin daşınması və hündürlükdə işlər eyni vaxtda aparılır. Bu, texnikanın düzgün seçilməsini və təcrübəli operatorları tələb edir.",
+      "CES Equipment Crescent Mall layihəsində texnika təminatı ilə iştirak edib.",
+    ],
+    details: projectDetails(TBD, TBD),
+  },
+  {
+    slug: "qarabag-infrastrukturu",
+    title: "Qarabağ infrastrukturu",
+    company: "CES Equipment",
+    image: "/media/proj-karabakh.jpg",
+    alt: "Dağ vadisində yol tikintisi",
+    category: "İnfrastruktur",
+    location: "Qarabağ",
+    summary: "Qarabağ bölgəsində yol və infrastruktur işləri üçün ağır texnika.",
+    body: [
+      "Qarabağ bölgəsində bərpa və yenidənqurma işləri yol, kommunikasiya və ərazi hazırlığı üzrə geniş həcmdə ağır texnika tələb edir. Çətin relyef və uzaq məsafələr texnikanın etibarlılığını və vaxtında çatdırılmasını xüsusilə vacib edir.",
+      "CES Equipment bu istiqamətdə infrastruktur layihələrinə texnika təminatı ilə dəstək verib.",
+    ],
+    details: projectDetails(TBD, TBD),
+  },
+];
+
+/** Hər layihə səhifəsindəki "Necə işləyirik" bölməsi: Equipment-in ümumi yanaşması */
+export const projectApproach = [
+  { title: "Düzgün texnika", text: "Layihənin yükünə, hündürlüyünə və sahə şəraitinə uyğun avtokran, forklift, ekskavator və ya səbət seçilir." },
+  { title: "Sertifikatlı operator", text: "Texnika təcrübəli və sertifikatlı operatorlarla, sahədə təhlükəsizlik qaydalarına əməl edilərək işləyir." },
+  { title: "Vaxtında çatdırılma", text: "Texnika razılaşdırılmış vaxtda sahəyə çatdırılır, layihənin qrafiki pozulmur." },
 ];
 
 /** Equipment saytındakı müştərilərlə eynidir (sıra da eyni). Loqolar public/media/clients/ qovluğundadır. */

@@ -1,0 +1,229 @@
+.hero {
+  background: var(--ink);
+  color: var(--fg-light);
+  padding: clamp(40px, 6vw, 72px) 0 clamp(120px, 14vw, 200px);
+}
+
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: clamp(32px, 5vw, 56px);
+  font-size: 14px;
+  color: var(--muted-dark);
+}
+
+.crumbs a {
+  text-decoration: none;
+}
+
+.crumbs a:hover {
+  color: var(--gold-hover);
+}
+
+.crumbs [aria-current] {
+  color: var(--fg-light);
+}
+
+.title {
+  max-width: 16ch;
+  font-size: var(--fs-h2);
+  line-height: 1.05;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.lead {
+  max-width: 640px;
+  margin-top: 24px;
+  font-size: var(--fs-lead);
+  line-height: 1.6;
+  color: var(--muted-dark);
+}
+
+/* Şəkil tünd hero ilə açıq fon arasında yarı-yarıya keçir */
+.coverWrap {
+  margin-top: calc(-1 * clamp(80px, 10vw, 140px));
+  position: relative;
+}
+
+.cover {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--ink-3);
+}
+
+.coverImg {
+  object-fit: cover;
+}
+
+.about {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.text h2 {
+  margin-bottom: 8px;
+}
+
+.details {
+  margin: 0;
+  align-self: start;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+
+.detail dt {
+  font-size: 14px;
+  color: var(--muted-2);
+}
+
+.detail dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: right;
+}
+
+.todo {
+  color: var(--muted-2);
+  font-weight: 400;
+}
+
+.white {
+  background: var(--white);
+  border-block: 1px solid var(--line);
+}
+
+.approach {
+  list-style: none;
+  margin: clamp(32px, 4vw, 48px) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+.step {
+  padding-top: 20px;
+  border-top: 2px solid var(--gold);
+}
+
+.stepNo {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: var(--gold-text);
+}
+
+.stepTitle {
+  margin-top: 12px;
+  font-size: clamp(20px, 2vw, 24px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.stepText {
+  margin-top: 8px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.companyBtn {
+  margin-top: clamp(32px, 4vw, 48px);
+}
+
+.moreGrid {
+  list-style: none;
+  margin: clamp(32px, 4vw, 48px) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px 16px;
+}
+
+.cardLink {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.cardImg {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 8px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--ink-3);
+}
+
+.cardImg img {
+  object-fit: cover;
+  transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.cardLink:hover .cardImg img {
+  transform: scale(1.05);
+}
+
+.cardTitle {
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.cardMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--muted-2);
+}
+
+.cardLink:hover .cardMeta {
+  color: var(--gold-text);
+}
+
+@media (min-width: 640px) {
+  .moreGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 900px) {
+  .about {
+    grid-template-columns: 7fr 5fr;
+    gap: 64px;
+  }
+  .approach {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 40px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .moreGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

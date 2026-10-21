@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
-import { site } from "@/content/site";
+import { projects, site } from "@/content/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
-  return ["", "/haqqimizda", "/elaqe"].map((path) => ({
+  return ["", "/haqqimizda", "/layiheler", "/elaqe", ...projects.map((p) => `/layiheler/${p.slug}`)].map((path) => ({
     url: `${site.url}${path}`,
     lastModified: now,
     changeFrequency: "monthly",

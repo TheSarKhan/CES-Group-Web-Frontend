@@ -86,13 +86,6 @@
   opacity: 0.45;
 }
 
-.index {
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  color: var(--gold);
-}
-
 .name {
   font-size: clamp(26px, 2.4vw, 40px);
   line-height: 1.05;
@@ -148,10 +141,6 @@
     right: 16px;
     bottom: 14px;
     gap: 2px;
-  }
-
-  .index {
-    font-size: 11px;
   }
 
   .name {

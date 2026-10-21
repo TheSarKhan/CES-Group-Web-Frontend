@@ -12,13 +12,18 @@ function subsiteOf(host: string | null) {
 /**
  * construction.cesgroup.az və farmart.cesgroup.az eyni tətbiqdən xidmət göstərir:
  * host-a görə sorğu /s/<sayt>/... marşrutuna yazılır. Brauzerdə ünvan dəyişmir.
- * /s/... ünvanına birbaşa giriş bağlıdır ki, eyni məzmun iki ünvanda görünməsin.
+ *
+ * Prod (standalone) rejimində rewrite olunmuş sorğu proxy-dən yenidən keçir və bu zaman Host
+ * başlığı daxili ünvan (localhost:PORT) olur. Ona görə /s/... yolunun icazəli olduğunu Host yox,
+ * rewrite zamanı qoyulan x-subsite başlığı göstərir. Əsas domendə /s/... birbaşa açılmır (404).
  */
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const site = subsiteOf(req.headers.get("host"));
+  const marked = req.headers.get("x-subsite");
 
   if (pathname === "/s" || pathname.startsWith("/s/")) {
+    if (marked && (pathname === `/s/${marked}` || pathname.startsWith(`/s/${marked}/`))) return NextResponse.next();
     return NextResponse.rewrite(new URL("/_not-found", req.url));
   }
   if (!site) return NextResponse.next();
@@ -27,7 +32,9 @@ export function proxy(req: NextRequest) {
   const path = pathname === "/sitemap.xml" ? "/sitemap-xml" : pathname === "/" ? "" : pathname;
   const url = req.nextUrl.clone();
   url.pathname = `/s/${site}${path}`;
-  return NextResponse.rewrite(url);
+  const headers = new Headers(req.headers);
+  headers.set("x-subsite", site);
+  return NextResponse.rewrite(url, { request: { headers } });
 }
 
 export const config = {

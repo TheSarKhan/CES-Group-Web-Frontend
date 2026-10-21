@@ -1,6 +1,8 @@
-import { steps } from "@/content/site";
+import { companies, steps } from "@/content/site";
 import { ArrowRight } from "./Icons";
 import styles from "./Synergy.module.css";
+
+const farmartUrl = companies.find((c) => c.id === "farmart")!.url;
 
 export function Synergy() {
   return (
@@ -31,8 +33,8 @@ export function Synergy() {
           <p className="lead">
             <strong>Farmart</strong> qrupun kənd təsərrüfatı istiqamətidir.
           </p>
-          <a href="https://farmart.az" className="link-arrow">
-            farmart.az <ArrowRight />
+          <a href={farmartUrl} className="link-arrow">
+            {new URL(farmartUrl).host} <ArrowRight />
           </a>
         </div>
       </div>
