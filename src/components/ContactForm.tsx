@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { COMPANY_OPTIONS } from "@/lib/contact-schema";
 import { ArrowRight } from "./Icons";
+import { TURNSTILE_ENABLED, Turnstile, type TurnstileHandle } from "./Turnstile";
 import styles from "./ContactForm.module.css";
 
 type Status = { kind: "idle" } | { kind: "sending" } | { kind: "ok" } | { kind: "error"; message: string };
@@ -12,11 +13,17 @@ type FieldErrors = Partial<Record<"name" | "phone" | "email" | "company" | "mess
 export function ContactForm({ company }: { company?: (typeof COMPANY_OPTIONS)[number]["value"] }) {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [token, setToken] = useState("");
+  const turnstile = useRef<TurnstileHandle>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
-    const payload = Object.fromEntries(new FormData(form).entries());
+    if (TURNSTILE_ENABLED && !token) {
+      setStatus({ kind: "error", message: "Zəhmət olmasa təhlükəsizlik yoxlamasını tamamlayın." });
+      return;
+    }
+    const payload = { ...Object.fromEntries(new FormData(form).entries()), turnstileToken: token };
     setStatus({ kind: "sending" });
     setErrors({});
     try {
@@ -35,6 +42,10 @@ export function ContactForm({ company }: { company?: (typeof COMPANY_OPTIONS)[nu
       }
     } catch {
       setStatus({ kind: "error", message: "Şəbəkə xətası. İnternet bağlantınızı yoxlayın." });
+    } finally {
+      // Token bir dəfəlikdir: uğurlu və ya uğursuz cəhddən sonra yenisi alınmalıdır
+      setToken("");
+      turnstile.current?.reset();
     }
   }
 
@@ -93,6 +104,8 @@ export function ContactForm({ company }: { company?: (typeof COMPANY_OPTIONS)[nu
         <label htmlFor="website">Sayt</label>
         <input id="website" name="website" tabIndex={-1} autoComplete="off" />
       </div>
+
+      <Turnstile ref={turnstile} onVerify={setToken} onExpire={() => setToken("")} />
 
       <div className={styles.footer}>
         <button type="submit" className="btn btn-gold" disabled={status.kind === "sending"}>

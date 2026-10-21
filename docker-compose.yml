@@ -5,6 +5,8 @@ services:
       context: .
       args:
         NEXT_PUBLIC_SITE_URL: https://cesgroup.az
+        # Serverdəki .env faylından oxunur (docker compose bunu build zamanı avtomatik əvəz edir)
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
     image: cesgroup-frontend
     container_name: cesgroup-frontend
     restart: unless-stopped

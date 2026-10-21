@@ -10,6 +10,9 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_SITE_URL=https://cesgroup.az
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+# Turnstile sayt açarı brauzer koduna build zamanı yazılır
+ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY=
+ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build

@@ -19,6 +19,8 @@ export const contactSchema = z.object({
   email: z.union([z.literal(""), z.email("E-poçt ünvanı düzgün deyil")]).optional(),
   company: z.enum(["equipment", "architect", "construction", "farmart", "general"], { error: "Şirkəti seçin" }),
   message: z.string().trim().min(10, "Mesaj ən azı 10 simvol olmalıdır").max(3000),
+  /** Cloudflare Turnstile tokeni (açar konfiqurasiya olunubsa məcburidir, /api/contact yoxlayır) */
+  turnstileToken: z.string().max(2048).optional(),
   /** honeypot — botlar doldurur, insanlar görmür */
   website: z.string().max(0).optional(),
 });

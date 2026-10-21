@@ -22,6 +22,23 @@ function rateLimited(ip: string) {
   return recent.length > 5;
 }
 
+/** Cloudflare Turnstile tokenini yoxlayır. Gizli açar verilməyibsə (lokal dev) yoxlama keçilir. */
+async function verifyTurnstile(token: string | undefined, ip: string) {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (!secret) return true;
+  if (!token) return false;
+  try {
+    const body = new URLSearchParams({ secret, response: token });
+    if (ip !== "unknown") body.set("remoteip", ip);
+    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", { method: "POST", body });
+    const json = (await res.json()) as { success?: boolean };
+    return json.success === true;
+  } catch (err) {
+    console.error("[contact] Turnstile yoxlaması alınmadı:", err);
+    return false;
+  }
+}
+
 const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 export async function POST(req: Request) {
@@ -48,6 +65,10 @@ export async function POST(req: Request) {
   const data = parsed.data;
   // Bot honeypot-u doldurubsa, uğurlu kimi cavab ver, amma heç nə göndərmə
   if (data.website) return NextResponse.json({ ok: true });
+
+  if (!(await verifyTurnstile(data.turnstileToken, ip))) {
+    return NextResponse.json({ ok: false, error: "Təhlükəsizlik yoxlaması keçilmədi. Səhifəni yeniləyib yenidən cəhd edin." }, { status: 400 });
+  }
 
   const companyLabel = COMPANY_OPTIONS.find((o) => o.value === data.company)?.label ?? data.company;
   const lines = [

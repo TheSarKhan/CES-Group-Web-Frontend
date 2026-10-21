@@ -72,6 +72,8 @@ Hero masaüstündə (≥1024px, siçanla) X şəklində 4 üçbucaq kimi görün
 
 `/api/contact` müraciəti seçilən şirkətin emailinə (`CONTACT_EMAIL_*`) və Telegram-a göndərir. Ən azı bir kanal (SMTP və ya Telegram) konfiqurasiya olunmalıdır, əks halda forma istifadəçiyə xəta göstərir. Dəyişənlərin siyahısı `.env.example`-dədir; Netlify-da **Site settings → Environment variables** bölməsinə əlavə edin.
 
+Bot qoruması: forma Cloudflare Turnstile ilə qorunur (Equipment-dəki kimi). `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (build zamanı, Docker-də build arg) və `TURNSTILE_SECRET_KEY` (yalnız serverdə) verilməlidir; boş qalsa qoruma söndürülür (lokal dev). Cloudflare panelində widget-in hostname siyahısına `cesgroup.az` əlavə edin, o, `construction.` və `farmart.` subdomain-lərini də əhatə edir. Lokal test üçün Cloudflare-in test açarları: sayt `1x00000000000000000000AA`, gizli `1x0000000000000000000000000000000AA`.
+
 Telegram üçün: @BotFather-dən bot yaradın, botu qrupa əlavə edin, `TELEGRAM_CHAT_ID` olaraq qrupun ID-sini yazın.
 
 ## Netlify-a deploy

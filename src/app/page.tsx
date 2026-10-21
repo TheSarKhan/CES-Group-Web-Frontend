@@ -1,7 +1,6 @@
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
-import { Intro } from "@/components/Intro";
-import { Synergy } from "@/components/Synergy";
+import { Journey } from "@/components/Journey";
 import { Stats } from "@/components/Stats";
 import { Projects } from "@/components/Projects";
 import { Clients } from "@/components/Clients";
@@ -15,8 +14,7 @@ export default function HomePage() {
       <Header overlay />
       <main id="main" className="home">
         <Hero />
-        <Intro />
-        <Synergy />
+        <Journey />
         <Stats />
         <Projects />
         <Clients />

@@ -98,10 +98,14 @@ export const companies: Company[] = [
   },
 ];
 
-export const steps = [
-  { title: "Layihələndirmə", company: "CES Architect", text: companies[1].description },
-  { title: "İcra", company: "CES Construction", text: companies[2].description },
-  { title: "Texnika təminatı", company: "CES Equipment", text: companies[0].description },
+/** Ana səhifədəki "layihənin yolu" bölməsi: şirkətlər layihənin mərhələləri kimi sıralanır */
+export type JourneyStep = { id: CompanyId; icon: "design" | "build" | "crane" | "wheat"; points: string[] };
+
+export const journey: JourneyStep[] = [
+  { id: "architect", icon: "design", points: ["İnteryer dizaynı", "Eksteryer dizaynı", "Landşaft", "İşçi layihə"] },
+  { id: "construction", icon: "build", points: ["Yaşayış və kommersiya tikintisi", "İnfrastruktur və yol işləri", "Təmir-bitirmə", "Baş podrat"] },
+  { id: "equipment", icon: "crane", points: ["Avtokran", "Forklift", "Ekskavator", "Hündürlük səbətləri"] },
+  { id: "farmart", icon: "wheat", points: ["Bitkiçilik", "Aqrotexnika", "Məhsul təchizatı"] },
 ];
 
 export const stats = [
