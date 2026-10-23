@@ -111,3 +111,19 @@ export const CheckIcon = (p: IconProps) => (
     <path d="M5 12.5l4.5 4.5L19 7.5" />
   </Glyph>
 );
+
+/** Kateqoriya: etiket */
+export const TagIcon = (p: IconProps) => (
+  <Glyph {...p}>
+    <path d="M3 12V4h8l9 9-8 8-9-9z" />
+    <circle cx="7.5" cy="8.5" r="1" />
+  </Glyph>
+);
+
+/** Yer: xəritə işarəsi */
+export const PinIcon = (p: IconProps) => (
+  <Glyph {...p}>
+    <path d="M12 21s7-6.2 7-11.5a7 7 0 00-14 0C5 14.8 12 21 12 21z" />
+    <circle cx="12" cy="9.5" r="2.5" />
+  </Glyph>
+);

@@ -5,7 +5,7 @@ import { Header } from "@/components/Header";
 import { PageHero } from "@/components/PageHero";
 import { ContactBlock } from "@/components/ContactBlock";
 import { Footer } from "@/components/Footer";
-import { ArrowRight } from "@/components/Icons";
+import { ArrowRight, PinIcon, TagIcon } from "@/components/Icons";
 import { JsonLdScript } from "@/components/JsonLd";
 import { projects } from "@/content/site";
 import { pageMetadata } from "@/lib/seo";
@@ -40,7 +40,14 @@ export default function ProjectsPage() {
                       />
                     </span>
                     <span className={styles.meta}>
-                      {p.category} · {p.location}
+                      <span className={styles.metaItem}>
+                        <TagIcon size={15} />
+                        {p.category}
+                      </span>
+                      <span className={styles.metaItem}>
+                        <PinIcon size={15} />
+                        {p.location}
+                      </span>
                     </span>
                     <span className={styles.title}>{p.title}</span>
                     <span className={styles.summary}>{p.summary}</span>

@@ -35,9 +35,18 @@
 }
 
 .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
   font-size: 14px;
   font-weight: 500;
   color: var(--gold-text);
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .title {
