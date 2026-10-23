@@ -32,6 +32,10 @@ export function GroupContacts() {
         <span className={styles.value}>{site.address}</span>
       </li>
       <li className={styles.row}>
+        <span className={styles.name}>İş saatları</span>
+        <span className={styles.value}>{site.hours.label}</span>
+      </li>
+      <li className={styles.row}>
         <span className={styles.name}>Telefon</span>
         <span className={styles.links}>
           <a href={tel(site.phone)}>{site.phone}</a>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import type { SubSite } from "@/content/subsites";
+import { isTbd, type SubSite } from "@/content/subsites";
 import { Reveal } from "./Reveal";
 import { ServicesGrid } from "./ServicesGrid";
 import styles from "./Sections.module.css";
@@ -21,13 +21,16 @@ export function About({ site }: { site: SubSite }) {
 }
 
 export function Stats({ site }: { site: SubSite }) {
+  // Real dəyəri yazılmayan göstəricilər (`[00+]`) saytda görünmür
+  const stats = site.stats.filter((s) => !isTbd(s.value));
+  if (stats.length === 0) return null;
   return (
     <section className={styles.stats}>
       <Reveal>
         <h2 className={`h2 ${styles.heading}`}>Göstəricilərimiz</h2>
       </Reveal>
       <div className={styles.statsGrid}>
-        {site.stats.map((s, i) => (
+        {stats.map((s, i) => (
           <Reveal key={s.label} delay={i * 120}>
             <p className={styles.statLabel}>{s.label}</p>
             <p className={styles.statValue}>{s.value}</p>

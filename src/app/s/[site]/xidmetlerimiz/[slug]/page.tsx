@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { subsites } from "@/content/subsites";
 import { getSubSite } from "@/lib/subsite";
+import { companies } from "@/content/site";
+import { pageMetadata } from "@/lib/seo";
+import { abs, graph, orgId, pageNodes } from "@/lib/schema";
+import { JsonLdScript } from "@/components/JsonLd";
 import { DetailHero } from "@/components/subsite/DetailHero";
 import { PanelLink } from "@/components/subsite/PanelLink";
 import { Reveal } from "@/components/subsite/Reveal";
@@ -22,13 +26,21 @@ async function load({ params }: Props) {
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const { service } = await load(props);
-  return { title: service.label, description: service.description, alternates: { canonical: `/xidmetlerimiz/${service.slug}` } };
+  const { site, service } = await load(props);
+  return pageMetadata({
+    title: service.label,
+    description: service.description,
+    path: `/xidmetlerimiz/${service.slug}`,
+    siteName: site.name,
+    image: { url: service.image },
+  });
 }
 
 export default async function ServiceDetailPage(props: Props) {
   const { site, service } = await load(props);
   const others = site.services.filter((s) => s.slug !== service.slug);
+  const company = companies.find((c) => c.id === site.id);
+  const path = `/xidmetlerimiz/${service.slug}`;
 
   return (
     <>
@@ -64,6 +76,34 @@ export default async function ServiceDetailPage(props: Props) {
           </div>
         </section>
       )}
+
+      <JsonLdScript
+        data={graph([
+          ...pageNodes({
+            base: site.url,
+            path,
+            name: service.label,
+            description: service.description,
+            image: service.image,
+            crumbs: [
+              { name: "Ana səhifə", path: "/" },
+              { name: "Xidmətlərimiz", path: "/xidmetlerimiz" },
+              { name: service.label, path },
+            ],
+          }),
+          {
+            "@type": "Service",
+            "@id": `${abs(path, site.url)}#service`,
+            name: service.label,
+            description: service.description,
+            serviceType: company?.field,
+            provider: { "@id": orgId(site.url) },
+            areaServed: { "@type": "Country", name: "Azərbaycan" },
+            image: abs(service.image, site.url),
+            url: abs(path, site.url),
+          },
+        ])}
+      />
     </>
   );
 }

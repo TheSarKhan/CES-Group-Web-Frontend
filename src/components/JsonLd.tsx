@@ -1,14 +1,11 @@
-import { companies, site } from "@/content/site";
+import { groupGraph } from "@/lib/schema";
 
+export function JsonLdScript({ data }: { data: object }) {
+  // "<" qaçışı JSON-un </script> ilə səhifədən çıxmasının qarşısını alır
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }} />;
+}
+
+/** Ana səhifə: sayt, qrup və şirkətlər */
 export function JsonLd() {
-  const data = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: site.name,
-    url: site.url,
-    foundingDate: String(site.founded),
-    description: site.description,
-    subOrganization: companies.map((c) => ({ "@type": "Organization", name: c.name, url: c.url, description: c.field })),
-  };
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />;
+  return <JsonLdScript data={groupGraph()} />;
 }

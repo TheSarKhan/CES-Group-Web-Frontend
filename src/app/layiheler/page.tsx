@@ -6,14 +6,16 @@ import { PageHero } from "@/components/PageHero";
 import { ContactBlock } from "@/components/ContactBlock";
 import { Footer } from "@/components/Footer";
 import { ArrowRight } from "@/components/Icons";
+import { JsonLdScript } from "@/components/JsonLd";
 import { projects } from "@/content/site";
+import { pageMetadata } from "@/lib/seo";
+import { graph, pageNodes, projectsItemList } from "@/lib/schema";
 import styles from "./page.module.css";
 
-export const metadata: Metadata = {
-  title: "Layihələr",
-  description: "CES Group şirkətlərinin iştirak etdiyi layihələr: beynəlxalq tədbirlər, kommersiya obyektləri və infrastruktur.",
-  alternates: { canonical: "/layiheler" },
-};
+const description =
+  "CES Group şirkətlərinin iştirak etdiyi layihələr: Formula 1, COP29, Port Baku, Crescent Mall və Qarabağ infrastrukturu üçün texnika təminatı.";
+
+export const metadata: Metadata = pageMetadata({ title: "Layihələr", description, path: "/layiheler" });
 
 export default function ProjectsPage() {
   return (
@@ -55,6 +57,21 @@ export default function ProjectsPage() {
         <ContactBlock />
       </main>
       <Footer />
+      <JsonLdScript
+        data={graph([
+          ...pageNodes({
+            type: "CollectionPage",
+            path: "/layiheler",
+            name: "Layihələr",
+            description,
+            crumbs: [
+              { name: "Ana səhifə", path: "/" },
+              { name: "Layihələr", path: "/layiheler" },
+            ],
+            extra: { mainEntity: projectsItemList() },
+          }),
+        ])}
+      />
     </>
   );
 }

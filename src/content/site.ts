@@ -10,6 +10,10 @@ export type CompanyId = "equipment" | "architect" | "construction" | "farmart";
 export type Company = {
   id: CompanyId;
   name: string;
+  /** Rəsmi hüquqi ad (Architect və Construction eyni hüquqi şəxsdir) */
+  legalName: string;
+  /** Yaradılma tarixi (schema.org üçün: il və ya tam tarix) */
+  founded: string;
   field: string;
   description: string;
   url: string;
@@ -27,17 +31,27 @@ export const site = {
   name: "CES Group",
   url: siteUrl,
   description:
-    "CES Group memarlıq, tikinti, ağır texnika icarəsi və kənd təsərrüfatı sahələrində fəaliyyət göstərən dörd şirkəti bir araya gətirir.",
+    "CES Group: Azərbaycanda memarlıq, tikinti, ağır texnika icarəsi və innovativ fermerçilik. Layihənin dizaynından təhvilinə qədər bir komanda.",
   founded: 2020,
+  /** Rəsmi qurulma tarixi (ISO), schema.org üçün */
+  foundingDate: "2020-09-03",
+  /** Qrupun əsas hüquqi şəxsi (Equipment) */
+  legalName: "Construction Equipment Services MMC",
+  /** Həftə içi iş saatları: schema.org üçün opens/closes və göstəriləcək mətn */
+  hours: { opens: "08:00", closes: "17:00", label: "Bazar ertəsi – Cümə, 08:00–17:00" },
+  /** Google Maps-da şirkətin kartı */
+  mapUrl: "https://maps.app.goo.gl/L8Sgk6ZsaQh2LUXu9",
   /** Bütün brendlərin (qrup, Equipment, Architect, Construction, Farmart) ortaq əlaqə məlumatı */
   address: "Qaradağ ray, Salyan şossesi, Lökbatan yolu, 22A, Bakı",
+  /** Ünvanın hissələri: schema.org PostalAddress üçün */
+  addressParts: { street: "Salyan şossesi, Lökbatan yolu, 22A", region: "Qaradağ rayonu", city: "Bakı" },
   mapQuery: "Construction Equipment Services MMC, Lökbatan yolu, Bakı",
   email: "sales@ces.com.az",
   phone: "+994 51 290 42 80",
   social: [
-    { label: "Instagram", href: "#" },
-    { label: "LinkedIn", href: "#" },
-    { label: "Facebook", href: "#" },
+    { label: "Instagram", href: "https://www.instagram.com/construction_es/" },
+    { label: "LinkedIn", href: "https://www.linkedin.com/company/construction-equipment-services-llc/home/" },
+    { label: "Facebook", href: "https://www.facebook.com/p/Construction-Equipment-Services-LLC-100076846233793/" },
   ],
 };
 
@@ -54,6 +68,8 @@ export const companies: Company[] = [
   {
     id: "equipment",
     name: "CES Equipment",
+    legalName: "Construction Equipment Services MMC",
+    founded: site.foundingDate,
     field: "Ağır texnika icarəsi",
     description:
       "Avtokran, forklift, ekskavator və hündürlük səbətləri. Sertifikatlı operator və çatdırılma ilə.",
@@ -67,6 +83,8 @@ export const companies: Company[] = [
   {
     id: "architect",
     name: "CES Architect",
+    legalName: "Arch Construction Engineering Services MMC",
+    founded: "2025",
     field: "Memarlıq və dizayn",
     description: "İnteryer, eksteryer və landşaft dizaynı. Konsepsiyadan işçi layihəyə qədər.",
     url: externalUrls.architect,
@@ -78,6 +96,8 @@ export const companies: Company[] = [
   {
     id: "construction",
     name: "CES Construction",
+    legalName: "Arch Construction Engineering Services MMC",
+    founded: "2025",
     field: "Tikinti və podrat",
     description:
       "Yaşayış və kommersiya tikintisi, infrastruktur və yol işləri, təmir-bitirmə, baş podrat.",
@@ -89,8 +109,10 @@ export const companies: Company[] = [
   {
     id: "farmart",
     name: "Farmart",
-    field: "Kənd təsərrüfatı",
-    description: "Qrupun kənd təsərrüfatı istiqaməti.",
+    legalName: "Farmart MMC",
+    founded: "2026",
+    field: "İnnovativ fermerçilik",
+    description: "Müasir texnologiya və dəqiq əkinçilik ilə məhsuldar, dayanıqlı kənd təsərrüfatı.",
     url: subdomainUrl("farmart"),
     image: "/media/farmart-hd.jpg",
     imageAlt: "Taxıl sahəsində kombayn",
@@ -105,14 +127,14 @@ export const journey: JourneyStep[] = [
   { id: "architect", icon: "design", points: ["İnteryer dizaynı", "Eksteryer dizaynı", "Landşaft", "İşçi layihə"] },
   { id: "construction", icon: "build", points: ["Yaşayış və kommersiya tikintisi", "İnfrastruktur və yol işləri", "Təmir-bitirmə", "Baş podrat"] },
   { id: "equipment", icon: "crane", points: ["Avtokran", "Forklift", "Ekskavator", "Hündürlük səbətləri"] },
-  { id: "farmart", icon: "wheat", points: ["Bitkiçilik", "Aqrotexnika", "Məhsul təchizatı"] },
+  { id: "farmart", icon: "wheat", points: ["Dəqiq əkinçilik", "Ağıllı suvarma", "Müasir aqrotexnika", "Məhsul təchizatı"] },
 ];
 
 export const stats = [
   { value: "2020", label: "fəaliyyətə başladığımız il" },
   { value: "120+", label: "icarəyə hazır texnika" },
-  { value: "25+", label: "korporativ müştəri" },
-  { value: "15+", label: "dizayn layihəsi" },
+  { value: "150+", label: "müştəri" },
+  { value: "20+", label: "dizayn layihəsi" },
 ];
 
 export type Project = {
@@ -130,17 +152,16 @@ export type Project = {
   details: { label: string; value: string }[];
 };
 
-const TBD = "[...]";
-const projectDetails = (year: string, client: string) => [
+const projectDetails = (client: string, year: string, equipment: string, role: string) => [
   { label: "Sifarişçi", value: client },
   { label: "İl", value: year },
-  { label: "İstifadə olunan texnika", value: TBD },
-  { label: "Layihədə rolumuz", value: TBD },
+  { label: "İstifadə olunan texnika", value: equipment },
+  { label: "Layihədə rolumuz", value: role },
 ];
 
 /**
  * Diqqət: şəkillər müvəqqəti stok fotolardır — real layihə fotoları ilə əvəz edin.
- * Mətnlər ümumi kontekstdir; sifarişçi, il, texnika və rol `[...]` ilə qalıb, real məlumatla əvəz olunmalıdır.
+ * Mətnlər ümumi kontekstdir; `[...]` ilə qalan sahələr real məlumatla əvəz olunmalıdır.
  */
 export const projects: Project[] = [
   {
@@ -156,7 +177,7 @@ export const projects: Project[] = [
       "Formula 1 Azərbaycan Qran-prisi Bakının şəhər küçələrində keçirilir. Küçə trassı və tədbir infrastrukturu qısa müddətdə qurulur, yarışdan sonra isə şəhər öz adi rejiminə qaytarılır.",
       "Belə layihələrdə texnikanın vaxtında çatdırılması, hündürlükdə və sıx şəhər mühitində təhlükəsiz işləməsi həlledici əhəmiyyət daşıyır. CES Equipment bu istiqamətdə texnika təminatı ilə iştirak edib.",
     ],
-    details: projectDetails(TBD, TBD),
+    details: projectDetails("Baku City Circle", "2021–2025", "Teleskopik yükləyici, kran, forklift", "Texnika təminatı"),
   },
   {
     slug: "cop29-baki",
@@ -171,7 +192,7 @@ export const projects: Project[] = [
       "BMT-nin İqlim Dəyişikliyi üzrə Çərçivə Konvensiyasının tərəflər konfransı (COP29) 2024-cü ilin noyabrında Bakıda keçirildi. Tədbir yüzlərlə nümayəndə heyətini bir araya gətirdi və sıx hazırlıq qrafiki tələb etdi.",
       "Miqyaslı tədbirlərdə quraşdırma və hazırlıq işləri dəqiq cədvəllə aparılır. CES Equipment bu layihədə texnika təminatı ilə iştirak edib.",
     ],
-    details: projectDetails("2024", TBD),
+    details: projectDetails("Al Baddad", "2024", "Forklift, golfcar, sprinter, transfer xidmətləri", "Texnika icarəsi"),
   },
   {
     slug: "port-baku",
@@ -186,7 +207,7 @@ export const projects: Project[] = [
       "Port Baku Bakının mərkəzində yerləşən yaşayış və kommersiya kompleksidir. Belə çoxmərtəbəli obyektlərdə fasad, montaj və yükdaşıma işləri hündürlük və yükqaldırma texnikası olmadan mümkün deyil.",
       "CES Equipment bu layihədə texnika təminatı ilə iştirak edib.",
     ],
-    details: projectDetails(TBD, TBD),
+    details: projectDetails("Oasis Construction (Port Baku Tower 2), North West Construction (Port Baku Walk)", "2022 (Tower 2), 2024 (Walk)", "Forklift, teleskopik yükləyici, kran", "Texnika icarəsi"),
   },
   {
     slug: "crescent-mall",
@@ -201,7 +222,7 @@ export const projects: Project[] = [
       "Ticarət mərkəzlərinin tikintisi və təchizatı işlərində ağır konstruksiyaların qaldırılması, yüklərin daşınması və hündürlükdə işlər eyni vaxtda aparılır. Bu, texnikanın düzgün seçilməsini və təcrübəli operatorları tələb edir.",
       "CES Equipment Crescent Mall layihəsində texnika təminatı ilə iştirak edib.",
     ],
-    details: projectDetails(TBD, TBD),
+    details: projectDetails("PMD Projects", "2021", "Forklift, teleskopik yükləyici, kran", "Texnika icarəsi"),
   },
   {
     slug: "qarabag-infrastrukturu",
@@ -216,7 +237,7 @@ export const projects: Project[] = [
       "Qarabağ bölgəsində bərpa və yenidənqurma işləri yol, kommunikasiya və ərazi hazırlığı üzrə geniş həcmdə ağır texnika tələb edir. Çətin relyef və uzaq məsafələr texnikanın etibarlılığını və vaxtında çatdırılmasını xüsusilə vacib edir.",
       "CES Equipment bu istiqamətdə infrastruktur layihələrinə texnika təminatı ilə dəstək verib.",
     ],
-    details: projectDetails(TBD, TBD),
+    details: projectDetails("CCN İnşaat, TVM Construction, Road and Construction, Electro Industries və digər", "2020", "Ekskavator, kran və digər texnika", "Texnika icarəsi"),
   },
 ];
 
@@ -271,8 +292,9 @@ export const about = {
   ],
   timeline: [
     { year: "2020", text: "CES ağır texnika icarəsi ilə fəaliyyətə başlayır." },
-    { year: "[İl]", text: "CES Architect memarlıq və dizayn istiqaməti kimi yaradılır." },
-    { year: "[İl]", text: "CES Construction tikinti və podrat işlərinə başlayır." },
+    { year: "2025", text: "CES Architect memarlıq və dizayn istiqaməti kimi yaradılır." },
+    { year: "2025", text: "CES Construction tikinti və podrat işlərinə başlayır." },
+    { year: "2026", text: "Farmart innovativ fermerçilik istiqaməti kimi yaradılır." },
     { year: "2026", text: "Şirkətlər CES Group adı altında birləşir." },
   ],
 };

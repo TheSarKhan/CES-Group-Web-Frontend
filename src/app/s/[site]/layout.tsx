@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import { companies } from "@/content/site";
 import { subsiteIds } from "@/content/subsites";
 import { getSubSite, groupUrl, siblingsOf, type SubSiteParams } from "@/lib/subsite";
+import { graph, companyNode, websiteId, orgId } from "@/lib/schema";
+import { JsonLdScript } from "@/components/JsonLd";
 import { SubHeader } from "@/components/subsite/SubHeader";
 import { SubFooter } from "@/components/subsite/SubFooter";
 import { BackToTop } from "@/components/subsite/BackToTop";
@@ -20,16 +23,11 @@ export async function generateMetadata(props: SubSiteParams): Promise<Metadata> 
     metadataBase: new URL(site.url),
     title: { default: `${site.name} — ${site.tagline}`, template: `%s | ${site.name}` },
     description: site.description,
-    alternates: { canonical: "/" },
-    openGraph: {
-      type: "website",
-      locale: "az_AZ",
-      siteName: site.name,
-      title: site.name,
-      description: site.description,
-      url: site.url,
-      images: [{ url: site.poster, width: 1280, height: 720 }],
-    },
+    applicationName: site.name,
+    // Hər səhifə öz canonical, Open Graph və Twitter məlumatını pageMetadata ilə verir
+    openGraph: { type: "website", locale: "az_AZ", siteName: site.name, images: [{ url: site.poster, width: 1280, height: 720 }] },
+    twitter: { card: "summary_large_image", images: [site.poster] },
+    robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
   };
 }
 
@@ -37,15 +35,12 @@ export default async function SubSiteLayout({ children, params }: { children: Re
   const site = await getSubSite({ params });
   const siblings = siblingsOf(site.id);
 
-  // Axtarış sistemləri bu saytın CES Group-un şirkəti olduğunu bilsin
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: site.name,
-    url: site.url,
-    description: site.description,
-    parentOrganization: { "@type": "Organization", name: "CES Group", url: groupUrl },
-  };
+  // Axtarış sistemləri bu saytın CES Group-un şirkəti olduğunu bilsin (parentOrganization eyni @id ilə qrupa bağlanır)
+  const company = companies.find((c) => c.id === site.id);
+  const jsonLd = graph([
+    { "@type": "WebSite", "@id": websiteId(site.url), url: site.url, name: site.name, inLanguage: "az", publisher: { "@id": orgId(site.url) } },
+    ...(company ? [{ ...companyNode(company, { contact: true }), description: site.description, image: new URL(site.poster, site.url).toString() }] : []),
+  ]);
 
   return (
     <>
@@ -53,7 +48,7 @@ export default async function SubSiteLayout({ children, params }: { children: Re
       <main id="main">{children}</main>
       <SubFooter site={site} groupUrl={groupUrl} siblings={siblings} />
       <BackToTop />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <JsonLdScript data={jsonLd} />
     </>
   );
 }

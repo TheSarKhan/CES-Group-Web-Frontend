@@ -89,7 +89,7 @@ const construction: SubSite = {
     },
   ],
   stats: [
-    { label: "Tamamlanmış layihələr:", value: "[00+]" },
+    { label: "Tamamlanmış layihələr:", value: "10" },
     { label: "Komanda üzvləri:", value: "[00+]" },
     { label: "İcra olunan sahə:", value: "[00 000 m²]" },
   ],
@@ -149,33 +149,40 @@ const farmart: SubSite = {
   id: "farmart",
   name: "Farmart",
   url: subdomainUrl("farmart"),
-  tagline: "Torpağın Gücü, Müasir Texnikanın Dəqiqliyi",
-  description: "Farmart CES Group-un kənd təsərrüfatı istiqamətidir: bitkiçilik, aqrotexnika və məhsul təchizatı.",
+  tagline: "Fermerçiliyi İnnovasiya ilə Yeniləyirik",
+  description: "Farmart CES Group-un innovativ fermerçilik istiqamətidir: dəqiq əkinçilik, ağıllı suvarma, müasir aqrotexnika və məhsul təchizatı.",
   video: "/media/video/vid-farmart",
   poster: `${MEDIA}/farmart-poster.jpg`,
   about: [
-    "“Farmart CES Group-un kənd təsərrüfatı istiqamətidir. Müasir texnika, düzgün planlaşdırma və məsuliyyətli yanaşma ilə sahədə məhsuldarlığı və dayanıqlılığı artırmağı hədəfləyirik.”",
+    "“Farmart CES Group-un innovativ fermerçilik istiqamətidir. Müasir texnologiya, dəqiq planlaşdırma və məsuliyyətli yanaşma ilə hər hektardan daha çox səmərə, daha az itki hədəfləyirik.”",
     "Qrupun texnika təcrübəsi Farmart-ın əkin, becərmə və yığım işlərində birbaşa istifadə olunur.",
   ],
   services: [
     {
-      slug: "bitkicilik",
-      label: "Bitkiçilik",
+      slug: "deqiq-ekinciliyi",
+      label: "Dəqiq əkinçilik",
       image: "/media/farmart-hd.jpg",
       description:
-        "Taxıl və digər kənd təsərrüfatı bitkilərinin əkini, becərilməsi və yığımı. Hər sahə üçün əkin planı torpağın xüsusiyyətlərinə və mövsümə uyğun hazırlanır.",
+        "Əkin, gübrələmə və becərmə işləri hər sahənin xüsusiyyətlərinə əsasən planlaşdırılır. Rəqəmsal məlumat və müasir texnika resursları düzgün yerə yönəldir, məhsuldarlığı artırır.",
     },
     {
-      slug: "aqrotexnika",
-      label: "Aqrotexnika",
+      slug: "agilli-suvarma",
+      label: "Ağıllı suvarma",
+      image: `${MEDIA}/farmart-field.jpg`,
+      description:
+        "Suvarma bitkinin real ehtiyacına görə idarə olunur. Bu, suya qənaət edir, torpağı qoruyur və məhsulun keyfiyyətini yaxşılaşdırır.",
+    },
+    {
+      slug: "muasir-aqrotexnika",
+      label: "Müasir aqrotexnika",
       image: `${MEDIA}/farmart-combine-close.jpg`,
       description:
-        "Kombayn, traktor və digər kənd təsərrüfatı texnikası ilə mövsümi işlərin icrası. Texnika sertifikatlı operatorlarla və vaxtında texniki baxışla təmin olunur.",
+        "Kombayn, traktor və digər müasir texnika ilə əkin, becərmə və biçin işlərinin icrası. Texnika sertifikatlı operatorlarla və vaxtında texniki baxışla təmin olunur.",
     },
     {
       slug: "mehsul-techizati",
       label: "Məhsul təchizatı",
-      image: `${MEDIA}/farmart-field.jpg`,
+      image: `${MEDIA}/farmart-combine-side.jpg`,
       description:
         "Yığılmış məhsulun saxlanması, çeşidlənməsi və tərəfdaşlara çatdırılması. Təchizat şərtləri hər tərəfdaşla əvvəlcədən razılaşdırılır.",
     },
@@ -189,7 +196,7 @@ const farmart: SubSite = {
     {
       slug: "taxil-sahesi",
       title: "Taxıl sahəsi",
-      category: "Bitkiçilik",
+      category: "Dəqiq əkinçilik",
       client: "[Təsərrüfat]",
       duration: "[Mövsüm]",
       area: "[Sahə]",
@@ -200,7 +207,7 @@ const farmart: SubSite = {
     {
       slug: "bicin-movsumu",
       title: "Biçin mövsümü",
-      category: "Aqrotexnika",
+      category: "Müasir aqrotexnika",
       client: "[Təsərrüfat]",
       duration: "[Mövsüm]",
       area: "[Sahə]",
@@ -211,7 +218,7 @@ const farmart: SubSite = {
     {
       slug: "texnika-parki",
       title: "Texnika parkı",
-      category: "Aqrotexnika",
+      category: "Müasir aqrotexnika",
       client: "[Təsərrüfat]",
       duration: "[Mövsüm]",
       area: "[Sahə]",
@@ -229,6 +236,12 @@ const farmart: SubSite = {
 export const subsites: Record<SubSiteId, SubSite> = { construction, farmart };
 
 export const subsiteIds = Object.keys(subsites) as SubSiteId[];
+
+/** `[...]` ilə başlayan dəyər hələ real məlumatla əvəz olunmayıb */
+export const isTbd = (v: string) => v.trim().startsWith("[");
+
+/** Təsviri yazılmayan layihə səhifəsi axtarışa açılmır */
+export const isReadyProject = (p: SubProject) => !isTbd(p.description);
 
 export const isSubSiteId = (v: string): v is SubSiteId => v in subsites;
 

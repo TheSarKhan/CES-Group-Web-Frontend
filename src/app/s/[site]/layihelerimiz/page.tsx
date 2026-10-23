@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { isReadyProject } from "@/content/subsites";
 import { getSubSite, type SubSiteParams } from "@/lib/subsite";
+import { pageMetadata } from "@/lib/seo";
 import { Breadcrumb } from "@/components/subsite/Breadcrumb";
 import { CharTitle } from "@/components/subsite/CharTitle";
 import { PanelLink } from "@/components/subsite/PanelLink";
@@ -9,7 +11,15 @@ import styles from "@/components/subsite/Pages.module.css";
 
 export async function generateMetadata(props: SubSiteParams): Promise<Metadata> {
   const site = await getSubSite(props);
-  return { title: "Layihələrimiz", description: `${site.name} layihələri.`, alternates: { canonical: "/layihelerimiz" } };
+  return pageMetadata({
+    title: "Layihələrimiz",
+    description: `${site.name} tərəfindən icra olunan layihələr.`,
+    path: "/layihelerimiz",
+    siteName: site.name,
+    image: { url: site.poster, width: 1280, height: 720 },
+    // Layihə təsvirləri yazılana qədər siyahı axtarışa açılmır
+    noindex: !site.projects.some(isReadyProject),
+  });
 }
 
 export default async function ProjectsPage(props: SubSiteParams) {

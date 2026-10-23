@@ -6,7 +6,10 @@ import { Header } from "@/components/Header";
 import { ContactBlock } from "@/components/ContactBlock";
 import { Footer } from "@/components/Footer";
 import { ArrowRight, ArrowUpRight } from "@/components/Icons";
+import { JsonLdScript } from "@/components/JsonLd";
 import { companies, projectApproach, projects } from "@/content/site";
+import { pageMetadata } from "@/lib/seo";
+import { graph, pageNodes } from "@/lib/schema";
 import styles from "./page.module.css";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -26,12 +29,7 @@ async function load({ params }: Props) {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const p = await load(props);
-  return {
-    title: p.title,
-    description: p.summary,
-    alternates: { canonical: `/layiheler/${p.slug}` },
-    openGraph: { images: [{ url: p.image }] },
-  };
+  return pageMetadata({ title: p.title, description: p.summary, path: `/layiheler/${p.slug}`, image: { url: p.image, alt: p.alt } });
 }
 
 export default async function ProjectPage(props: Props) {
@@ -148,6 +146,21 @@ export default async function ProjectPage(props: Props) {
         <ContactBlock />
       </main>
       <Footer />
+      <JsonLdScript
+        data={graph(
+          pageNodes({
+            path: `/layiheler/${project.slug}`,
+            name: project.title,
+            description: project.summary,
+            image: project.image,
+            crumbs: [
+              { name: "Ana səhifə", path: "/" },
+              { name: "Layihələr", path: "/layiheler" },
+              { name: project.title, path: `/layiheler/${project.slug}` },
+            ],
+          }),
+        )}
+      />
     </>
   );
 }

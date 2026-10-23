@@ -1,22 +1,21 @@
 import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/manrope";
 import { site } from "@/content/site";
+import { defaultOgImage } from "@/lib/seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: "CES Group — Memarlıq, tikinti, texnika icarəsi və aqro",
+    default: "CES Group — memarlıq, tikinti, texnika icarəsi və innovativ fermerçilik",
     template: "%s | CES Group",
   },
   description: site.description,
-  openGraph: {
-    type: "website",
-    locale: "az_AZ",
-    siteName: "CES Group",
-    images: [{ url: "/media/ces-equipment-crane.jpg", width: 1280, height: 720 }],
-  },
-  alternates: { canonical: "/" },
+  applicationName: site.name,
+  // Hər səhifə öz canonical, Open Graph və Twitter məlumatını pageMetadata ilə verir
+  openGraph: { type: "website", locale: "az_AZ", siteName: site.name, images: [defaultOgImage] },
+  twitter: { card: "summary_large_image", images: [defaultOgImage.url] },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
 };
 
 export const viewport: Viewport = {

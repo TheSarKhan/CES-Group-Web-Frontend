@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { subsites } from "@/content/subsites";
+import { isReadyProject, subsites } from "@/content/subsites";
 import { getSubSite } from "@/lib/subsite";
+import { pageMetadata } from "@/lib/seo";
+import { graph, pageNodes } from "@/lib/schema";
+import { JsonLdScript } from "@/components/JsonLd";
 import { DetailHero } from "@/components/subsite/DetailHero";
 import { Gallery } from "@/components/subsite/Gallery";
 import { Reveal } from "@/components/subsite/Reveal";
@@ -20,16 +23,24 @@ async function load({ params }: Props) {
   const site = await getSubSite({ params });
   const index = site.projects.findIndex((p) => p.slug === slug);
   if (index < 0) notFound();
-  return { project: site.projects[index], next: site.projects.length > 1 ? site.projects[(index + 1) % site.projects.length] : null };
+  return { site, project: site.projects[index], next: site.projects.length > 1 ? site.projects[(index + 1) % site.projects.length] : null };
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const { project } = await load(props);
-  return { title: project.title, alternates: { canonical: `/layihelerimiz/${project.slug}` } };
+  const { site, project } = await load(props);
+  return pageMetadata({
+    title: project.title,
+    description: isReadyProject(project) ? project.description : `${site.name}: ${project.title}.`,
+    path: `/layihelerimiz/${project.slug}`,
+    siteName: site.name,
+    image: { url: project.image },
+    // Təsviri yazılmayan layihə səhifəsi axtarışa açılmır
+    noindex: !isReadyProject(project),
+  });
 }
 
 export default async function ProjectDetailPage(props: Props) {
-  const { project, next } = await load(props);
+  const { site, project, next } = await load(props);
   const specs = [
     { label: "Sifarişçi", value: project.client },
     { label: "Növü", value: project.category },
@@ -85,6 +96,23 @@ export default async function ProjectDetailPage(props: Props) {
           <Gallery images={project.gallery} title={project.title} />
         </section>
       )}
+
+      <JsonLdScript
+        data={graph(
+          pageNodes({
+            base: site.url,
+            path: `/layihelerimiz/${project.slug}`,
+            name: project.title,
+            description: project.description,
+            image: project.image,
+            crumbs: [
+              { name: "Ana səhifə", path: "/" },
+              { name: "Layihələrimiz", path: "/layihelerimiz" },
+              { name: project.title, path: `/layihelerimiz/${project.slug}` },
+            ],
+          }),
+        )}
+      />
 
       {next && (
         <Link href={`/layihelerimiz/${next.slug}`} className={styles.next} data-header-theme="dark">

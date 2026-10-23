@@ -6,14 +6,16 @@ import { Stats } from "@/components/Stats";
 import { ContactBlock } from "@/components/ContactBlock";
 import { Footer } from "@/components/Footer";
 import { ArrowUpRight } from "@/components/Icons";
+import { JsonLdScript } from "@/components/JsonLd";
 import { about, companies } from "@/content/site";
+import { pageMetadata } from "@/lib/seo";
+import { graph, pageNodes } from "@/lib/schema";
 import styles from "./page.module.css";
 
-export const metadata: Metadata = {
-  title: "Haqqımızda",
-  description: about.lead,
-  alternates: { canonical: "/haqqimizda" },
-};
+const description =
+  "CES Group 2020-ci ildə ağır texnika icarəsi ilə başlayıb. Bu gün memarlıq, tikinti, texnika icarəsi və innovativ fermerçilik üzrə dörd şirkəti birləşdirir.";
+
+export const metadata: Metadata = pageMetadata({ title: "Haqqımızda", description, path: "/haqqimizda" });
 
 export default function AboutPage() {
   return (
@@ -101,6 +103,20 @@ export default function AboutPage() {
         <ContactBlock />
       </main>
       <Footer />
+      <JsonLdScript
+        data={graph(
+          pageNodes({
+            type: "AboutPage",
+            path: "/haqqimizda",
+            name: "Haqqımızda",
+            description,
+            crumbs: [
+              { name: "Ana səhifə", path: "/" },
+              { name: "Haqqımızda", path: "/haqqimizda" },
+            ],
+          }),
+        )}
+      />
     </>
   );
 }

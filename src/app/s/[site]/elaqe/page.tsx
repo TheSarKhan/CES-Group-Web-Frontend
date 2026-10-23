@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { site as group } from "@/content/site";
 import { getSubSite, type SubSiteParams } from "@/lib/subsite";
 import { tel } from "@/lib/tel";
+import { pageMetadata } from "@/lib/seo";
+import { graph, pageNodes } from "@/lib/schema";
+import { JsonLdScript } from "@/components/JsonLd";
 import { Breadcrumb } from "@/components/subsite/Breadcrumb";
 import { ContactForm } from "@/components/ContactForm";
 import anim from "@/components/subsite/Anim.module.css";
@@ -9,7 +12,13 @@ import styles from "@/components/subsite/Pages.module.css";
 
 export async function generateMetadata(props: SubSiteParams): Promise<Metadata> {
   const site = await getSubSite(props);
-  return { title: "Əlaqə", description: `${site.name} ilə əlaqə: müraciət forması, ünvan və telefon.`, alternates: { canonical: "/elaqe" } };
+  return pageMetadata({
+    title: "Əlaqə",
+    description: `${site.name} ilə əlaqə: müraciət forması, ${group.phone}, ${group.email}. Ünvan: ${group.address}.`,
+    path: "/elaqe",
+    siteName: site.name,
+    image: { url: site.poster, width: 1280, height: 720 },
+  });
 }
 
 export default async function ContactPage(props: SubSiteParams) {
@@ -25,6 +34,7 @@ export default async function ContactPage(props: SubSiteParams) {
         <h1 className={`${styles.contactTitle} ${anim.in}`}>Əlaqə</h1>
         <div className={`${styles.contactLines} ${anim.in}`} style={{ animationDelay: "150ms" }}>
           <p>{group.address}</p>
+          <p>{group.hours.label}</p>
           <p>
             <a href={tel(group.phone)}>{group.phone}</a>
           </p>
@@ -43,11 +53,27 @@ export default async function ContactPage(props: SubSiteParams) {
 
       <section className={styles.map}>
         <iframe title={`${site.name} ünvanı`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" src={`https://www.google.com/maps?q=${q}&output=embed`} />
-        <a className={styles.mapLink} href={`https://www.google.com/maps/search/?api=1&query=${q}`} target="_blank" rel="noopener noreferrer">
+        <a className={styles.mapLink} href={group.mapUrl} target="_blank" rel="noopener noreferrer">
           <span>{group.mapQuery.split(",")[0]}</span>
           <span aria-hidden="true">↗</span>
         </a>
       </section>
+
+      <JsonLdScript
+        data={graph(
+          pageNodes({
+            type: "ContactPage",
+            base: site.url,
+            path: "/elaqe",
+            name: "Əlaqə",
+            description: `${site.name} ilə əlaqə`,
+            crumbs: [
+              { name: "Ana səhifə", path: "/" },
+              { name: "Əlaqə", path: "/elaqe" },
+            ],
+          }),
+        )}
+      />
     </>
   );
 }

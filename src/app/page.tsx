@@ -7,6 +7,15 @@ import { Clients } from "@/components/Clients";
 import { ContactBlock } from "@/components/ContactBlock";
 import { Footer } from "@/components/Footer";
 import { JsonLd } from "@/components/JsonLd";
+import { site } from "@/content/site";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata({
+  title: "CES Group — memarlıq, tikinti, texnika icarəsi və innovativ fermerçilik",
+  description: site.description,
+  path: "/",
+  absoluteTitle: true,
+});
 
 export default function HomePage() {
   return (
