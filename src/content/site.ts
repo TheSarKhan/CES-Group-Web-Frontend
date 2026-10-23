@@ -10,6 +10,8 @@ export type CompanyId = "equipment" | "architect" | "construction" | "farmart";
 export type Company = {
   id: CompanyId;
   name: string;
+  /** Hero panelində göstərilən qısa ad ("CES" olmadan) */
+  shortName: string;
   /** Rəsmi hüquqi ad (Architect və Construction eyni hüquqi şəxsdir) */
   legalName: string;
   /** Yaradılma tarixi (schema.org üçün: il və ya tam tarix) */
@@ -68,6 +70,7 @@ export const companies: Company[] = [
   {
     id: "equipment",
     name: "CES Equipment",
+    shortName: "Equipment",
     legalName: "Construction Equipment Services MMC",
     founded: site.foundingDate,
     field: "Ağır texnika icarəsi",
@@ -83,6 +86,7 @@ export const companies: Company[] = [
   {
     id: "architect",
     name: "CES Architect",
+    shortName: "Architect",
     legalName: "Arch Construction Engineering Services MMC",
     founded: "2025",
     field: "Memarlıq və dizayn",
@@ -96,6 +100,7 @@ export const companies: Company[] = [
   {
     id: "construction",
     name: "CES Construction",
+    shortName: "Construction",
     legalName: "Arch Construction Engineering Services MMC",
     founded: "2025",
     field: "Tikinti və podrat",
@@ -109,6 +114,7 @@ export const companies: Company[] = [
   {
     id: "farmart",
     name: "Farmart",
+    shortName: "Agro",
     legalName: "Farmart MMC",
     founded: "2026",
     field: "İnnovativ fermerçilik",
