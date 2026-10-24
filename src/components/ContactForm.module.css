@@ -73,6 +73,18 @@
   overflow: hidden;
 }
 
+.consent {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted-2);
+}
+
+.consent a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+
 .footer {
   display: flex;
   flex-wrap: wrap;

@@ -62,6 +62,12 @@
   text-decoration: none;
 }
 
+.legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+
 .bottom a:hover {
   color: var(--white);
 }

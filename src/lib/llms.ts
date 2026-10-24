@@ -50,6 +50,8 @@ ${link("Tez-tez verilən suallar", `${site.url}/suallar`, "Texnika icarəsi, mem
 ${link("Haqqımızda", `${site.url}/haqqimizda`, "Qrupun tarixi, missiyası, dəyərləri və şirkətlərin strukturu")}
 ${link("Layihələr", `${site.url}/layiheler`, "İştirak etdiyimiz layihələrin siyahısı")}
 ${link("Əlaqə", `${site.url}/elaqe`, "Müraciət forması, telefon, e-poçt və ünvan")}
+${link("Məxfilik siyasəti", `${site.url}/mexfilik-siyaseti`, "Şəxsi məlumatların emalı")}
+${link("İstifadə şərtləri", `${site.url}/istifade-sertleri`, "Saytdan istifadə qaydaları")}
 `;
 }
 

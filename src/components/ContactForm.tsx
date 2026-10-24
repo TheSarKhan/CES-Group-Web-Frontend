@@ -2,6 +2,7 @@
 
 import { useRef, useState, useSyncExternalStore } from "react";
 import { COMPANY_OPTIONS } from "@/lib/contact-schema";
+import { siteUrl } from "@/lib/urls";
 import { ArrowRight } from "./Icons";
 import { TURNSTILE_ENABLED, Turnstile, type TurnstileHandle } from "./Turnstile";
 import styles from "./ContactForm.module.css";
@@ -114,6 +115,10 @@ export function ContactForm({ company }: { company?: (typeof COMPANY_OPTIONS)[nu
       </div>
 
       <Turnstile ref={turnstile} onVerify={setToken} onExpire={() => setToken("")} />
+
+      <p className={styles.consent}>
+        Müraciəti göndərməklə <a href={`${siteUrl}/mexfilik-siyaseti`}>məxfilik siyasəti</a> ilə razılaşırsınız.
+      </p>
 
       <div className={styles.footer}>
         <button type="submit" className="btn btn-gold" disabled={status.kind === "sending"}>

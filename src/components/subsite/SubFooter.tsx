@@ -50,7 +50,11 @@ export function SubFooter({ site, groupUrl, siblings }: { site: SubSite; groupUr
       </div>
       <div className={styles.bottom}>
         <span>© {new Date().getFullYear()} {site.name}. Bütün hüquqlar qorunur.</span>
-        <a href={groupUrl}>CES Group-un şirkətidir</a>
+        <span className={styles.legal}>
+          <a href={`${groupUrl}/mexfilik-siyaseti`}>Məxfilik siyasəti</a>
+          <a href={`${groupUrl}/istifade-sertleri`}>İstifadə şərtləri</a>
+          <a href={groupUrl}>CES Group-un şirkətidir</a>
+        </span>
       </div>
     </footer>
   );

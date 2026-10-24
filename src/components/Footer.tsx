@@ -48,8 +48,8 @@ export function Footer() {
         <div className={styles.bottom}>
           <span>© {new Date().getFullYear()} CES Group. Bütün hüquqlar qorunur.</span>
           <div className={styles.legal}>
-            <a href="#">Məxfilik siyasəti</a>
-            <a href="#">İstifadə şərtləri</a>
+            <Link href="/mexfilik-siyaseti">Məxfilik siyasəti</Link>
+            <Link href="/istifade-sertleri">İstifadə şərtləri</Link>
           </div>
         </div>
       </div>
