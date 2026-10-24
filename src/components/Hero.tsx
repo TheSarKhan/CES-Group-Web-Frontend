@@ -1,14 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type PointerEvent } from "react";
 import { companies, type CompanyId } from "@/content/site";
+import { afterLoad, prefersLightMedia } from "@/lib/media";
 import { ArrowUpRight } from "./Icons";
 import styles from "./Hero.module.css";
 
 const HOVER_QUERY = "(hover: hover) and (pointer: fine)";
 const REDUCED_QUERY = "(prefers-reduced-motion: reduce)";
 const CYCLE_MS = 4500;
+const noopSubscribe = () => () => undefined;
 
 export function Hero() {
   const [active, setActive] = useState<CompanyId | null>(null);
@@ -16,6 +18,8 @@ export function Hero() {
   const [reduced, setReduced] = useState(false);
   const [inView, setInView] = useState(true);
   const [warm, setWarm] = useState(false);
+  // Server və hidrasiya zamanı false, brauzerdə bağlantı məlumatına görə
+  const saver = useSyncExternalStore(noopSubscribe, prefersLightMedia, () => false);
   const root = useRef<HTMLDivElement>(null);
   const videos = useRef<Partial<Record<CompanyId, HTMLVideoElement | null>>>({});
 
@@ -29,12 +33,24 @@ export function Hero() {
     update();
     hq.addEventListener("change", update);
     rq.addEventListener("change", update);
-    // Videolar səhifə yükləndikdən sonra fonda yüklənir ki, ilk açılışı yavaşlatmasın
-    const t = window.setTimeout(() => setWarm(true), 1500);
+    // Videolar ilk açılışı (LCP) yavaşlatmasın deyə gec başlayır. Trafikə qənaət rejimində və ya zəif bağlantıda
+    // əvvəlcədən yüklənmir. Masaüstündə səhifə tam yükləndikdən sonra fonda yüklənir; toxunma ekranlarında
+    // (mobil) videolar yalnız istifadəçinin ilk toxunuşu və ya sürüşdürməsindən sonra başlayır.
+    let cancel = () => undefined as void;
+    if (!prefersLightMedia()) {
+      if (hq.matches) {
+        cancel = afterLoad(() => setWarm(true));
+      } else {
+        const events = ["pointerdown", "touchstart", "scroll", "keydown"] as const;
+        const start = () => setWarm(true);
+        events.forEach((e) => window.addEventListener(e, start, { once: true, passive: true }));
+        cancel = () => events.forEach((e) => window.removeEventListener(e, start));
+      }
+    }
     return () => {
       hq.removeEventListener("change", update);
       rq.removeEventListener("change", update);
-      window.clearTimeout(t);
+      cancel();
     };
   }, []);
 
@@ -49,7 +65,7 @@ export function Hero() {
 
   // Toxunma ekranlarında hover yoxdur — şirkətlər növbə ilə avtomatik aktivləşir
   useEffect(() => {
-    if (hoverable || reduced || !inView) return;
+    if (hoverable || reduced || saver || !warm || !inView) return;
     const first = window.setTimeout(() => setActive((cur) => cur ?? companies[0].id), 600);
     const t = window.setInterval(() => {
       setActive((cur) => {
@@ -61,7 +77,7 @@ export function Hero() {
       window.clearTimeout(first);
       window.clearInterval(t);
     };
-  }, [hoverable, reduced, inView]);
+  }, [hoverable, reduced, saver, warm, inView]);
 
   useEffect(() => {
     for (const [id, el] of Object.entries(videos.current)) {
@@ -111,7 +127,7 @@ export function Hero() {
             className={styles.video}
             style={{ "--i": i } as CSSProperties}
             data-on={active === c.id || undefined}
-            poster={c.poster ?? c.image}
+            poster={active === c.id ? (c.poster ?? c.image) : undefined}
             muted
             loop
             playsInline
@@ -119,8 +135,8 @@ export function Hero() {
             aria-hidden="true"
             tabIndex={-1}
           >
+            <source src={`${c.video}-m.mp4`} media="(max-width: 767px)" type="video/mp4" />
             <source src={`${c.video}.mp4`} type="video/mp4" />
-            <source src={`${c.video}.webm`} type="video/webm" />
           </video>
         ))}
 

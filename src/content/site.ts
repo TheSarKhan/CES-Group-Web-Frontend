@@ -27,7 +27,7 @@ export type Company = {
   focus?: string;
   /** Videonun posteri (video yüklənənə qədər). Verilməsə, panel şəkli istifadə olunur */
   poster?: string;
-  /** Videonun yolu, uzantısız: həm .mp4, həm .webm faylı olmalıdır */
+  /** Videonun yolu, uzantısız: `<yol>.mp4` (masaüstü) və `<yol>-m.mp4` (mobil, 640px) faylları olmalıdır */
   video: string;
 };
 
