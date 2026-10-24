@@ -5,6 +5,36 @@ const nextConfig: NextConfig = {
   // Docker image üçün minimal server paketi (.next/standalone)
   output: "standalone",
   poweredByHeader: false,
+  // Əl ilə yazıla biləcək səhv və ya köhnə ünvanlar düzgün səhifəyə yönləndirilir (404 əvəzinə).
+  // Qaydalar host-a bağlıdır, çünki construction/farmart subsaytları eyni tətbiqdən xidmət olunur.
+  async redirects() {
+    const group = [{ type: "host" as const, value: "cesgroup.az" }];
+    const sub = (name: string) => [{ type: "host" as const, value: `${name}.cesgroup.az` }];
+    const to = (source: string, destination: string, has: { type: "host"; value: string }[]) => ({ source, destination, has, permanent: true });
+    return [
+      to("/mexfilik", "/mexfilik-siyaseti", group),
+      to("/privacy", "/mexfilik-siyaseti", group),
+      to("/sertler", "/istifade-sertleri", group),
+      to("/terms", "/istifade-sertleri", group),
+      to("/layihelerimiz", "/layiheler", group),
+      to("/layihelerimiz/:slug", "/layiheler/:slug", group),
+      to("/xidmetlerimiz", "/sirketler", group),
+      to("/faq", "/suallar", group),
+      to("/about", "/haqqimizda", group),
+      to("/contact", "/elaqe", group),
+      to("/sirketler/ces-equipment", "/sirketler/equipment", group),
+      to("/sirketler/ces-architect", "/sirketler/architect", group),
+      to("/sirketler/ces-construction", "/sirketler/construction", group),
+      to("/sirketler/agro", "/sirketler/farmart", group),
+      // Subsaytlarda hüquqi səhifələr qrupun saytındadır
+      ...["construction", "farmart"].flatMap((n) => [
+        to("/mexfilik-siyaseti", "https://cesgroup.az/mexfilik-siyaseti", sub(n)),
+        to("/istifade-sertleri", "https://cesgroup.az/istifade-sertleri", sub(n)),
+        to("/haqqimizda", "/#haqqimizda", sub(n)),
+        to("/layiheler", "/layihelerimiz", sub(n)),
+      ]),
+    ];
+  },
   async headers() {
     return [
       // HTTPS-i brauzerlərdə yadda saxlatdırır (alt domenlərə şamil edilmir)
