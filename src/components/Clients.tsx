@@ -11,6 +11,7 @@ export function Clients() {
           <h2 id="clients-title" className="h2">
             Bizə güvənənlər
           </h2>
+          <p className="lead">150+ müştəridən ən tanınmışları</p>
         </div>
       </div>
 

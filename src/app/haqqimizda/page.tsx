@@ -13,7 +13,7 @@ import { graph, pageNodes } from "@/lib/schema";
 import styles from "./page.module.css";
 
 const description =
-  "CES Group 2020-ci ildə ağır texnika icarəsi ilə başlayıb. Bu gün memarlıq, tikinti, texnika icarəsi və innovativ fermerçilik üzrə dörd şirkəti birləşdirir.";
+  "CES Group 2020-ci ildə ağır texnika icarəsi ilə başlayıb. Bu gün memarlıq, tikinti, texnika icarəsi və innovativ ekosistem üzrə dörd şirkəti birləşdirir.";
 
 export const metadata: Metadata = pageMetadata({ title: "Haqqımızda", description, path: "/haqqimizda" });
 

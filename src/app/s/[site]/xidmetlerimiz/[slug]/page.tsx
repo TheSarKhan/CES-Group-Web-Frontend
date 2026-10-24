@@ -49,7 +49,7 @@ export default async function ServiceDetailPage(props: Props) {
         alt={service.label}
         kicker="Xidmət"
         title={service.label}
-        links={[{ href: "#haqqinda", label: "Xidmət haqqında" }, ...(others.length ? [{ href: "#diger", label: "Digər xidmətlər" }] : [])]}
+        links={[{ href: "#haqqinda", label: "Xidmət haqqında" }, ...(service.includes?.length ? [{ href: "#daxildir", label: "Nələr daxildir" }] : []), ...(others.length ? [{ href: "#diger", label: "Digər xidmətlər" }] : [])]}
       />
 
       <section id="haqqinda" className={styles.dark} data-header-theme="dark">
@@ -59,8 +59,28 @@ export default async function ServiceDetailPage(props: Props) {
         </Reveal>
         <Reveal delay={150}>
           <p className={styles.darkText}>{service.description}</p>
+          {service.body?.map((p, i) => (
+            <p key={i} className={`${styles.darkText} ${styles.darkTextMore}`}>
+              {p}
+            </p>
+          ))}
         </Reveal>
       </section>
+
+      {service.includes && service.includes.length > 0 && (
+        <section id="daxildir" className={styles.light}>
+          <Reveal>
+            <h2 className={`h2 ${styles.sectionTitle}`}>Nələr daxildir</h2>
+          </Reveal>
+          <ul className={styles.includes}>
+            {service.includes.map((item, i) => (
+              <li key={item} className={styles.include}>
+                <Reveal delay={(i % 2) * 100}>{item}</Reveal>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {others.length > 0 && (
         <section id="diger" className={styles.light}>

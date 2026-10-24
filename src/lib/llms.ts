@@ -1,4 +1,5 @@
 import { companies, projects, site, stats } from "@/content/site";
+import { faqItems } from "@/content/faq";
 import { isReadyProject, type SubSite } from "@/content/subsites";
 
 /**
@@ -13,7 +14,7 @@ export function groupLlmsTxt() {
     `Hüquqi ad: ${site.legalName}`,
     `Qurulma: ${site.foundingDate} (CES ağır texnika icarəsi ilə başlayıb)`,
     `Ünvan: ${site.address}`,
-    `Telefon: ${site.phone}`,
+    `Telefon və WhatsApp: ${site.phone}`,
     `E-poçt: ${site.email}`,
     `İş saatları: ${site.hours.label}`,
     "Xidmət ərazisi: bütün Azərbaycan",
@@ -24,7 +25,7 @@ export function groupLlmsTxt() {
 
 > ${site.description}
 
-${site.name} dörd şirkəti birləşdirir: memarlıq (CES Architect), tikinti və podrat (CES Construction), ağır texnika icarəsi (CES Equipment) və innovativ fermerçilik (Farmart). Sifarişçi layihənin dizaynından icrasına və texnika təminatına qədər bütün mərhələlər üçün bir komanda ilə işləyir.
+${site.name} dörd şirkəti birləşdirir: memarlıq (CES Architect), tikinti və podrat (CES Construction), ağır texnika icarəsi (CES Equipment) və innovativ və təbii ekosistem (Farmart). Sifarişçi layihənin dizaynından icrasına və texnika təminatına qədər bütün mərhələlər üçün bir komanda ilə işləyir.
 
 ## Şirkətlər
 
@@ -38,8 +39,13 @@ ${facts.map((f) => `- ${f}`).join("\n")}
 
 ${projects.map((p) => link(p.title, `${site.url}/layiheler/${p.slug}`, p.summary)).join("\n")}
 
+## Tez-tez verilən suallar
+
+${faqItems.map((f) => `- ${f.q} ${f.a}`).join("\n")}
+
 ## Səhifələr
 
+${link("Tez-tez verilən suallar", `${site.url}/suallar`, "Texnika icarəsi, memarlıq, tikinti və Farmart üzrə suallar və cavablar")}
 ${link("Haqqımızda", `${site.url}/haqqimizda`, "Qrupun tarixi, missiyası, dəyərləri və şirkətlərin strukturu")}
 ${link("Layihələr", `${site.url}/layiheler`, "İştirak etdiyimiz layihələrin siyahısı")}
 ${link("Əlaqə", `${site.url}/elaqe`, "Müraciət forması, telefon, e-poçt və ünvan")}
@@ -63,7 +69,7 @@ ${ready.length ? `\n## Layihələr\n\n${ready.map((p) => link(p.title, `${s.url}
 ## Əlaqə
 
 - Ünvan: ${site.address}
-- Telefon: ${site.phone}
+- Telefon və WhatsApp: ${site.phone}
 - E-poçt: ${site.email}
 - İş saatları: ${site.hours.label}
 - Əlaqə səhifəsi (müraciət forması): ${s.url}/elaqe

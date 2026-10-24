@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { isReadyProject, subsites } from "@/content/subsites";
+import { isReadyProject, isTbd, subsites } from "@/content/subsites";
 import { getSubSite } from "@/lib/subsite";
 import { pageMetadata } from "@/lib/seo";
 import { graph, pageNodes } from "@/lib/schema";
@@ -46,7 +46,7 @@ export default async function ProjectDetailPage(props: Props) {
     { label: "Növü", value: project.category },
     { label: "Müddəti", value: project.duration },
     { label: "Sahəsi", value: project.area },
-  ].filter((s) => s.value);
+  ].filter((s) => s.value && !isTbd(s.value));
 
   return (
     <>

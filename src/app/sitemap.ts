@@ -3,5 +3,5 @@ import { projects, site } from "@/content/site";
 
 // lastModified yazılmır: real dəyişiklik tarixi olmadan yanlış tarix axtarış sisteminin sitemap-a etibarını azaldır
 export default function sitemap(): MetadataRoute.Sitemap {
-  return ["", "/haqqimizda", "/layiheler", "/elaqe", ...projects.map((p) => `/layiheler/${p.slug}`)].map((path) => ({ url: `${site.url}${path}` }));
+  return ["", "/haqqimizda", "/layiheler", "/suallar", "/elaqe", ...projects.map((p) => `/layiheler/${p.slug}`)].map((path) => ({ url: `${site.url}${path}` }));
 }

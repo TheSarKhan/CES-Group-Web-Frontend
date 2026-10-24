@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { isReadyProject } from "@/content/subsites";
 import { getSubSite, type SubSiteParams } from "@/lib/subsite";
 import { pageMetadata } from "@/lib/seo";
@@ -24,6 +25,7 @@ export async function generateMetadata(props: SubSiteParams): Promise<Metadata> 
 
 export default async function ProjectsPage(props: SubSiteParams) {
   const { projects } = await getSubSite(props);
+  if (projects.length === 0) notFound();
   return (
     <section className={styles.list}>
       <Breadcrumb items={[{ label: "Ana səhifə", href: "/" }, { label: "Layihələrimiz" }]} />

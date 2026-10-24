@@ -93,7 +93,7 @@ export function Hero() {
 
   return (
     <section id="sirketler" className={styles.hero} aria-label="CES Group şirkətləri">
-      <h1 className="sr-only">CES Group: memarlıq, tikinti, texnika icarəsi və innovativ fermerçilik</h1>
+      <h1 className="sr-only">CES Group: memarlıq, tikinti, texnika icarəsi və innovativ ekosistem</h1>
       <div
         ref={root}
         className={styles.row}

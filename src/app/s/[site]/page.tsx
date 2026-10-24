@@ -26,7 +26,7 @@ export default async function SubSiteHome(props: SubSiteParams) {
       <About site={site} />
       <ServicesSection site={site} />
       <Stats site={site} />
-      <ProjectsSlider projects={site.projects} />
+      {site.projects.length > 0 && <ProjectsSlider projects={site.projects} />}
       <Cta site={site} />
     </>
   );

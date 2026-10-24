@@ -8,9 +8,9 @@ import { CloseIcon, MenuIcon } from "../Icons";
 import { SubLogo } from "./SubLogo";
 import styles from "./SubHeader.module.css";
 
-type Props = { name: string; groupUrl: string; siblings: { name: string; url: string }[] };
+type Props = { name: string; groupUrl: string; siblings: { name: string; url: string }[]; hasProjects?: boolean };
 
-export function SubHeader({ name, groupUrl, siblings }: Props) {
+export function SubHeader({ name, groupUrl, siblings, hasProjects = true }: Props) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -65,7 +65,7 @@ export function SubHeader({ name, groupUrl, siblings }: Props) {
           <CloseIcon size={28} />
         </button>
         <nav className={styles.links} aria-label="Əsas menyu">
-          {subNav.map((item) => (
+          {subNav.filter((n) => hasProjects || n.href !== "/layihelerimiz").map((item) => (
             <Link key={item.href} href={item.href} onClick={() => setOpen(false)}>
               {item.label}
             </Link>

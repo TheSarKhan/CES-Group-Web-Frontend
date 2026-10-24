@@ -7,7 +7,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: "CES Group — memarlıq, tikinti, texnika icarəsi və innovativ fermerçilik",
+    default: "CES Group — memarlıq, tikinti, texnika icarəsi və innovativ ekosistem",
     template: "%s | CES Group",
   },
   description: site.description,

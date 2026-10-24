@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { companies, nav, site } from "@/content/site";
+import { companies, footerNav, site } from "@/content/site";
 import { Logo } from "./Logo";
 import styles from "./Footer.module.css";
 
@@ -22,7 +22,7 @@ export function Footer() {
           </nav>
           <nav aria-label="Səhifələr" className={styles.col}>
             <span className={styles.heading}>Səhifələr</span>
-            {nav.map((n) => (
+            {footerNav.map((n) => (
               <Link key={n.href} href={n.href}>
                 {n.label}
               </Link>
@@ -33,6 +33,9 @@ export function Footer() {
             <span>{site.address}</span>
             <span>{site.email}</span>
             <span>{site.phone}</span>
+            <a href={site.whatsapp} target="_blank" rel="noopener noreferrer">
+              WhatsApp
+            </a>
             <div className={styles.social}>
               {site.social.map((s) => (
                 <a key={s.label} href={s.href}>

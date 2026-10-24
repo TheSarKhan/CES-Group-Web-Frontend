@@ -44,7 +44,7 @@ export default async function SubSiteLayout({ children, params }: { children: Re
 
   return (
     <>
-      <SubHeader name={site.name} groupUrl={groupUrl} siblings={siblings} />
+      <SubHeader name={site.name} groupUrl={groupUrl} siblings={siblings} hasProjects={site.projects.length > 0} />
       <main id="main">{children}</main>
       <SubFooter site={site} groupUrl={groupUrl} siblings={siblings} />
       <BackToTop />

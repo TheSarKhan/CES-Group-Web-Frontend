@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { site as group } from "@/content/site";
-import { subNav, type SubSite } from "@/content/subsites";
+import { navFor, type SubSite } from "@/content/subsites";
 import { tel } from "@/lib/tel";
 import { SubLogo } from "./SubLogo";
 import styles from "./SubFooter.module.css";
@@ -17,7 +17,7 @@ export function SubFooter({ site, groupUrl, siblings }: { site: SubSite; groupUr
         </div>
         <nav className={styles.cell} aria-label="Səhifələr">
           <span className={styles.heading}>Səhifələr</span>
-          {subNav.map((n) => (
+          {navFor(site).map((n) => (
             <Link key={n.href} href={n.href} className={styles.link}>
               {n.label}
             </Link>
@@ -39,6 +39,9 @@ export function SubFooter({ site, groupUrl, siblings }: { site: SubSite; groupUr
           <span className={styles.muted}>{group.address}</span>
           <a href={tel(group.phone)} className={styles.link}>
             {group.phone}
+          </a>
+          <a href={group.whatsapp} className={styles.link} target="_blank" rel="noopener noreferrer">
+            WhatsApp
           </a>
           <a href={`mailto:${group.email}`} className={styles.link}>
             {group.email}

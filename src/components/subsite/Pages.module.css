@@ -55,6 +55,35 @@
   color: rgba(251, 250, 247, 0.75);
 }
 
+.darkTextMore {
+  margin-top: 20px;
+}
+
+.includes {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0;
+  border-bottom: 1px solid rgba(30, 30, 33, 0.12);
+}
+
+@media (min-width: 768px) {
+  .includes {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 48px;
+  }
+}
+
+.include {
+  padding: 20px 0;
+  border-top: 1px solid rgba(30, 30, 33, 0.12);
+  font-size: 16px;
+  line-height: 1.5;
+  text-align: left;
+}
+
 .rule {
   display: block;
   width: 40px;

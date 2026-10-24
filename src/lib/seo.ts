@@ -7,7 +7,7 @@ export const defaultOgImage: OgImage = {
   url: "/media/og-cesgroup.jpg",
   width: 1200,
   height: 630,
-  alt: "CES Group: memarlıq, tikinti, texnika icarəsi və innovativ fermerçilik",
+  alt: "CES Group: memarlıq, tikinti, texnika icarəsi və innovativ ekosistem",
 };
 
 type PageSeo = {

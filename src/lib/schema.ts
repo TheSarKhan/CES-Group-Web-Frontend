@@ -35,7 +35,8 @@ const contactPoint = {
 
 /** Şirkət qovşağı: qrupun ana səhifəsində də, öz subsaytında da eyni @id ilə işlənir */
 export function companyNode(c: Company, { contact = false }: { contact?: boolean } = {}) {
-  const services = journey.find((j) => j.id === c.id)?.points ?? [];
+  // Hələ fəaliyyətə başlamayan istiqamətin xidmətləri schema-ya Service kimi yazılmır
+  const services = c.planned ? [] : (journey.find((j) => j.id === c.id)?.points ?? []);
   return {
     "@type": "Organization",
     "@id": orgId(c.url),
@@ -103,7 +104,7 @@ export function breadcrumbNode(items: Crumb[], base: string = site.url) {
 }
 
 type PageNode = {
-  type?: "WebPage" | "AboutPage" | "ContactPage" | "CollectionPage";
+  type?: "WebPage" | "AboutPage" | "ContactPage" | "CollectionPage" | "FAQPage";
   base?: string;
   path: string;
   name: string;
@@ -138,5 +139,8 @@ export const itemList = (items: { name: string; url: string }[]) => ({
   "@type": "ItemList",
   itemListElement: items.map((it, i) => ({ "@type": "ListItem", position: i + 1, name: it.name, url: it.url })),
 });
+
+export const faqQuestions = (items: { q: string; a: string }[]) =>
+  items.map((it) => ({ "@type": "Question", name: it.q, acceptedAnswer: { "@type": "Answer", text: it.a } }));
 
 export const projectsItemList = () => itemList(projects.map((p) => ({ name: p.title, url: abs(`/layiheler/${p.slug}`) })));

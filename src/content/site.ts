@@ -18,6 +18,8 @@ export type Company = {
   founded: string;
   field: string;
   description: string;
+  /** true: şirkət hələ tam fəaliyyətə başlamayıb, xidmətlər "olacaq" kimi yazılır və schema-ya əlavə olunmur */
+  planned?: boolean;
   url: string;
   image: string;
   imageAlt: string;
@@ -33,7 +35,7 @@ export const site = {
   name: "CES Group",
   url: siteUrl,
   description:
-    "CES Group: Azərbaycanda memarlıq, tikinti, ağır texnika icarəsi və innovativ fermerçilik. Layihənin dizaynından təhvilinə qədər bir komanda.",
+    "CES Group: Azərbaycanda memarlıq, tikinti, ağır texnika icarəsi və innovativ ekosistem. Layihənin dizaynından təhvilinə qədər bir komanda.",
   founded: 2020,
   /** Rəsmi qurulma tarixi (ISO), schema.org üçün */
   foundingDate: "2020-09-03",
@@ -50,6 +52,8 @@ export const site = {
   mapQuery: "Construction Equipment Services MMC, Lökbatan yolu, Bakı",
   email: "sales@ces.com.az",
   phone: "+994 51 290 42 80",
+  /** WhatsApp bütün saytda əsas telefonla eyni nömrədir */
+  whatsapp: "https://wa.me/994512904280",
   social: [
     { label: "Instagram", href: "https://www.instagram.com/construction_es/" },
     { label: "LinkedIn", href: "https://www.linkedin.com/company/construction-equipment-services-llc/home/" },
@@ -64,6 +68,9 @@ export const nav = [
   { label: "Layihələr", href: "/layiheler" },
   { label: "Əlaqə", href: "/elaqe" },
 ];
+
+/** Footer-də əsas menyuya əlavə olaraq göstərilən səhifələr */
+export const footerNav = [...nav, { label: "Suallar", href: "/suallar" }];
 
 /** Hero-dakı sıra: yuxarı, sağ, aşağı, sol */
 export const companies: Company[] = [
@@ -117,8 +124,9 @@ export const companies: Company[] = [
     shortName: "Agro",
     legalName: "Farmart MMC",
     founded: "2026",
-    field: "İnnovativ fermerçilik",
-    description: "Müasir texnologiya və dəqiq əkinçilik ilə məhsuldar, dayanıqlı kənd təsərrüfatı.",
+    field: "İnnovativ və təbii ekosistem",
+    description: "Kotteclər, əyləncə mərkəzləri və innovativ ferma: insanların təbiətlə iç-içə yararlana biləcəyi ekosistem. Əkinçilik üçün B2B texnika icarəsi də olacaq.",
+    planned: true,
     url: subdomainUrl("farmart"),
     image: "/media/farmart-hd.jpg",
     imageAlt: "Taxıl sahəsində kombayn",
@@ -133,12 +141,14 @@ export const journey: JourneyStep[] = [
   { id: "architect", icon: "design", points: ["İnteryer dizaynı", "Eksteryer dizaynı", "Landşaft", "İşçi layihə"] },
   { id: "construction", icon: "build", points: ["Yaşayış və kommersiya tikintisi", "İnfrastruktur və yol işləri", "Təmir-bitirmə", "Baş podrat"] },
   { id: "equipment", icon: "crane", points: ["Avtokran", "Forklift", "Ekskavator", "Hündürlük səbətləri"] },
-  { id: "farmart", icon: "wheat", points: ["Dəqiq əkinçilik", "Ağıllı suvarma", "Müasir aqrotexnika", "Məhsul təchizatı"] },
+  { id: "farmart", icon: "wheat", points: ["Kotteclər", "Əyləncə mərkəzləri", "İnnovativ ferma", "B2B texnika icarəsi"] },
 ];
 
 export const stats = [
   { value: "2020", label: "fəaliyyətə başladığımız il" },
+  { value: "100+", label: "icra olunan layihə" },
   { value: "120+", label: "icarəyə hazır texnika" },
+  { value: "100+", label: "sertifikatlı operator" },
   { value: "150+", label: "müştəri" },
   { value: "20+", label: "dizayn layihəsi" },
 ];
@@ -278,7 +288,7 @@ export const clients: { name: string; logo: string }[] = [
   { name: "Met-Ak", logo: "/media/clients/met-ak.png" },
   { name: "UPS", logo: "/media/clients/ups.png" },
   { name: "Qala Group", logo: "/media/clients/qala-group.jpg" },
-  { name: "Sun Beverage", logo: "/media/clients/sun-beverage.jpg" },
+  { name: "Azersun", logo: "/media/clients/sun-beverage.jpg" },
   { name: "Starmining", logo: "/media/clients/starmining.jpg" },
   { name: "Azlift Pro", logo: "/media/clients/azlift-pro.png" },
 ];
@@ -300,7 +310,7 @@ export const about = {
     { year: "2020", text: "CES ağır texnika icarəsi ilə fəaliyyətə başlayır." },
     { year: "2025", text: "CES Architect memarlıq və dizayn istiqaməti kimi yaradılır." },
     { year: "2025", text: "CES Construction tikinti və podrat işlərinə başlayır." },
-    { year: "2026", text: "Farmart innovativ fermerçilik istiqaməti kimi yaradılır." },
+    { year: "2026", text: "Farmart innovativ və təbii ekosistem istiqaməti kimi yaradılır." },
     { year: "2026", text: "Şirkətlər CES Group adı altında birləşir." },
   ],
 };

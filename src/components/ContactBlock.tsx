@@ -42,6 +42,14 @@ export function GroupContacts() {
         </span>
       </li>
       <li className={styles.row}>
+        <span className={styles.name}>WhatsApp</span>
+        <span className={styles.links}>
+          <a href={site.whatsapp} target="_blank" rel="noopener noreferrer">
+            {site.phone}
+          </a>
+        </span>
+      </li>
+      <li className={styles.row}>
         <span className={styles.name}>E-poçt</span>
         <span className={styles.links}>
           <a href={`mailto:${site.email}`}>{site.email}</a>

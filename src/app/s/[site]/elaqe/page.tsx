@@ -39,6 +39,11 @@ export default async function ContactPage(props: SubSiteParams) {
             <a href={tel(group.phone)}>{group.phone}</a>
           </p>
           <p>
+            <a href={group.whatsapp} target="_blank" rel="noopener noreferrer">
+              WhatsApp: {group.phone}
+            </a>
+          </p>
+          <p>
             <a href={`mailto:${group.email}`}>{group.email}</a>
           </p>
         </div>
