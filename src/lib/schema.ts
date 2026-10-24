@@ -73,7 +73,7 @@ export function groupGraph() {
       "@id": id,
       name: site.name,
       legalName: site.legalName,
-      alternateName: ["CES", "Construction Equipment Services"],
+      alternateName: ["CES", "CES Group Azərbaycan", "CES Azerbaijan", "Construction Equipment Services"],
       url: site.url,
       image: abs(defaultOgImage.url),
       description: site.description,

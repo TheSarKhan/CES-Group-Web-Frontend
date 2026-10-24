@@ -11,7 +11,7 @@ import { site } from "@/content/site";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
-  title: "CES Group — memarlıq, tikinti, texnika icarəsi və innovativ ekosistem",
+  title: "CES Group Azərbaycan — memarlıq, tikinti, texnika icarəsi və innovativ ekosistem",
   description: site.description,
   path: "/",
   absoluteTitle: true,
