@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { COMPANY_OPTIONS } from "@/lib/contact-schema";
 import { ArrowRight } from "./Icons";
 import { TURNSTILE_ENABLED, Turnstile, type TurnstileHandle } from "./Turnstile";
@@ -9,8 +9,16 @@ import styles from "./ContactForm.module.css";
 type Status = { kind: "idle" } | { kind: "sending" } | { kind: "ok" } | { kind: "error"; message: string };
 type FieldErrors = Partial<Record<"name" | "phone" | "email" | "company" | "message", string[]>>;
 
+const noopSubscribe = () => () => undefined;
+// ?sirket=<id> ilə gələndə şirkət əvvəlcədən seçilir (server və hidrasiya zamanı boşdur)
+const presetFromUrl = () => {
+  const v = new URLSearchParams(window.location.search).get("sirket") ?? "";
+  return COMPANY_OPTIONS.some((o) => o.value === v) ? v : "";
+};
+
 /** `company` verilərsə şirkət seçimi gizlənir və müraciət həmin şirkətə yönləndirilir (subdomain saytları) */
 export function ContactForm({ company }: { company?: (typeof COMPANY_OPTIONS)[number]["value"] }) {
+  const preset = useSyncExternalStore(noopSubscribe, presetFromUrl, () => "");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [token, setToken] = useState("");
@@ -81,7 +89,7 @@ export function ContactForm({ company }: { company?: (typeof COMPANY_OPTIONS)[nu
         ) : (
           <div className={styles.field}>
             <label htmlFor="company">Hansı şirkətlə bağlıdır? *</label>
-            <select id="company" name="company" required defaultValue="">
+            <select key={preset} id="company" name="company" required defaultValue={preset}>
               <option value="" disabled>
                 Seçin
               </option>

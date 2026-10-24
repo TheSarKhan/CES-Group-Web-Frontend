@@ -64,7 +64,7 @@ export const site = {
 export const nav = [
   { label: "Ana səhifə", href: "/" },
   { label: "Haqqımızda", href: "/haqqimizda" },
-  { label: "Şirkətlər", href: "/#sirketler" },
+  { label: "Şirkətlər", href: "/sirketler" },
   { label: "Layihələr", href: "/layiheler" },
   { label: "Əlaqə", href: "/elaqe" },
 ];

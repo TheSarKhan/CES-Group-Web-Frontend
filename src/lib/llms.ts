@@ -29,7 +29,7 @@ ${site.name} dörd şirkəti birləşdirir: memarlıq (CES Architect), tikinti v
 
 ## Şirkətlər
 
-${companies.map((c) => link(c.name, c.url, `${c.field}. ${c.description}`)).join("\n")}
+${companies.map((c) => link(c.name, `${site.url}/sirketler/${c.id}`, `${c.field}. ${c.description} Şirkətin saytı: ${c.url}`)).join("\n")}
 
 ## Əsas faktlar
 
@@ -45,6 +45,7 @@ ${faqItems.map((f) => `- ${f.q} ${f.a}`).join("\n")}
 
 ## Səhifələr
 
+${link("Şirkətlər", `${site.url}/sirketler`, "Dörd şirkətin təsviri, xidmətləri, rəqəmləri və layihələri")}
 ${link("Tez-tez verilən suallar", `${site.url}/suallar`, "Texnika icarəsi, memarlıq, tikinti və Farmart üzrə suallar və cavablar")}
 ${link("Haqqımızda", `${site.url}/haqqimizda`, "Qrupun tarixi, missiyası, dəyərləri və şirkətlərin strukturu")}
 ${link("Layihələr", `${site.url}/layiheler`, "İştirak etdiyimiz layihələrin siyahısı")}

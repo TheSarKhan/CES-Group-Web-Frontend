@@ -15,9 +15,9 @@ export function Footer() {
           <nav aria-label="Şirkətlər" className={styles.col}>
             <span className={styles.heading}>Şirkətlər</span>
             {companies.map((c) => (
-              <a key={c.id} href={c.url}>
+              <Link key={c.id} href={`/sirketler/${c.id}`}>
                 {c.name}
-              </a>
+              </Link>
             ))}
           </nav>
           <nav aria-label="Səhifələr" className={styles.col}>
