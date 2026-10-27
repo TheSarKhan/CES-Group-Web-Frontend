@@ -14,7 +14,7 @@ import {
 } from "@/lib/admin/server";
 
 /** Brauzerə açıq olan backend yolları. Giriş, yenilənmə və çıxış ayrıca route-lardadır. */
-const LEGACY_MODULES = ["faqs", "clients", "offerings", "projects", "testimonials", "fleet", "uploads", "trash"];
+const LEGACY_MODULES = ["faqs", "clients", "offerings", "projects", "testimonials", "fleet", "uploads", "trash", "telegram"];
 
 function allowed(path: string) {
   if (path === "iam" || path.startsWith("iam/") || path === "panel" || path.startsWith("panel/")) return true;
@@ -88,4 +88,5 @@ async function handle(req: NextRequest, ctx: { params: Promise<{ path: string[] 
 export const GET = handle;
 export const POST = handle;
 export const PUT = handle;
+export const PATCH = handle;
 export const DELETE = handle;

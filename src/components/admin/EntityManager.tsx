@@ -18,7 +18,7 @@ export type Deps = Record<string, Row[]>;
 export type Field =
   | { kind: "text" | "textarea" | "url" | "number"; name: string; label: string; max?: number; required?: boolean; hint?: string; rows?: number; placeholder?: string }
   | { kind: "bool"; name: string; label: string }
-  | { kind: "image"; name: string; label: string; folder: string; required?: boolean }
+  | { kind: "image"; name: string; label: string; folder: string; required?: boolean; crop?: number | "free" }
   | { kind: "gallery"; name: string; label: string; folder: string }
   | { kind: "select"; name: string; label: string; required?: boolean; options: (deps: Deps) => Option[] };
 
@@ -40,6 +40,10 @@ export type EntityConfig = {
   specs?: boolean;
   /** Seçim siyahıları üçün əvvəlcədən yüklənən yollar: ad → backend yolu */
   deps?: Record<string, string>;
+  /** Sürüklə-burax sıralama (PATCH {path}/reorder, yalnız slug açarlı kataloq və layihələr) */
+  reorder?: boolean;
+  /** Siyahıda "Saytda/Gizli" düyməsi (PATCH {path}/{slug}/publish) */
+  publishToggle?: boolean;
   /** Serverdən gələn sətirdən forma dəyərlərini çıxarır (default: sətrin eyni adlı sahəsi) */
   fromRow?: (row: Row) => Record<string, unknown>;
   confirmName: (row: Row) => string;
@@ -63,17 +67,46 @@ export function EntityManager({ cfg, site }: { cfg: EntityConfig; site: string }
   const deps = useDeps(cfg.deps);
   const [editing, setEditing] = useState<Row | "new" | null>(null);
   const [filter, setFilter] = useState("");
+  const [dragKey, setDragKey] = useState<string | null>(null);
 
   const canCreate = can(cfg.module, "CREATE", site);
   const canEdit = can(cfg.module, "UPDATE", site);
   const canDelete = can(cfg.module, "DELETE", site);
+  const canPublish = can(cfg.module, "PUBLISH", site);
 
+  // Siyahı həmişə "Sıra" üzrə göstərilir (saytda da belə sıralanır)
+  const sorted = useMemo(() => [...(list.data ?? [])].sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0)), [list.data]);
   const rows = useMemo(() => {
     const q = filter.trim().toLowerCase();
-    const all = list.data ?? [];
-    if (!q) return all;
-    return all.filter((r) => (cfg.searchText ? cfg.searchText(r) : JSON.stringify(r)).toLowerCase().includes(q));
-  }, [list.data, filter, cfg]);
+    if (!q) return sorted;
+    return sorted.filter((r) => (cfg.searchText ? cfg.searchText(r) : JSON.stringify(r)).toLowerCase().includes(q));
+  }, [sorted, filter, cfg]);
+  const reorderable = !!cfg.reorder && canEdit && !filter.trim();
+
+  async function drop(targetKey: string) {
+    if (!dragKey || dragKey === targetKey) return setDragKey(null);
+    const order = sorted.map((r) => String(r[cfg.key]));
+    const from = order.indexOf(dragKey);
+    const to = order.indexOf(targetKey);
+    if (from < 0 || to < 0) return setDragKey(null);
+    order.splice(to, 0, order.splice(from, 1)[0]);
+    setDragKey(null);
+    try {
+      await api(`${cfg.path}/reorder`, { method: "PATCH", body: { slugs: order } });
+    } catch (e) {
+      alert(e instanceof ApiError ? e.message : "Sıra saxlanmadı.");
+    }
+    list.reload();
+  }
+
+  async function togglePublish(row: Row) {
+    try {
+      await api(`${cfg.path}/${row[cfg.key]}/publish`, { method: "PATCH", body: { isPublished: row.isPublished === false } });
+      list.reload();
+    } catch (e) {
+      alert(e instanceof ApiError ? e.message : "Status dəyişmədi.");
+    }
+  }
 
   async function remove(row: Row) {
     if (!confirm(`"${cfg.confirmName(row)}" silinsin? Zibil qutusundan bərpa etmək olar.`)) return;
@@ -114,25 +147,54 @@ export function EntityManager({ cfg, site }: { cfg: EntityConfig; site: string }
         <table className={styles.table}>
           <thead>
             <tr>
+              {reorderable && <th aria-label="Sıralama" />}
               {cfg.columns.map((c) => (
                 <th key={c.head}>{c.head}</th>
               ))}
+              <th>Status</th>
               <th />
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={cfg.columns.length + 1} className={styles.muted}>
+                <td colSpan={cfg.columns.length + 3} className={styles.muted}>
                   Heç nə tapılmadı.
                 </td>
               </tr>
             )}
             {rows.map((r) => (
-              <tr key={String(r[cfg.key])}>
+              <tr
+                key={String(r[cfg.key])}
+                draggable={reorderable}
+                onDragStart={() => setDragKey(String(r[cfg.key]))}
+                onDragOver={(e) => reorderable && e.preventDefault()}
+                onDrop={() => reorderable && drop(String(r[cfg.key]))}
+                onDragEnd={() => setDragKey(null)}
+                style={dragKey === String(r[cfg.key]) ? { opacity: 0.4 } : undefined}
+              >
+                {reorderable && (
+                  <td style={{ cursor: "grab", color: "var(--muted-2)", width: 28 }} title="Sıranı dəyişmək üçün sürüşdürün">
+                    ⠿
+                  </td>
+                )}
                 {cfg.columns.map((c) => (
                   <td key={c.head}>{c.cell(r)}</td>
                 ))}
+                <td>
+                  {cfg.publishToggle && canPublish ? (
+                    <button
+                      className={`${styles.badge} ${r.isPublished === false ? styles.badgeBad : styles.badgeOk}`}
+                      style={{ border: 0, cursor: "pointer" }}
+                      title="Dəyişmək üçün basın"
+                      onClick={() => togglePublish(r)}
+                    >
+                      {r.isPublished === false ? "Gizli" : "Saytda"}
+                    </button>
+                  ) : (
+                    <span className={`${styles.badge} ${r.isPublished === false ? styles.badgeBad : styles.badgeOk}`}>{r.isPublished === false ? "Gizli" : "Saytda"}</span>
+                  )}
+                </td>
                 <td style={{ whiteSpace: "nowrap" }}>
                   <div className={styles.row} style={{ flexWrap: "nowrap" }}>
                     {canEdit && (
@@ -279,7 +341,7 @@ function EntityForm({ cfg, deps, existing, source, nextSort, onClose, onSaved }:
               </label>
             );
           case "image":
-            return <ImageField key={f.name} label={f.label} folder={f.folder} value={str(values[f.name])} onChange={(v) => set(f.name, v)} />;
+            return <ImageField key={f.name} label={f.label} folder={f.folder} crop={f.crop} value={str(values[f.name])} onChange={(v) => set(f.name, v)} />;
           case "gallery":
             return <GalleryField key={f.name} label={f.label} folder={f.folder} value={(values[f.name] as string[]) ?? []} onChange={(v) => set(f.name, v)} />;
           case "select":

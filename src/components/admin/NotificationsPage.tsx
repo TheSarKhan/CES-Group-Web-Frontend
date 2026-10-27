@@ -31,6 +31,7 @@ export function NotificationsPage({ code }: { code: string }) {
       ) : (
         <div style={{ display: "grid", gap: 24, maxWidth: 640 }}>
           <EmailBlock key={settings.data.emails.join(",")} code={code} data={settings.data} canEdit={can("NOTIFICATIONS", "UPDATE", code)} onSaved={settings.reload} />
+          {me.superAdmin && <BotBlock />}
           <TelegramBlock code={code} data={settings.data} canEdit={can("NOTIFICATIONS", "UPDATE", code)} onChanged={settings.reload} />
           {can("NOTIFICATIONS", "UPDATE", code) && <TestBlock code={code} />}
         </div>
@@ -179,6 +180,76 @@ function TestBlock({ code }: { code: string }) {
           Test bildirişi göndər
         </button>
       </div>
+    </section>
+  );
+}
+
+type BotStatus = { enabled: boolean; tokenMasked: string | null; source: string };
+
+/** Telegram botunun tokeni bütün saytlar üçün ortaqdır, ona görə yalnız Super Admin-ə göstərilir */
+function BotBlock() {
+  const bot = useApi<BotStatus>("admin/telegram");
+  const [token, setToken] = useState("");
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function run(fn: () => Promise<unknown>, ok: string) {
+    setBusy(true);
+    setMsg(null);
+    try {
+      await fn();
+      setMsg({ ok: true, text: ok });
+      setToken("");
+      bot.reload();
+    } catch (err) {
+      setMsg({ ok: false, text: err instanceof ApiError ? err.message : "Xəta baş verdi." });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className={`${styles.panel} ${styles.form}`} style={{ padding: 24 }}>
+      <h2 style={{ fontSize: 20, fontWeight: 600 }}>Telegram botu (bütün saytlar üçün)</h2>
+      {bot.error ? (
+        <p className={styles.error}>{bot.error}</p>
+      ) : !bot.data ? (
+        <p className={styles.loading}>Yüklənir…</p>
+      ) : (
+        <>
+          <p>
+            <span className={`${styles.badge} ${bot.data.enabled ? styles.badgeOk : styles.badgeBad}`}>{bot.data.enabled ? "Qoşulub" : "Qoşulmayıb"}</span>{" "}
+            {bot.data.tokenMasked && <span className={styles.mono}>{bot.data.tokenMasked}</span>}
+            {bot.data.enabled && <span className={styles.hint}> (mənbə: {bot.data.source === "panel" ? "panel" : "server ayarı"})</span>}
+          </p>
+          <div className={styles.field}>
+            <label htmlFor="bot-token">Yeni bot tokeni</label>
+            <input id="bot-token" type="password" className={styles.input} value={token} onChange={(e) => setToken(e.target.value)} autoComplete="off" placeholder="123456:ABC..." />
+            <span className={styles.hint}>Tokeni Telegram-da @BotFather verir. Saxlamazdan əvvəl Telegram ilə yoxlanılır.</span>
+          </div>
+          {msg && (
+            <p className={msg.ok ? styles.ok : styles.error} role="status">
+              {msg.text}
+            </p>
+          )}
+          <div className={styles.row}>
+            <button className={`${styles.btn} ${styles.btnGold}`} disabled={busy || !token.trim()} onClick={() => run(() => api("admin/telegram", { method: "PUT", body: { botToken: token.trim() } }), "Bot qoşuldu.")}>
+              Saxla
+            </button>
+            {bot.data.enabled && (
+              <button
+                className={`${styles.btn} ${styles.btnDanger}`}
+                disabled={busy}
+                onClick={() => {
+                  if (confirm("Telegram botu söndürülsün? Heç bir sayt üçün Telegram bildirişi getməyəcək.")) void run(() => api("admin/telegram", { method: "DELETE" }), "Bot söndürüldü.");
+                }}
+              >
+                Söndür
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </section>
   );
 }

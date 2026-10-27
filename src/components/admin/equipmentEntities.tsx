@@ -3,9 +3,6 @@ import { azText } from "./EntityManager";
 import styles from "./admin.module.css";
 import { previewUrl } from "@/lib/admin/upload";
 
-const status = (r: Row) => (
-  <span className={`${styles.badge} ${r.isPublished === false ? styles.badgeBad : styles.badgeOk}`}>{r.isPublished === false ? "Gizli" : "Saytda"}</span>
-);
 const thumb = (url: unknown) =>
   typeof url === "string" && url ? (
     // eslint-disable-next-line @next/next/no-img-element
@@ -26,7 +23,7 @@ export const faqs: EntityConfig = {
   path: "admin/faqs",
   key: "id",
   newLabel: "+ Yeni sual",
-  columns: [{ head: "Sual (AZ)", cell: (r) => azText(r, "question") }, sort, { head: "Status", cell: status }],
+  columns: [{ head: "Sual (AZ)", cell: (r) => azText(r, "question") }, sort],
   fields: [sortField, published],
   tr: [
     { name: "question", label: "Sual", required: true, max: 512 },
@@ -43,7 +40,7 @@ export const offerings: EntityConfig = {
   path: "admin/offerings",
   key: "slug",
   newLabel: "+ Yeni xidmət",
-  columns: [{ head: "", cell: (r) => thumb(r.icon) }, { head: "Başlıq (AZ)", cell: (r) => azText(r, "title") }, sort, { head: "Status", cell: status }],
+  columns: [{ head: "", cell: (r) => thumb(r.icon) }, { head: "Başlıq (AZ)", cell: (r) => azText(r, "title") }, sort],
   fields: [{ kind: "image", name: "icon", label: "Şəkil / ikon", folder: "offerings" }, sortField, published],
   tr: [
     { name: "eyebrow", label: "Üst yazı", max: 64 },
@@ -61,7 +58,7 @@ export const clients: EntityConfig = {
   path: "admin/clients",
   key: "id",
   newLabel: "+ Yeni müştəri",
-  columns: [{ head: "Loqo", cell: (r) => thumb(r.logo) }, { head: "Ad", cell: (r) => String(r.name ?? "") }, sort, { head: "Status", cell: status }],
+  columns: [{ head: "Loqo", cell: (r) => thumb(r.logo) }, { head: "Ad", cell: (r) => String(r.name ?? "") }, sort],
   fields: [
     { kind: "text", name: "name", label: "Ad", required: true, max: 128 },
     { kind: "image", name: "logo", label: "Loqo", folder: "clients", required: true },
@@ -80,12 +77,12 @@ export const testimonials: EntityConfig = {
   path: "admin/testimonials",
   key: "id",
   newLabel: "+ Yeni rəy",
-  columns: [{ head: "Ad", cell: (r) => String(r.name ?? "") }, { head: "Şirkət", cell: (r) => String(r.company ?? "") }, sort, { head: "Status", cell: status }],
+  columns: [{ head: "Ad", cell: (r) => String(r.name ?? "") }, { head: "Şirkət", cell: (r) => String(r.company ?? "") }, sort],
   fields: [
     { kind: "text", name: "name", label: "Ad", required: true, max: 128 },
     { kind: "text", name: "initials", label: "Baş hərflər", max: 8 },
     { kind: "text", name: "company", label: "Şirkət", max: 128 },
-    { kind: "image", name: "avatar", label: "Şəkil", folder: "testimonials" },
+    { kind: "image", name: "avatar", label: "Şəkil", folder: "testimonials", crop: 1 },
     sortField,
     published,
   ],
@@ -103,11 +100,12 @@ export const projects: EntityConfig = {
   module: "PROJECTS",
   path: "admin/projects",
   key: "slug",
+  reorder: true,
   newLabel: "+ Yeni layihə",
-  columns: [{ head: "", cell: (r) => thumb(r.image) }, { head: "Ad (AZ)", cell: (r) => azText(r, "title") }, { head: "İl", cell: (r) => String(r.year ?? "") }, sort, { head: "Status", cell: status }],
+  columns: [{ head: "", cell: (r) => thumb(r.image) }, { head: "Ad (AZ)", cell: (r) => azText(r, "title") }, { head: "İl", cell: (r) => String(r.year ?? "") }, sort],
   fields: [
     { kind: "text", name: "year", label: "İl", max: 16, placeholder: "2025" },
-    { kind: "image", name: "image", label: "Əsas şəkil", folder: "projects" },
+    { kind: "image", name: "image", label: "Əsas şəkil", folder: "projects", crop: 4 / 3 },
     { kind: "gallery", name: "gallery", label: "Qalereya", folder: "projects" },
     sortField,
     published,
@@ -128,8 +126,10 @@ export const categories: EntityConfig = {
   module: "FLEET",
   path: "admin/fleet/categories",
   key: "slug",
+  reorder: true,
+  publishToggle: true,
   newLabel: "+ Yeni kateqoriya",
-  columns: [{ head: "Ad (AZ)", cell: (r) => nameAz(r) }, { head: "Alt kateqoriya", cell: (r) => String((r.subcategories as unknown[] | undefined)?.length ?? 0) }, sort, { head: "Status", cell: status }],
+  columns: [{ head: "Ad (AZ)", cell: (r) => nameAz(r) }, { head: "Alt kateqoriya", cell: (r) => String((r.subcategories as unknown[] | undefined)?.length ?? 0) }, sort],
   fields: [{ kind: "text", name: "icon", label: "İkon adı (könüllü)", max: 64 }, sortField, published],
   tr: [{ name: "name", label: "Ad", required: true, max: 128 }],
   confirmName: nameAz,
@@ -142,14 +142,15 @@ export const subcategories: EntityConfig = {
   module: "FLEET",
   path: "admin/fleet/subcategories",
   key: "slug",
+  reorder: true,
+  publishToggle: true,
   newLabel: "+ Yeni alt kateqoriya",
   deps: { cats: "admin/fleet/categories" },
   columns: [
     { head: "Ad (AZ)", cell: (r) => nameAz(r) },
     { head: "Kateqoriya", cell: (r) => azText(r.category as Row, "name") },
     { head: "Texnika", cell: (r) => String((r.items as unknown[] | undefined)?.length ?? 0) },
-    sort,
-    { head: "Status", cell: status },
+    sort
   ],
   fields: [
     { kind: "select", name: "categorySlug", label: "Kateqoriya", required: true, options: (d) => (d.cats ?? []).map((c) => ({ value: String(c.slug), label: nameAz(c) })) },
@@ -168,6 +169,8 @@ export const items: EntityConfig = {
   module: "FLEET",
   path: "admin/fleet/items",
   key: "slug",
+  reorder: true,
+  publishToggle: true,
   newLabel: "+ Yeni texnika",
   detail: true,
   specs: true,
@@ -177,13 +180,12 @@ export const items: EntityConfig = {
     { head: "Ad (AZ)", cell: (r) => nameAz(r) },
     { head: "Model", cell: (r) => String(r.modelNumber ?? "") },
     { head: "Növ", cell: (r) => String(r.subcategoryName ?? "") },
-    sort,
-    { head: "Status", cell: status },
+    sort
   ],
   fields: [
     { kind: "select", name: "subcategorySlug", label: "Alt kateqoriya", required: true, options: (d) => (d.subs ?? []).map((s) => ({ value: String(s.slug), label: `${nameAz(s)} (${azText(s.category as Row, "name")})` })) },
     { kind: "text", name: "modelNumber", label: "Model", max: 128 },
-    { kind: "image", name: "image", label: "Şəkil", folder: "fleet" },
+    { kind: "image", name: "image", label: "Şəkil", folder: "fleet", crop: 4 / 3 },
     { kind: "text", name: "price", label: "Qiymət (könüllü)", max: 64, hint: "Boş qalsa sayt “sorğu ilə” göstərir." },
     { kind: "text", name: "priceUnit", label: "Qiymət vahidi", max: 32, placeholder: "gün" },
     sortField,
