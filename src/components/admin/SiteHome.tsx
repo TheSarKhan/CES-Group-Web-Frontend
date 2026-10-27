@@ -15,6 +15,7 @@ const READY: Record<string, (code: string) => string | undefined> = {
   NOTIFICATIONS: (code) => `/sites/${code}/notifications`,
   STATISTICS: (code) => `/sites/${code}/stats`,
   REDIRECTS: (code) => `/sites/${code}/redirects`,
+  MEDIA: (code) => `/sites/${code}/media`,
   // Məzmun modulları hələlik yalnız Texnika saytı üçün qoşulub
   // Texnika öz kataloq ekranlarını işlədir, digər saytların məzmunu ümumi mühərrikdən gəlir
   ...Object.fromEntries(Object.entries(CONTENT).map(([module, slug]) => [module, (code: string) => (code === "equipment" ? `/sites/${code}/m/${slug}` : module === "TRASH" ? undefined : `/sites/${code}/content`)])),

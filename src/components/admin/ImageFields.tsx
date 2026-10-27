@@ -3,12 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import Cropper from "cropperjs";
 import "cropperjs/dist/cropper.css";
-import { uploadImage, previewUrl } from "@/lib/admin/upload";
+import { uploadImage, uploadMedia, previewUrl } from "@/lib/admin/upload";
 import styles from "./admin.module.css";
+import { MediaPicker } from "./MediaLibrary";
 import { Modal } from "./Modal";
 
+/** Texnika kataloqu köhnə qovluq əsaslı yükləməni saxlayır, digər sahələr media kitabxanasına yazır */
+const send = (file: File, folder: string, site?: string) => (site && !(site === "equipment" && folder !== "misc") ? uploadMedia(file, site).then((a) => a.url) : uploadImage(file, folder));
+
 /** Tək şəkil: yüklə, ünvan yaz və ya sil */
-export function ImageField({ label, value, folder, crop, onChange }: { label: string; value: string; folder: string; crop?: number | "free"; onChange: (v: string) => void }) {
+export function ImageField({ label, value, folder, crop, site, onChange }: { label: string; value: string; folder: string; crop?: number | "free"; site?: string; onChange: (v: string) => void }) {
+  const [library, setLibrary] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -27,7 +32,7 @@ export function ImageField({ label, value, folder, crop, onChange }: { label: st
     setBusy(true);
     setError("");
     try {
-      onChange(await uploadImage(file, folder));
+      onChange(await send(file, folder, site));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Şəkil yüklənmədi.");
     } finally {
@@ -71,6 +76,11 @@ export function ImageField({ label, value, folder, crop, onChange }: { label: st
         <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} disabled={busy} onClick={() => input.current?.click()}>
           {busy ? "Yüklənir…" : value ? "Dəyiş" : "Yüklə"}
         </button>
+        {site && (
+          <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} onClick={() => setLibrary(true)}>
+            Kitabxanadan seç
+          </button>
+        )}
         {value && (
           <button type="button" className={`${styles.btn} ${styles.btnDanger} ${styles.btnSm}`} onClick={() => onChange("")}>
             Sil
@@ -79,12 +89,14 @@ export function ImageField({ label, value, folder, crop, onChange }: { label: st
       </div>
       <input className={styles.input} value={value} onChange={(e) => onChange(e.target.value)} placeholder="və ya şəkil ünvanını yazın" aria-label={`${label}, ünvan`} />
       {error && <span className={styles.error}>{error}</span>}
+      {library && site && <MediaPicker site={site} onClose={() => setLibrary(false)} onPick={(u) => { onChange(u); setLibrary(false); }} />}
     </div>
   );
 }
 
 /** Qalereya: bir neçə şəkil */
-export function GalleryField({ label, value, folder, onChange }: { label: string; value: string[]; folder: string; onChange: (v: string[]) => void }) {
+export function GalleryField({ label, value, folder, site, onChange }: { label: string; value: string[]; folder: string; site?: string; onChange: (v: string[]) => void }) {
+  const [library, setLibrary] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -95,7 +107,7 @@ export function GalleryField({ label, value, folder, onChange }: { label: string
     setError("");
     const next = [...value];
     try {
-      for (const f of Array.from(files)) next.push(await uploadImage(f, folder));
+      for (const f of Array.from(files)) next.push(await send(f, folder, site));
       onChange(next);
     } catch (e) {
       onChange(next);
@@ -140,8 +152,14 @@ export function GalleryField({ label, value, folder, onChange }: { label: string
       <div>
         <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} disabled={busy} onClick={() => input.current?.click()}>
           {busy ? "Yüklənir…" : "Şəkil əlavə et"}
-        </button>
+        </button>{" "}
+        {site && (
+          <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} onClick={() => setLibrary(true)}>
+            Kitabxanadan əlavə et
+          </button>
+        )}
       </div>
+      {library && site && <MediaPicker site={site} onClose={() => setLibrary(false)} onPick={(u) => { onChange([...value, u]); setLibrary(false); }} />}
       {error && <span className={styles.error}>{error}</span>}
     </div>
   );

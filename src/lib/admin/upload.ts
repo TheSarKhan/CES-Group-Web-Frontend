@@ -41,3 +41,31 @@ export async function uploadImage(file: File, folder: string): Promise<string> {
 
 /** DB-də nisbi yol ola bilər; önizləmə üçün Texnika saytının ünvanı əlavə olunur */
 export const previewUrl = (v: string) => (v.startsWith("/") ? `https://equipment.cesgroup.az${v}` : v);
+
+export type MediaAsset = {
+  id: number;
+  url: string;
+  name: string | null;
+  mime: string;
+  size: number;
+  width: number | null;
+  height: number | null;
+  alt: Record<string, string>;
+  uploadedBy: string | null;
+  createdAt: string;
+};
+
+/** Media kitabxanasına yükləyir (sayt üzrə qeydə alınır, alt mətn və silmə qorunması işləyir) */
+export async function uploadMedia(file: File, site: string): Promise<MediaAsset> {
+  const prepared = await shrink(file);
+  const form = new FormData();
+  form.append("file", prepared);
+  const res = await fetch(`/api/admin/panel/sites/${site}/media`, { method: "POST", body: form });
+  if (res.status === 401) {
+    window.location.replace("/login");
+    throw new Error("Sessiya bitib.");
+  }
+  const json = (await res.json().catch(() => null)) as (MediaAsset & { message?: string }) | null;
+  if (!res.ok || !json?.url) throw new Error(json?.message ?? "Şəkil yüklənmədi.");
+  return json;
+}

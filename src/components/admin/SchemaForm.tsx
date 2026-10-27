@@ -25,18 +25,18 @@ export function LangTabs({ lang, onChange }: { lang: Lang; onChange: (l: Lang) =
 }
 
 /** Sahələrin təsvirinə görə formanı özü qurur: backend-də tip bir dəfə təyin olunur, forma və yoxlama ondan yaranır */
-export function SchemaForm({ fields, value, onChange, lang, idPrefix = "f" }: { fields: FieldDef[]; value: Data; onChange: (v: Data) => void; lang: Lang; idPrefix?: string }) {
+export function SchemaForm({ fields, value, onChange, lang, site, idPrefix = "f" }: { fields: FieldDef[]; value: Data; onChange: (v: Data) => void; lang: Lang; site?: string; idPrefix?: string }) {
   const set = (name: string, v: unknown) => onChange({ ...value, [name]: v });
   return (
     <>
       {fields.map((f) => (
-        <FieldInput key={f.name} def={f} id={`${idPrefix}-${f.name}`} value={value[f.name]} onChange={(v) => set(f.name, v)} lang={lang} />
+        <FieldInput key={f.name} def={f} id={`${idPrefix}-${f.name}`} value={value[f.name]} onChange={(v) => set(f.name, v)} lang={lang} site={site} />
       ))}
     </>
   );
 }
 
-function FieldInput({ def, id, value, onChange, lang }: { def: FieldDef; id: string; value: unknown; onChange: (v: unknown) => void; lang: Lang }) {
+function FieldInput({ def, id, value, onChange, lang, site }: { def: FieldDef; id: string; value: unknown; onChange: (v: unknown) => void; lang: Lang; site?: string }) {
   const star = def.required ? " *" : "";
 
   if (def.kind === "BOOL") {
@@ -47,9 +47,9 @@ function FieldInput({ def, id, value, onChange, lang }: { def: FieldDef; id: str
       </label>
     );
   }
-  if (def.kind === "IMAGE") return <ImageField label={def.label + star} folder="misc" value={asStr(value)} onChange={onChange} crop="free" />;
-  if (def.kind === "GALLERY") return <GalleryField label={def.label} folder="misc" value={Array.isArray(value) ? (value as string[]) : []} onChange={onChange} />;
-  if (def.kind === "LIST") return <ListInput def={def} id={id} value={Array.isArray(value) ? (value as Data[]) : []} onChange={onChange} lang={lang} />;
+  if (def.kind === "IMAGE") return <ImageField label={def.label + star} folder="misc" site={site} value={asStr(value)} onChange={onChange} crop="free" />;
+  if (def.kind === "GALLERY") return <GalleryField label={def.label} folder="misc" site={site} value={Array.isArray(value) ? (value as string[]) : []} onChange={onChange} />;
+  if (def.kind === "LIST") return <ListInput def={def} id={id} value={Array.isArray(value) ? (value as Data[]) : []} onChange={onChange} lang={lang} site={site} />;
 
   if (def.kind === "SELECT") {
     return (
@@ -84,7 +84,7 @@ function FieldInput({ def, id, value, onChange, lang }: { def: FieldDef; id: str
   );
 }
 
-function ListInput({ def, id, value, onChange, lang }: { def: FieldDef; id: string; value: Data[]; onChange: (v: unknown) => void; lang: Lang }) {
+function ListInput({ def, id, value, onChange, lang, site }: { def: FieldDef; id: string; value: Data[]; onChange: (v: unknown) => void; lang: Lang; site?: string }) {
   const sub = def.itemFields ?? [];
   const move = (i: number, d: -1 | 1) => {
     const j = i + d;
@@ -98,7 +98,7 @@ function ListInput({ def, id, value, onChange, lang }: { def: FieldDef; id: stri
       <span className={styles.label}>{def.label}</span>
       {value.map((item, i) => (
         <div key={i} style={{ border: "1px solid var(--line)", borderRadius: 6, padding: 14, display: "grid", gap: 12 }}>
-          <SchemaForm fields={sub} value={item} lang={lang} idPrefix={`${id}-${i}`} onChange={(v) => onChange(value.map((x, k) => (k === i ? v : x)))} />
+          <SchemaForm fields={sub} value={item} lang={lang} site={site} idPrefix={`${id}-${i}`} onChange={(v) => onChange(value.map((x, k) => (k === i ? v : x)))} />
           <div className={styles.row}>
             <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} onClick={() => move(i, -1)} aria-label="Yuxarı">
               ↑

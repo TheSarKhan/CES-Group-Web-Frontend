@@ -222,6 +222,7 @@ export function EntityManager({ cfg, site }: { cfg: EntityConfig; site: string }
       </div>
       {editing && (
         <EntityDialog
+          site={site}
           cfg={cfg}
           deps={deps.data}
           row={editing === "new" ? null : editing}
@@ -250,7 +251,7 @@ function useDeps(paths?: Record<string, string>) {
   return { ready, data };
 }
 
-function EntityDialog({ cfg, deps, row, nextSort, onClose, onSaved }: { cfg: EntityConfig; deps: Deps; row: Row | null; nextSort: number; onClose: () => void; onSaved: () => void }) {
+function EntityDialog({ site, cfg, deps, row, nextSort, onClose, onSaved }: { site: string; cfg: EntityConfig; deps: Deps; row: Row | null; nextSort: number; onClose: () => void; onSaved: () => void }) {
   const detail = useApi<Row>(row && cfg.detail ? `${cfg.path}/${row[cfg.key]}` : null);
   const loading = !!row && !!cfg.detail && !detail.data && !detail.error;
   return (
@@ -260,13 +261,13 @@ function EntityDialog({ cfg, deps, row, nextSort, onClose, onSaved }: { cfg: Ent
       ) : loading ? (
         <p className={styles.loading}>Yüklənir…</p>
       ) : (
-        <EntityForm cfg={cfg} deps={deps} existing={row} source={detail.data ?? row} nextSort={nextSort} onClose={onClose} onSaved={onSaved} />
+        <EntityForm site={site} cfg={cfg} deps={deps} existing={row} source={detail.data ?? row} nextSort={nextSort} onClose={onClose} onSaved={onSaved} />
       )}
     </Modal>
   );
 }
 
-function EntityForm({ cfg, deps, existing, source, nextSort, onClose, onSaved }: { cfg: EntityConfig; deps: Deps; existing: Row | null; source: Row | null; nextSort: number; onClose: () => void; onSaved: () => void }) {
+function EntityForm({ site, cfg, deps, existing, source, nextSort, onClose, onSaved }: { site: string; cfg: EntityConfig; deps: Deps; existing: Row | null; source: Row | null; nextSort: number; onClose: () => void; onSaved: () => void }) {
   const fromRow = source && cfg.fromRow ? cfg.fromRow(source) : {};
   const [values, setValues] = useState<Record<string, unknown>>(() => {
     const v: Record<string, unknown> = {};
@@ -347,9 +348,9 @@ function EntityForm({ cfg, deps, existing, source, nextSort, onClose, onSaved }:
               </label>
             );
           case "image":
-            return <ImageField key={f.name} label={f.label} folder={f.folder} crop={f.crop} value={str(values[f.name])} onChange={(v) => set(f.name, v)} />;
+            return <ImageField key={f.name} label={f.label} folder={f.folder} site={site} crop={f.crop} value={str(values[f.name])} onChange={(v) => set(f.name, v)} />;
           case "gallery":
-            return <GalleryField key={f.name} label={f.label} folder={f.folder} value={(values[f.name] as string[]) ?? []} onChange={(v) => set(f.name, v)} />;
+            return <GalleryField key={f.name} label={f.label} folder={f.folder} site={site} value={(values[f.name] as string[]) ?? []} onChange={(v) => set(f.name, v)} />;
           case "select":
             return (
               <div key={f.name} className={styles.field}>

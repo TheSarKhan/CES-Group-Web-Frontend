@@ -296,7 +296,7 @@ function EditorBody({ code, def, entry, onReload, siteName, can }: { code: strin
         }}
       >
         <LangTabs lang={lang} onChange={setLang} />
-        <SchemaForm fields={def.fields} value={draft.data} lang={lang} onChange={(data) => setDraft((d) => ({ ...d, data }))} />
+        <SchemaForm fields={def.fields} value={draft.data} lang={lang} site={code} onChange={(data) => setDraft((d) => ({ ...d, data }))} />
 
         {!def.singleton && (
           <div className={styles.field}>
@@ -318,7 +318,7 @@ function EditorBody({ code, def, entry, onReload, siteName, can }: { code: strin
               <label htmlFor="seo-desc">Təsvir (ən çox 200 simvol)</label>
               <textarea id="seo-desc" className={styles.input} rows={3} maxLength={200} value={seoText("description")} onChange={(e) => setSeoText("description", e.target.value)} />
             </div>
-            <ImageField label="Paylaşım şəkli (sosial şəbəkələrdə görünən)" folder="misc" crop="free" value={draft.seo.ogImage ?? ""} onChange={(v) => setSeo({ ogImage: v || undefined })} />
+            <ImageField label="Paylaşım şəkli (sosial şəbəkələrdə görünən)" folder="misc" site={code} crop="free" value={draft.seo.ogImage ?? ""} onChange={(v) => setSeo({ ogImage: v || undefined })} />
             <div className={styles.field}>
               <label htmlFor="seo-canonical">Canonical ünvan (könüllü)</label>
               <input id="seo-canonical" className={styles.input} value={draft.seo.canonical ?? ""} onChange={(e) => setSeo({ canonical: e.target.value || undefined })} placeholder="https://..." />
