@@ -5,19 +5,22 @@ import { useState } from "react";
 import { fmtDate, useApi } from "@/lib/admin/client";
 import type { StatsOverview } from "@/lib/admin/types";
 import styles from "./admin.module.css";
-import { DaysSelect, nf } from "./StatsParts";
+import { DaysSelect, Kpi, nf } from "./StatsParts";
 
 /** Saytların yan-yana müqayisəsi: yalnız baxmaq icazəsi olan saytlar göstərilir */
 export function StatsOverviewPage() {
   const [days, setDays] = useState(30);
   const data = useApi<StatsOverview>(`panel/stats/overview?days=${days}`);
+  // Hələ cavablandırılmamış (yeni) müraciətlər: yan menyudakı sayğacla eyni mənbə
+  const pending = useApi<Record<string, number>>("panel/summary").data ?? {};
+  const newTotal = Object.values(pending).reduce((n, v) => n + v, 0);
 
   return (
     <>
       <div className={styles.head}>
         <div>
-          <h1 className={styles.h1}>Statistika</h1>
-          <p className={styles.sub}>Saytların ümumi müqayisəsi. Ətraflı görmək üçün saytın adına basın.</p>
+          <h1 className={styles.h1}>Ümumi icmal</h1>
+          <p className={styles.sub}>Bütün saytların birgə statistikası. Ətraflı görmək üçün saytın adına basın.</p>
         </div>
         <DaysSelect days={days} onChange={setDays} />
       </div>
@@ -28,6 +31,13 @@ export function StatsOverviewPage() {
       ) : !data.data ? (
         <p className={styles.loading}>Yüklənir…</p>
       ) : (
+        <>
+        <div className={styles.kpis}>
+          <Kpi label="Ziyarətçi" value={nf(data.data.sites.reduce((n, s) => n + s.users, 0))} note={`Son ${days} gün, ${data.data.sites.length} sayt`} />
+          <Kpi label="Səhifə baxışı" value={nf(data.data.sites.reduce((n, s) => n + s.pageViews, 0))} />
+          <Kpi label="Sessiya" value={nf(data.data.sites.reduce((n, s) => n + s.sessions, 0))} />
+          <Kpi label="Müraciət" value={nf(data.data.sites.reduce((n, s) => n + s.leads, 0))} note={newTotal ? `${newTotal} cavabsız` : undefined} />
+        </div>
         <div className={`${styles.panel} ${styles.tableWrap}`}>
           <table className={styles.table}>
             <thead>
@@ -38,6 +48,7 @@ export function StatsOverviewPage() {
                 <th>Sessiya</th>
                 <th>Müraciət</th>
                 <th>Konversiya</th>
+                <th>Cavabsız müraciət</th>
               </tr>
             </thead>
             <tbody>
@@ -51,6 +62,7 @@ export function StatsOverviewPage() {
                   <td>{nf(s.sessions)}</td>
                   <td>{nf(s.leads)}</td>
                   <td>{s.conversionRate}%</td>
+                  <td>{pending[s.code] ? <Link href={`/sites/${s.code}/submissions`}>{pending[s.code]}</Link> : <span className={styles.muted}>0</span>}</td>
                 </tr>
               ))}
             </tbody>
@@ -59,6 +71,7 @@ export function StatsOverviewPage() {
             Yenilənmə: {fmtDate(data.data.generatedAt)}. Cookie razılığı verməyənlər ölçülmür, müraciət sayı isə dəqiqdir.
           </p>
         </div>
+        </>
       )}
     </>
   );
