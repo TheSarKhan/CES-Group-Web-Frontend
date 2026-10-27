@@ -1,6 +1,7 @@
 import "@fontsource-variable/manrope";
 import "@/app/globals.css";
 import { Analytics } from "@/components/Analytics";
+import { PreviewBadge } from "@/components/PreviewBadge";
 import { htmlLang, type Lang } from "@/lib/i18n";
 
 const SKIP: Record<Lang, string> = {
@@ -19,6 +20,7 @@ export function RootShell({ lang = "az", children }: { lang?: Lang; children: Re
         </a>
         {children}
         <Analytics lang={lang} />
+        <PreviewBadge />
       </body>
     </html>
   );

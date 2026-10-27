@@ -4,7 +4,7 @@
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { cmsEntry, cmsList } from "@/lib/cms";
-import { DEFAULT_LANG, LANGS, type Lang } from "@/lib/i18n";
+import { DEFAULT_LANG, LANGS, localePath, type Lang } from "@/lib/i18n";
 import { aboutFrom, approachFrom, clientFrom, companyFrom, companyPageFrom, faqGroupFrom, journeyFrom, serviceFrom, subProjectFrom, subsiteFrom, legalFrom, projectFrom, settingsFrom, statsFrom, type About, type Approach, type Client, type SiteSettings, type Stat } from "./cms-map";
 import { faqGroups as faqFallback, type FaqGroup } from "./faq";
 import { privacy, terms, type LegalDoc } from "./legal";
@@ -92,12 +92,24 @@ const loadBundle = cache(async (lang: Lang): Promise<Bundle | null> => {
   if (!list) return az(lang) ? { companies: companiesFallback, pages: withLiveProjects(pagesFallback), journey: journeyFallback } : null;
 
   const entries = list.filter((e) => isCompanyId(e.slug));
+  // Construction və Farmart-ın xidmətləri alt saytın xidmətləridir: təkrar yazılmır, buradan götürülür
+  const subServices = async (id: SubSiteId) => {
+    const sub = await loadSubSite(id, lang);
+    return sub && sub.services.length > 0 ? sub.services.map((x) => ({ name: x.label, text: x.description, href: `${sub.url}${localePath(lang, `/xidmetlerimiz/${x.slug}`)}` })) : null;
+  };
   const present = new Set(entries.map((e) => e.slug));
   // En/ru: dörd şirkətin hamısı tərcümə olunmayınca şirkət bölmələri açılmır (yarımçıq siyahı göstərilməsin)
   if (!az(lang) && COMPANY_IDS.some((id) => !present.has(id))) return null;
   const companies: Company[] = entries.map((e) => companyFrom(e.data, companiesFallback.find((c) => c.id === e.slug)!));
   const pages = { ...pagesFallback } as Record<CompanyId, CompanyPage>;
   entries.forEach((e) => (pages[e.slug as CompanyId] = companyPageFrom(e.slug as CompanyId, e.data)));
+  for (const id of ["construction", "farmart"] as const) {
+    if (!present.has(id)) continue;
+    const derived = await subServices(id);
+    if (derived) pages[id] = { ...pages[id], services: derived };
+    // En/ru: alt saytın xidmətləri həmin dildə tərcümə olunmayıbsa şirkət səhifəsində xidmət siyahısı olmaz, səhifə açılmır
+    else if (!az(lang)) return null;
+  }
   const steps = entries
     .map((e) => ({ step: journeyFrom(e.slug as CompanyId, e.data), order: typeof e.data.journeyOrder === "number" ? e.data.journeyOrder : 99 }))
     .sort((a, b) => a.order - b.order)

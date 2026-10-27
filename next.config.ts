@@ -58,6 +58,11 @@ const nextConfig: NextConfig = {
   },
   images: {
     formats: ["image/avif", "image/webp"],
+    // Paneldən yüklənən şəkillər: indiki ünvan (Equipment) və gələcək neytral media ünvanı
+    remotePatterns: [
+      { protocol: "https", hostname: "equipment.cesgroup.az", pathname: "/uploads/**" },
+      { protocol: "https", hostname: "media.cesgroup.az", pathname: "/uploads/**" },
+    ],
   },
 };
 

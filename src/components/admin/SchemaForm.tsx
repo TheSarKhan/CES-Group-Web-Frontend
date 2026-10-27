@@ -12,12 +12,18 @@ const asObj = (v: unknown): Record<string, string> => (v && typeof v === "object
 const asStr = (v: unknown) => (typeof v === "string" ? v : "");
 
 /** Dil sekmeleri: formada hər tərcümə olunan sahə seçilmiş dildə göstərilir */
-export function LangTabs({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => void }) {
+/** `gaps` verilərsə hər dilin yanında çatışan tərcümə sahələrinin sayı (və ya ✓) göstərilir */
+export function LangTabs({ lang, onChange, gaps }: { lang: Lang; onChange: (l: Lang) => void; gaps?: Partial<Record<Lang, number>> }) {
   return (
     <div className={styles.tabs} role="tablist" aria-label="Dil">
       {LANGS.map((l) => (
         <button key={l} type="button" role="tab" aria-selected={lang === l} className={styles.tab} onClick={() => onChange(l)}>
           {l.toUpperCase()}
+          {gaps && l !== "az" && gaps[l] !== undefined && (
+            <span className={`${styles.badge} ${gaps[l] === 0 ? styles.badgeOk : styles.badgeBad}`} style={{ marginLeft: 6 }} title={gaps[l] === 0 ? "Tərcümə tamdır" : `${gaps[l]} sahənin tərcüməsi çatışmır`}>
+              {gaps[l] === 0 ? "✓" : gaps[l]}
+            </span>
+          )}
         </button>
       ))}
     </div>

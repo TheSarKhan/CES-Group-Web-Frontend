@@ -5,6 +5,7 @@
  * Səhifələr 5 dəqiqədən bir arxa fonda yenilənir (ISR); panel-dən dərc edəndə backend `content:*` tag-ları ilə dərhal yeniləyir.
  */
 import { DEFAULT_LANG, type Lang } from "./i18n";
+import { previewTarget, previewToken } from "./preview";
 
 export const CMS_REVALIDATE = 300;
 
@@ -18,11 +19,12 @@ export type CmsEntry = {
 
 const BASE = process.env.BACKEND_URL;
 
-async function get<T>(path: string, tags: string[]): Promise<T | null> {
+async function get<T>(path: string, tags: string[], preview?: string | null): Promise<T | null> {
   if (!BASE) return null;
   try {
-    const res = await fetch(`${BASE}/api/v1/public/content/${path}`, {
-      next: { revalidate: CMS_REVALIDATE, tags },
+    const res = await fetch(`${BASE}/api/v1/public/content/${path}${preview ? `?preview=${encodeURIComponent(preview)}` : ""}`, {
+      // Önizləmədə keş olmur (qaralama heç vaxt ISR keşinə düşməsin)
+      ...(preview ? { cache: "no-store" as const } : { next: { revalidate: CMS_REVALIDATE, tags } }),
       signal: AbortSignal.timeout(3000),
     });
     return res.ok ? ((await res.json()) as T) : null;
@@ -65,13 +67,21 @@ const forLang = (e: CmsEntry, lang: Lang): CmsEntry | null => {
 
 /** Növün dərc olunmuş qeydləri (sıra ilə). Qeyd yoxdursa (və ya seçilmiş dildə tam tərcümə olunmuş qeyd yoxdursa) null. */
 export async function cmsList(site: string, type: string, lang: Lang = DEFAULT_LANG): Promise<CmsEntry[] | null> {
-  const list = await get<CmsEntry[]>(`${site}/${type}`, [`content:${site}`, `content:${site}:${type}`]);
+  let list = await get<CmsEntry[]>(`${site}/${type}`, [`content:${site}`, `content:${site}:${type}`]);
+  // Önizləmə: işarənin adlandırdığı qeydin qaralaması siyahıda dərc olunmuş nüsxənin yerinə qoyulur (yeni qeyd isə əlavə olunur)
+  const token = await previewToken();
+  const target = token ? previewTarget(token) : null;
+  if (token && target && target.site === site && target.type === type) {
+    const draft = await get<CmsEntry>(`${site}/${type}/${target.slug}`, [], token);
+    if (draft) list = [...(list ?? []).filter((e) => e.slug !== draft.slug), draft].sort((a, b) => a.sortOrder - b.sortOrder);
+  }
   const ready = (list ?? []).map((e) => forLang(e, lang)).filter((e): e is CmsEntry => e !== null);
   return ready.length > 0 ? ready : null;
 }
 
 export async function cmsEntry(site: string, type: string, slug: string, lang: Lang = DEFAULT_LANG): Promise<CmsEntry | null> {
-  const e = await get<CmsEntry>(`${site}/${type}/${slug}`, [`content:${site}`, `content:${site}:${type}`, `content:${site}:${type}:${slug}`]);
+  const token = await previewToken();
+  const e = await get<CmsEntry>(`${site}/${type}/${slug}`, [`content:${site}`, `content:${site}:${type}`, `content:${site}:${type}:${slug}`], token);
   return e ? forLang(e, lang) : null;
 }
 

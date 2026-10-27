@@ -188,6 +188,9 @@ export type ContentSummary = {
   updatedAt: string;
   updatedBy: string | null;
   publishedAt: string | null;
+  /** Hər dildə (en, ru) çatışan tərcümə sahələrinin sayı: qaralamada və (dərc olunubsa) dərc olunmuş nüsxədə */
+  draftGaps: Record<string, number>;
+  publishedGaps: Record<string, number> | null;
 };
 
 export type Seo = { title?: Record<string, string>; description?: Record<string, string>; ogImage?: string; canonical?: string; noindex?: boolean };

@@ -1,6 +1,8 @@
 import { site as staticSite } from "@/content/site";
 import { faqItemsOf, getCompanies, getFaqGroups, getProjects, getSiteSettings, getStats } from "@/content/loaders";
 import { isReadyProject, type SubSite } from "@/content/subsites";
+import { GROUP_LLMS, SUB_LLMS } from "@/i18n/llms";
+import { localePath, type Lang } from "@/lib/i18n";
 
 /**
  * llms.txt: süni intellekt sistemləri üçün saytın qısa, faktlara əsaslanan təsviri (llmstxt.org formatı).
@@ -9,79 +11,84 @@ import { isReadyProject, type SubSite } from "@/content/subsites";
 
 const link = (title: string, url: string, text: string) => `- [${title}](${url}): ${text}`;
 
-export async function groupLlmsTxt() {
-  const site = { ...staticSite, ...(await getSiteSettings()) };
-  const faqItems = faqItemsOf(await getFaqGroups());
-  const projects = await getProjects();
-  const stats = await getStats();
-  const companies = await getCompanies();
+export async function groupLlmsTxt(lang: Lang = "az") {
+  const t = GROUP_LLMS[lang];
+  const site = { ...staticSite, ...(await getSiteSettings(lang)) };
+  const faqItems = faqItemsOf(await getFaqGroups(lang));
+  const projects = await getProjects(lang);
+  const stats = await getStats(lang);
+  const companies = await getCompanies(lang);
+  const u = (path: string) => `${site.url}${localePath(lang, path)}`;
   const facts = [
-    `Hüquqi ad: ${site.legalName}`,
-    `Qurulma: ${site.foundingDate} (CES ağır texnika icarəsi ilə başlayıb)`,
-    `Ünvan: ${site.address}`,
-    `Telefon və WhatsApp: ${site.phone}`,
-    `E-poçt: ${site.email}`,
-    `İş saatları: ${site.hours.label}`,
-    "Xidmət ərazisi: bütün Azərbaycan",
+    `${t.legalName}: ${site.legalName}`,
+    t.founded(site.foundingDate),
+    `${t.address}: ${site.address}`,
+    `${t.phone}: ${site.phone}`,
+    `${t.email}: ${site.email}`,
+    `${t.hours}: ${site.hours.label}`,
+    t.area,
     ...stats.slice(1).map((s) => `${s.value} ${s.label}`),
   ];
+  const pl = t.pageLinks;
 
   return `# ${site.name}
 
 > ${site.description}
 
-${site.name} dörd şirkəti birləşdirir: memarlıq (CES Architect), tikinti və podrat (CES Construction), ağır texnika icarəsi (CES Equipment) və innovativ və təbii ekosistem (Farmart). Sifarişçi layihənin dizaynından icrasına və texnika təminatına qədər bütün mərhələlər üçün bir komanda ilə işləyir.
+${t.intro(site.name)}
 
-## Şirkətlər
+## ${t.companies}
 
-${companies.map((c) => link(c.name, `${site.url}/sirketler/${c.id}`, `${c.field}. ${c.description} Şirkətin saytı: ${c.url}`)).join("\n")}
+${companies.map((c) => link(c.name, u(`/sirketler/${c.id}`), `${c.field}. ${c.description} ${t.companySite}: ${c.url}`)).join("\n")}
 
-## Əsas faktlar
+## ${t.facts}
 
 ${facts.map((f) => `- ${f}`).join("\n")}
 
-## Layihələr
+## ${t.projects}
 
-${projects.map((p) => link(p.title, `${site.url}/layiheler/${p.slug}`, p.summary)).join("\n")}
+${projects.map((p) => link(p.title, u(`/layiheler/${p.slug}`), p.summary)).join("\n")}
 
-## Tez-tez verilən suallar
+## ${t.faq}
 
 ${faqItems.map((f) => `- ${f.q} ${f.a}`).join("\n")}
 
-## Səhifələr
+## ${t.pages}
 
-${link("Şirkətlər", `${site.url}/sirketler`, "Dörd şirkətin təsviri, xidmətləri, rəqəmləri və layihələri")}
-${link("Tez-tez verilən suallar", `${site.url}/suallar`, "Texnika icarəsi, memarlıq, tikinti və Farmart üzrə suallar və cavablar")}
-${link("Haqqımızda", `${site.url}/haqqimizda`, "Qrupun tarixi, missiyası, dəyərləri və şirkətlərin strukturu")}
-${link("Layihələr", `${site.url}/layiheler`, "İştirak etdiyimiz layihələrin siyahısı")}
-${link("Əlaqə", `${site.url}/elaqe`, "Müraciət forması, telefon, e-poçt və ünvan")}
-${link("Məxfilik siyasəti", `${site.url}/mexfilik-siyaseti`, "Şəxsi məlumatların emalı")}
-${link("İstifadə şərtləri", `${site.url}/istifade-sertleri`, "Saytdan istifadə qaydaları")}
+${link(pl.companies[0], u("/sirketler"), pl.companies[1])}
+${link(pl.faq[0], u("/suallar"), pl.faq[1])}
+${link(pl.about[0], u("/haqqimizda"), pl.about[1])}
+${link(pl.projects[0], u("/layiheler"), pl.projects[1])}
+${link(pl.contact[0], u("/elaqe"), pl.contact[1])}
+${link(pl.privacy[0], u("/mexfilik-siyaseti"), pl.privacy[1])}
+${link(pl.terms[0], u("/istifade-sertleri"), pl.terms[1])}
 `;
 }
 
-export async function subsiteLlmsTxt(s: SubSite) {
-  const site = { ...staticSite, ...(await getSiteSettings()) };
-  const companies = await getCompanies();
+export async function subsiteLlmsTxt(s: SubSite, lang: Lang = "az") {
+  const t = SUB_LLMS[lang];
+  const site = { ...staticSite, ...(await getSiteSettings(lang)) };
+  const companies = await getCompanies(lang);
   const company = companies.find((c) => c.id === s.id);
   const ready = s.projects.filter(isReadyProject);
+  const u = (path: string) => `${s.url}${localePath(lang, path)}`;
 
   return `# ${s.name}
 
 > ${s.description}
 
-${s.name} ${site.name} qrupunun şirkətidir${company ? ` (${company.legalName}, ${company.founded}-ci ildən)` : ""}. Qrupun ana səhifəsi: ${site.url}
+${t.companyOf(s.name, site.name, company ? t.since(company.legalName, company.founded) : "", lang === "az" ? site.url : `${site.url}${localePath(lang, "/")}`)}
 
-## Xidmətlər
+## ${t.services}
 
-${s.services.map((x) => link(x.label, `${s.url}/xidmetlerimiz/${x.slug}`, x.description)).join("\n")}
-${ready.length ? `\n## Layihələr\n\n${ready.map((p) => link(p.title, `${s.url}/layihelerimiz/${p.slug}`, p.description)).join("\n")}\n` : ""}
-## Əlaqə
+${s.services.map((x) => link(x.label, u(`/xidmetlerimiz/${x.slug}`), x.description)).join("\n")}
+${ready.length ? `\n## ${t.projects}\n\n${ready.map((p) => link(p.title, u(`/layihelerimiz/${p.slug}`), p.description)).join("\n")}\n` : ""}
+## ${t.contact}
 
-- Ünvan: ${site.address}
-- Telefon və WhatsApp: ${site.phone}
-- E-poçt: ${site.email}
-- İş saatları: ${site.hours.label}
-- Əlaqə səhifəsi (müraciət forması): ${s.url}/elaqe
+- ${t.address}: ${site.address}
+- ${t.phone}: ${site.phone}
+- ${t.email}: ${site.email}
+- ${t.hours}: ${site.hours.label}
+- ${t.contactPage}: ${u("/elaqe")}
 `;
 }

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ApiError, api, fmtDate, useApi } from "@/lib/admin/client";
+import { previewUrl } from "@/lib/admin/preview";
+import { gapsFor } from "@/lib/admin/translations";
 import type { ContentEntry, ContentSummary, ContentType, Revision, Seo } from "@/lib/admin/types";
 import styles from "./admin.module.css";
 import { useAdmin } from "./AdminApp";
@@ -112,6 +114,7 @@ export function ContentList({ code, type }: { code: string; type: string }) {
             <tr>
               <th>Ad</th>
               <th>Status</th>
+              <th>Tərcümə</th>
               <th>Son dəyişiklik</th>
               <th />
             </tr>
@@ -119,7 +122,7 @@ export function ContentList({ code, type }: { code: string; type: string }) {
           <tbody>
             {list.data.length === 0 && (
               <tr>
-                <td colSpan={4} className={styles.muted}>
+                <td colSpan={5} className={styles.muted}>
                   Hələ heç nə yoxdur.
                 </td>
               </tr>
@@ -134,6 +137,21 @@ export function ContentList({ code, type }: { code: string; type: string }) {
                   </td>
                   <td>
                     <span className={`${styles.badge} ${st.cls}`}>{st.text}</span>
+                  </td>
+                  <td>
+                    {(["en", "ru"] as const).map((l) => {
+                      const gaps = e.draftGaps?.[l] ?? 0;
+                      const live = e.publishedGaps ? e.publishedGaps[l] === 0 : false;
+                      return (
+                        <span
+                          key={l}
+                          className={`${styles.badge} ${live ? styles.badgeOk : gaps === 0 ? styles.badgeGold : styles.badgeBad}`}
+                          title={live ? "Bu dildə saytda açıqdır" : gaps === 0 ? "Tərcümə tamdır, amma dərc olunmayıb" : `${gaps} sahənin tərcüməsi çatışmır, bu dildə sayt açılmır`}
+                        >
+                          {l.toUpperCase()} {live ? "✓" : gaps === 0 ? "hazır" : gaps}
+                        </span>
+                      );
+                    })}
                   </td>
                   <td className={styles.muted}>
                     {fmtDate(e.updatedAt)}
@@ -247,6 +265,26 @@ function EditorBody({ code, def, entry, onReload, siteName, can }: { code: strin
     }
   }
 
+  /** Qaralamanı saxlayıb saytda yeni pəncərədə göstərir (qaralama yalnız bu brauzerdə görünür, 10 dəqiqə) */
+  async function preview() {
+    const win = window.open("about:blank", "_blank");
+    const saved = dirty || !entry ? await save() : entry;
+    if (!saved) {
+      win?.close();
+      return;
+    }
+    try {
+      const { token } = await api<{ token: string }>(`${path}/${saved.id}/preview-token`, { method: "POST" });
+      const url = previewUrl(code, def.code, saved.slug, token, lang);
+      if (!url) throw new Error("no-site");
+      if (win) win.location.href = url;
+      else window.open(url, "_blank");
+    } catch (e) {
+      win?.close();
+      setError(e instanceof ApiError ? e.message : "Önizləmə açılmadı.");
+    }
+  }
+
   async function unpublish() {
     if (!entry || !confirm("Dərcdən çıxarılsın? Məzmun saytdan götürüləcək, qaralama qalacaq.")) return;
     setBusy(true);
@@ -279,6 +317,9 @@ function EditorBody({ code, def, entry, onReload, siteName, can }: { code: strin
           <Link href={`/sites/${code}/content/${def.code}`} className={`${styles.btn} ${styles.btnGhost}`}>
             Siyahı
           </Link>
+          <button type="button" className={`${styles.btn} ${styles.btnGhost}`} disabled={busy} onClick={preview} title="Qaralamanı saytda yalnız siz görürsünüz">
+            Önizlə
+          </button>
           {entry && (
             <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setShowRevisions(true)}>
               Versiyalar
@@ -295,7 +336,7 @@ function EditorBody({ code, def, entry, onReload, siteName, can }: { code: strin
           void save();
         }}
       >
-        <LangTabs lang={lang} onChange={setLang} />
+        <LangTabs lang={lang} onChange={setLang} gaps={{ en: gapsFor(draft.data, "en"), ru: gapsFor(draft.data, "ru") }} />
         <SchemaForm fields={def.fields} value={draft.data} lang={lang} site={code} onChange={(data) => setDraft((d) => ({ ...d, data }))} />
 
         {!def.singleton && (
