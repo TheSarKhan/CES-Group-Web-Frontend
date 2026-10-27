@@ -63,5 +63,30 @@ export function useApi<T>(path: string | null) {
   return { data: current ? state.data : undefined, error: current ? state.error : undefined, loading: path !== null && !(current && (state.data !== undefined || state.error)), reload };
 }
 
-export const fmtDate = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleString("az-AZ", { dateStyle: "short", timeStyle: "short" }) : "—";
+/** Bakı vaxtı ilə hissələr: brauzerin dilindən və saat qurşağından asılı olmayaraq eyni nəticə */
+const parts = (d: Date) => {
+  const f = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Baku", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(d);
+  const get = (t: string) => f.find((x) => x.type === t)?.value ?? "";
+  return { dd: get("day"), mm: get("month"), yyyy: get("year"), hh: get("hour"), min: get("minute") };
+};
+
+/** Panelin bütün tarixləri: dd.mm.yyyy HH:mm (Bakı vaxtı) */
+export const fmtDate = (iso: string | null) => {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const t = parts(d);
+  return `${t.dd}.${t.mm}.${t.yyyy} ${t.hh}:${t.min}`;
+};
+
+/** Yalnız gün: dd.mm.yyyy. Saf tarixi ("2026-10-27", "20261027") olduğu kimi, vaxtlı ISO damğasını isə Bakı vaxtına görə çevirir. */
+export const fmtDay = (v: string | null | undefined) => {
+  if (!v) return "—";
+  const m = /^(\d{4})-?(\d{2})-?(\d{2})$/.exec(v);
+  if (m) return `${m[3]}.${m[2]}.${m[1]}`;
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return v;
+  const t = parts(d);
+  return `${t.dd}.${t.mm}.${t.yyyy}`;
+};
+

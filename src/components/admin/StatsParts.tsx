@@ -1,5 +1,6 @@
 "use client";
 
+import { fmtDay } from "@/lib/admin/client";
 import type { StatItem } from "@/lib/admin/types";
 import styles from "./admin.module.css";
 
@@ -49,8 +50,8 @@ export function TrendChart({ points }: { points: { date: string; users: number; 
   const y = (v: number) => pad.t + (1 - v / max) * (H - pad.t - pad.b);
   const line = (pick: (p: (typeof points)[number]) => number) => points.map((p, i) => `${x(i).toFixed(1)},${y(pick(p)).toFixed(1)}`).join(" ");
   const ticks = [0, 0.5, 1].map((t) => Math.round(max * t));
-  const first = points[0].date;
-  const last = points[points.length - 1].date;
+  const first = fmtDay(points[0].date);
+  const last = fmtDay(points[points.length - 1].date);
   const label = `Ziyarətçi və baxış qrafiki, ${first} ilə ${last} arası. Ən yüksək dəyər ${nf(max)}.`;
 
   return (
