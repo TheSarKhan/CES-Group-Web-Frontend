@@ -153,3 +153,59 @@ export type StatsOverview = {
   sites: { code: string; name: string; users: number; pageViews: number; sessions: number; leads: number; conversionRate: number }[];
   generatedAt: string;
 };
+
+export type FieldKind = "TEXT" | "TEXTAREA" | "URL" | "NUMBER" | "BOOL" | "IMAGE" | "GALLERY" | "SELECT" | "LIST";
+
+export type FieldDef = {
+  name: string;
+  label: string;
+  kind: FieldKind;
+  translatable: boolean;
+  required: boolean;
+  max: number | null;
+  hint: string | null;
+  options: { value: string; label: string }[] | null;
+  itemFields: FieldDef[] | null;
+};
+
+export type ContentType = {
+  code: string;
+  label: string;
+  description: string;
+  module: string;
+  singleton: boolean;
+  titleField: string;
+  fields: FieldDef[];
+};
+
+export type ContentSummary = {
+  id: number;
+  slug: string;
+  title: string;
+  status: "DRAFT" | "PUBLISHED";
+  hasChanges: boolean;
+  sortOrder: number;
+  updatedAt: string;
+  updatedBy: string | null;
+  publishedAt: string | null;
+};
+
+export type Seo = { title?: Record<string, string>; description?: Record<string, string>; ogImage?: string; canonical?: string; noindex?: boolean };
+
+export type ContentEntry = {
+  id: number;
+  type: string;
+  slug: string;
+  sortOrder: number;
+  status: "DRAFT" | "PUBLISHED";
+  hasChanges: boolean;
+  data: Record<string, unknown>;
+  seo: Seo;
+  published: Record<string, unknown> | null;
+  publishedAt: string | null;
+  publishedBy: string | null;
+  updatedAt: string;
+  updatedBy: string | null;
+};
+
+export type Revision = { id: number; version: number; note: string | null; createdBy: string | null; createdAt: string };

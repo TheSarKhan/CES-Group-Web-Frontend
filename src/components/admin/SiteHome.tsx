@@ -15,7 +15,8 @@ const READY: Record<string, (code: string) => string | undefined> = {
   NOTIFICATIONS: (code) => `/sites/${code}/notifications`,
   STATISTICS: (code) => `/sites/${code}/stats`,
   // Məzmun modulları hələlik yalnız Texnika saytı üçün qoşulub
-  ...Object.fromEntries(Object.entries(CONTENT).map(([module, slug]) => [module, (code: string) => (code === "equipment" ? `/sites/${code}/m/${slug}` : undefined)])),
+  // Texnika öz kataloq ekranlarını işlədir, digər saytların məzmunu ümumi mühərrikdən gəlir
+  ...Object.fromEntries(Object.entries(CONTENT).map(([module, slug]) => [module, (code: string) => (code === "equipment" ? `/sites/${code}/m/${slug}` : module === "TRASH" ? undefined : `/sites/${code}/content`)])),
 };
 
 export function SiteHome({ code }: { code: string }) {

@@ -5,12 +5,13 @@ import styles from "./admin.module.css";
 import { useAdmin } from "./AdminApp";
 
 /** Sayt daxilində bölmələr arası keçid; yalnız icazəsi olan bölmələr göstərilir */
-export function SiteTabs({ code, current }: { code: string; current: "home" | "submissions" | "stats" | "notifications" }) {
+export function SiteTabs({ code, current }: { code: string; current: "home" | "submissions" | "content" | "stats" | "notifications" }) {
   const { me, can } = useAdmin();
   const site = me.sites.find((s) => s.code === code);
   const tabs = [
     { id: "home", href: `/sites/${code}`, label: "Ümumi", show: true },
     { id: "submissions", href: `/sites/${code}/submissions`, label: "Müraciətlər", show: can("SUBMISSIONS", "VIEW", code) },
+    { id: "content", href: `/sites/${code}/content`, label: "Məzmun", show: code !== "equipment" && (can("FAQ", "VIEW", code) || can("PAGES", "VIEW", code) || can("PROJECTS", "VIEW", code)) },
     { id: "stats", href: `/sites/${code}/stats`, label: "Statistika", show: can("STATISTICS", "VIEW", code) },
     { id: "notifications", href: `/sites/${code}/notifications`, label: "Bildirişlər", show: can("NOTIFICATIONS", "VIEW", code) },
   ].filter((t) => t.show);
