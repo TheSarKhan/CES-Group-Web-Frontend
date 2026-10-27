@@ -17,7 +17,7 @@ export const privacy: LegalDoc = {
   description:
     "CES Group saytlarında şəxsi məlumatların necə toplandığı, istifadə olunduğu, saxlandığı və qorunduğu, həmçinin sizin hüquqlarınız.",
   updated: "27 oktyabr 2026",
-  intro: `Bu siyasət ${operator} tərəfindən idarə olunan cesgroup.az saytında və onun subdomenlərində (construction.cesgroup.az, farmart.cesgroup.az) şəxsi məlumatlarınızın necə emal olunduğunu izah edir. Məlumatlar Azərbaycan Respublikasının “Fərdi məlumatlar haqqında” Qanununa uyğun emal olunur. equipment.cesgroup.az saytında ayrıca məxfilik səhifəsi də var.`,
+  intro: `Bu siyasət ${operator} tərəfindən idarə olunan cesgroup.az saytında və onun subdomenlərində (architect.cesgroup.az, construction.cesgroup.az, farmart.cesgroup.az) şəxsi məlumatlarınızın necə emal olunduğunu izah edir. Məlumatlar Azərbaycan Respublikasının “Fərdi məlumatlar haqqında” Qanununa uyğun emal olunur. equipment.cesgroup.az saytında ayrıca məxfilik səhifəsi də var.`,
   sections: [
     {
       id: "operator",
