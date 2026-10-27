@@ -61,7 +61,7 @@ export type Page<T> = { items: T[]; total: number; page: number; size: number };
 
 export const MODULE_LABELS: Record<string, string> = {
   SUBMISSIONS: "Müraciətlər",
-  PAGES: "Səhifələr",
+  PAGES: "Səhifə məzmunu",
   PROJECTS: "Layihələr",
   FAQ: "Suallar",
   FLEET: "Texnika kataloqu",

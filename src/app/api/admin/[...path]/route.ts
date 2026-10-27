@@ -14,8 +14,12 @@ import {
 } from "@/lib/admin/server";
 
 /** Brauzerə açıq olan backend yolları. Giriş, yenilənmə və çıxış ayrıca route-lardadır. */
+const LEGACY_MODULES = ["faqs", "clients", "offerings", "projects", "testimonials", "fleet", "uploads", "trash"];
+
 function allowed(path: string) {
   if (path === "iam" || path.startsWith("iam/") || path === "panel" || path.startsWith("panel/")) return true;
+  // Equipment məzmun modulları (backend hər birini modul + əməliyyat + sayt üzrə yoxlayır)
+  if (LEGACY_MODULES.some((m) => path === `admin/${m}` || path.startsWith(`admin/${m}/`))) return true;
   return path === "auth/me" || path === "auth/profile" || path.startsWith("auth/2fa/");
 }
 
@@ -27,10 +31,18 @@ async function handle(req: NextRequest, ctx: { params: Promise<{ path: string[] 
   const path = (await ctx.params).path.join("/");
   if (!allowed(path)) return jsonError(404, "Not found");
 
-  const body = isRead ? undefined : await req.text();
+  // Şəkil yükləmə multipart-dır: bayt-bayt olduğu kimi, orijinal Content-Type ilə ötürülür
+  const contentType = req.headers.get("content-type") ?? "";
+  const multipart = contentType.startsWith("multipart/form-data");
+  const body = isRead ? undefined : multipart ? await req.arrayBuffer() : await req.text();
   const url = backendUrl(path) + req.nextUrl.search;
   const call = (token: string) =>
-    fetch(url, { method: req.method, headers: { ...forwardHeaders(req), Authorization: `Bearer ${token}` }, body, cache: "no-store" });
+    fetch(url, {
+      method: req.method,
+      headers: { ...forwardHeaders(req), ...(multipart ? { "Content-Type": contentType } : {}), Authorization: `Bearer ${token}` },
+      body,
+      cache: "no-store",
+    });
 
   const at = req.cookies.get(ACCESS_COOKIE)?.value;
   const rt = req.cookies.get(REFRESH_COOKIE)?.value;

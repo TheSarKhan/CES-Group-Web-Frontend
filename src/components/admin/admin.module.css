@@ -64,7 +64,7 @@
 .check { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; }
 .check input { margin-top: 3px; }
 
-.modal { width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0; border: 0; border-radius: 10px; background: var(--white); color: var(--ink); }
+.modal { width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; padding: 0; border: 0; border-radius: 10px; background: var(--white); color: var(--ink); }
 .modal::backdrop { background: rgba(20, 20, 22, 0.55); }
 .modalBody { padding: 28px; display: grid; gap: 18px; }
 .modalHead { display: flex; justify-content: space-between; align-items: center; }

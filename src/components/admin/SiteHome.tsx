@@ -7,10 +7,15 @@ import { SiteTabs } from "./SiteTabs";
 import { useAdmin } from "./AdminApp";
 
 /** Hazır olan modulların keçidləri. Qalanları növbəti mərhələlərdə əlavə olunacaq. */
-const READY: Record<string, (code: string) => string> = {
+/** Hazır olan modulların keçidləri. Qalanları növbəti mərhələlərdə əlavə olunacaq. */
+const CONTENT: Record<string, string> = { FAQ: "faq", PAGES: "pages", PROJECTS: "projects", FLEET: "fleet", TRASH: "trash" };
+
+const READY: Record<string, (code: string) => string | undefined> = {
   SUBMISSIONS: (code) => `/sites/${code}/submissions`,
   NOTIFICATIONS: (code) => `/sites/${code}/notifications`,
   STATISTICS: (code) => `/sites/${code}/stats`,
+  // Məzmun modulları hələlik yalnız Texnika saytı üçün qoşulub
+  ...Object.fromEntries(Object.entries(CONTENT).map(([module, slug]) => [module, (code: string) => (code === "equipment" ? `/sites/${code}/m/${slug}` : undefined)])),
 };
 
 export function SiteHome({ code }: { code: string }) {
