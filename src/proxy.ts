@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isSubSiteId } from "@/content/subsites";
+import { isLang, DEFAULT_LANG } from "@/lib/i18n";
 import { findRedirect } from "@/lib/redirects";
+
+/** Kökdə dilsiz xidmət olunan fayllar (əsas saytın marşrutları /az altına yazılır, bunlar yox) */
+const ROOT_FILES = new Set(["/robots.txt", "/sitemap.xml", "/sitemap-index.xml", "/llms.txt"]);
 
 /** Subdomain saytları ümumi domen və ya lokal `*.localhost` altında işləyir */
 const BASE_HOSTS = new Set(["cesgroup.az", "localhost"]);
@@ -51,7 +55,23 @@ export async function proxy(req: NextRequest) {
     if (redirect.to.startsWith("/") && !target.search) target.search = req.nextUrl.search;
     return NextResponse.redirect(target, redirect.code);
   }
-  if (!site) return NextResponse.next();
+  if (!site) {
+    // Əsas sayt: az kökdə qalır (daxildə /az-a yazılır), en və ru /en, /ru prefiksi ilə gəlir
+    if (req.headers.get("x-lang")) return NextResponse.next();
+    const first = pathname.split("/")[1] ?? "";
+    if (first === DEFAULT_LANG) {
+      // /az/... təkrar məzmun olmasın: dilsiz ünvana yönləndirilir
+      const target = req.nextUrl.clone();
+      target.pathname = pathname.slice(`/${DEFAULT_LANG}`.length) || "/";
+      return NextResponse.redirect(target, 308);
+    }
+    if (isLang(first) || ROOT_FILES.has(pathname) || /\.[a-z0-9]+$/i.test(pathname)) return NextResponse.next();
+    const url = req.nextUrl.clone();
+    url.pathname = `/${DEFAULT_LANG}${pathname === "/" ? "" : pathname}`;
+    const headers = new Headers(req.headers);
+    headers.set("x-lang", DEFAULT_LANG);
+    return NextResponse.rewrite(url, { request: { headers } });
+  }
 
   // "sitemap.xml" adlı qovluq Next-in metadata konvensiyası ilə toqquşur, ona görə route "sitemap-xml"-dir
   const path = pathname === "/sitemap.xml" ? "/sitemap-xml" : pathname === "/" ? "" : pathname;

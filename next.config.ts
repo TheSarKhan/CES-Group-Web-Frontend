@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Kök layout-lar ayrıdır (əsas sayt [lang] altında, subsaytlar və admin ayrı), ona görə 404 səhifəsi layout-dan asılı deyil
+  experimental: { globalNotFound: true },
   reactStrictMode: true,
   // Docker image üçün minimal server paketi (.next/standalone)
   output: "standalone",
