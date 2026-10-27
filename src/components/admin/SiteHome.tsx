@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { ACTION_LABELS, MODULE_LABELS } from "@/lib/admin/types";
 import styles from "./admin.module.css";
+import { SiteTabs } from "./SiteTabs";
 import { useAdmin } from "./AdminApp";
 
 /** Hazır olan modulların keçidləri. Qalanları növbəti mərhələlərdə əlavə olunacaq. */
-const READY: Record<string, (code: string) => string> = {};
+const READY: Record<string, (code: string) => string> = {
+  SUBMISSIONS: (code) => `/sites/${code}/submissions`,
+  NOTIFICATIONS: (code) => `/sites/${code}/notifications`,
+};
 
 export function SiteHome({ code }: { code: string }) {
   const { me } = useAdmin();
@@ -37,6 +41,7 @@ export function SiteHome({ code }: { code: string }) {
           Bütün saytlar
         </Link>
       </div>
+      <SiteTabs code={code} current="home" />
       <div className={styles.cards}>
         {Object.entries(site.modules).map(([module, actions]) => {
           const href = READY[module]?.(site.code);

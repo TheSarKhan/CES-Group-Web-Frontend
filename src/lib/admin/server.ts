@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 /** Spring backend (iç şəbəkə). Brauzer ona birbaşa getmir, yalnız /api/admin/* BFF-i vasitəsilə. */
-export const BACKEND = process.env.ADMIN_API_URL ?? "http://localhost:8080";
+export const BACKEND = process.env.BACKEND_URL ?? "http://localhost:8080";
 
 export const ACCESS_COOKIE = "ces_at";
 export const REFRESH_COOKIE = "ces_rt";

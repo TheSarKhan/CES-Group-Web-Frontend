@@ -15,7 +15,7 @@ import {
 
 /** Brauzerə açıq olan backend yolları. Giriş, yenilənmə və çıxış ayrıca route-lardadır. */
 function allowed(path: string) {
-  if (path === "iam" || path.startsWith("iam/")) return true;
+  if (path === "iam" || path.startsWith("iam/") || path === "panel" || path.startsWith("panel/")) return true;
   return path === "auth/me" || path === "auth/profile" || path.startsWith("auth/2fa/");
 }
 
@@ -60,7 +60,11 @@ async function handle(req: NextRequest, ctx: { params: Promise<{ path: string[] 
     } else if (upstream.status === 204 || text === "") {
       res = new NextResponse(null, { status: upstream.status });
     } else {
-      res = new NextResponse(text, { status: upstream.status, headers: { "Content-Type": "application/json" } });
+      // CSV eksportu kimi cavablarda backend-in Content-Type və Content-Disposition başlıqları saxlanılır
+      const headers: Record<string, string> = { "Content-Type": upstream.headers.get("content-type") ?? "application/json" };
+      const disposition = upstream.headers.get("content-disposition");
+      if (disposition) headers["Content-Disposition"] = disposition;
+      res = new NextResponse(text, { status: upstream.status, headers });
     }
   }
 

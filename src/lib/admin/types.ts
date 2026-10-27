@@ -83,3 +83,47 @@ export const ACTION_LABELS: Record<Action, string> = {
   DELETE: "Sil",
   PUBLISH: "Dərc et",
 };
+
+export type LeadStatus = "NEW" | "IN_PROGRESS" | "DONE" | "SPAM";
+export type SubmissionType = "CONTACT" | "QUOTE";
+
+export const STATUS_LABELS: Record<LeadStatus, string> = {
+  NEW: "Yeni",
+  IN_PROGRESS: "İşlənir",
+  DONE: "Tamamlanıb",
+  SPAM: "Spam",
+};
+
+export const TYPE_LABELS: Record<SubmissionType, string> = { CONTACT: "Əlaqə", QUOTE: "Qiymət sorğusu" };
+
+/** Qiymət sorğusunun əlavə sahələrinin başlıqları */
+export const EXTRA_LABELS: Record<string, string> = { equipmentType: "Texnika növü", duration: "Müddət", location: "Yer" };
+
+export type Submission = {
+  id: number;
+  type: SubmissionType;
+  name: string;
+  email: string | null;
+  phone: string;
+  company: string | null;
+  message: string | null;
+  payload: string | null;
+  origin: string | null;
+  status: LeadStatus;
+  assignee: { id: number; name: string } | null;
+  ipAddress: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Note = { id: number; authorEmail: string | null; body: string; createdAt: string };
+
+export type SubmissionDetail = { submission: Submission; notes: Note[] };
+
+export type NotificationSettings = {
+  emails: string[];
+  fallbackEmail: string | null;
+  telegram: { id: number; username: string; connected: boolean }[];
+  botConfigured: boolean;
+  botUsername: string | null;
+};

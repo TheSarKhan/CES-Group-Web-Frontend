@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useApi } from "@/lib/admin/client";
 import styles from "./admin.module.css";
 import { useAdmin } from "./AdminApp";
 
 /** Girişdən sonrakı ilk ekran: istifadəçinin icazəsi olan saytlar kart kimi göstərilir */
 export function SitePicker() {
   const { me } = useAdmin();
+  const counts = useApi<Record<string, number>>("panel/summary").data ?? {};
   return (
     <>
       <div className={styles.head}>
@@ -23,7 +25,7 @@ export function SitePicker() {
             <Link key={s.code} href={`/sites/${s.code}`} className={styles.card}>
               <span className={styles.cardTitle}>{s.name}</span>
               <span className={styles.cardMeta}>{s.domain}</span>
-              <span className={styles.cardTag}>{Object.keys(s.modules).length} modul</span>
+              <span className={styles.cardTag}>{counts[s.code] ? `${counts[s.code]} yeni müraciət` : `${Object.keys(s.modules).length} modul`}</span>
             </Link>
           ))}
         </div>
