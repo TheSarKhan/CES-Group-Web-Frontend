@@ -1,93 +1,127 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { Pencil, Plus } from "lucide-react";
 import { ApiError, api, fmtDate, useApi } from "@/lib/admin/client";
 import type { RoleView, UserView } from "@/lib/admin/types";
 import styles from "./admin.module.css";
 import { useAdmin } from "./AdminApp";
-import { Modal } from "./Modal";
+import { Avatar, Notice, PageHeader, Pill, RowMenu, SearchBox, Toggle, useCrumbs } from "./ui";
 
 export function UsersPage() {
   const { can } = useAdmin();
   const users = useApi<UserView[]>("iam/users");
-  const roles = useApi<RoleView[]>("iam/roles");
-  const [editing, setEditing] = useState<UserView | "new" | null>(null);
+  const [q, setQ] = useState("");
+  useCrumbs([{ label: "Sistem" }, { label: "İstifadəçilər" }]);
 
-  if (users.error) return <p className={styles.error}>{users.error}</p>;
-  if (!users.data || !roles.data) return <p className={styles.loading}>Yüklənir…</p>;
+  const rows = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return (users.data ?? []).filter((u) => !needle || `${u.name} ${u.email} ${u.roles.map((r) => r.name).join(" ")}`.toLowerCase().includes(needle));
+  }, [users.data, q]);
+
+  if (users.error) return <Notice tone="bad">{users.error}</Notice>;
+  if (!users.data) return <p className={styles.loading}>Yüklənir…</p>;
 
   return (
     <>
-      <div className={styles.head}>
-        <div>
-          <h1 className={styles.h1}>İstifadəçilər</h1>
-          <p className={styles.sub}>Panelə giriş edə bilən hesablar və onların rolları.</p>
+      <PageHeader
+        title="İstifadəçilər"
+        sub="Sistemdəki istifadəçiləri idarə edin."
+        actions={
+          can("USERS", "CREATE") && (
+            <Link href="/users/new" className={`${styles.btn} ${styles.btnGold}`}>
+              <Plus size={18} /> Yeni istifadəçi
+            </Link>
+          )
+        }
+      />
+      <section className={styles.panel}>
+        <div className={styles.toolbar}>
+          <SearchBox value={q} onChange={setQ} placeholder="İstifadəçi axtar…" />
+          <span className={styles.toolbarEnd}>
+            Nəticələr: <strong style={{ color: "var(--ink)" }}>{rows.length}</strong>
+          </span>
         </div>
-        {can("USERS", "CREATE") && (
-          <button className={`${styles.btn} ${styles.btnGold}`} onClick={() => setEditing("new")}>
-            Yeni istifadəçi
-          </button>
-        )}
-      </div>
-      <div className={`${styles.panel} ${styles.tableWrap}`}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Ad</th>
-              <th>E-poçt</th>
-              <th>Rollar</th>
-              <th>Status</th>
-              <th>Son giriş</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {users.data.map((u) => (
-              <tr key={u.id}>
-                <td>{u.name}</td>
-                <td>{u.email}</td>
-                <td>
-                  {u.roles.map((r) => (
-                    <span key={r.id} className={styles.badge}>
-                      {r.name}
-                    </span>
-                  ))}
-                </td>
-                <td>
-                  <span className={`${styles.badge} ${u.active ? styles.badgeOk : styles.badgeBad}`}>{u.active ? "Aktiv" : "Deaktiv"}</span>
-                  {u.locked && <span className={`${styles.badge} ${styles.badgeBad}`}>Kilidli</span>}
-                  {u.totpEnabled && <span className={`${styles.badge} ${styles.badgeGold}`}>2FA</span>}
-                </td>
-                <td className={styles.muted}>{fmtDate(u.lastLoginAt)}</td>
-                <td>
-                  {can("USERS", "UPDATE") && (
-                    <button className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} onClick={() => setEditing(u)}>
-                      Redaktə
-                    </button>
-                  )}
-                </td>
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Ad</th>
+                <th>E-poçt</th>
+                <th>Rollar</th>
+                <th>Status</th>
+                <th>2FA</th>
+                <th>Son giriş</th>
+                <th style={{ textAlign: "right" }}>Əməliyyatlar</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {editing && (
-        <UserDialog
-          user={editing === "new" ? null : editing}
-          roles={roles.data}
-          onClose={() => setEditing(null)}
-          onSaved={() => {
-            setEditing(null);
-            users.reload();
-          }}
-          onChanged={users.reload}
-        />
-      )}
+            </thead>
+            <tbody>
+              {rows.map((u) => (
+                <tr key={u.id}>
+                  <td>
+                    <div className={styles.cellFlex}>
+                      <Avatar name={u.name} large />
+                      <Link href={`/users/${u.id}`} className={styles.cellMain}>
+                        {u.name}
+                      </Link>
+                    </div>
+                  </td>
+                  <td>{u.email}</td>
+                  <td>
+                    <div className={styles.row} style={{ gap: 6 }}>
+                      {u.roles.map((r) => (
+                        <Pill key={r.id} tone={r.name === "Super Admin" ? "gold" : "muted"}>
+                          {r.name}
+                        </Pill>
+                      ))}
+                    </div>
+                  </td>
+                  <td>
+                    <Pill tone={u.active ? "ok" : "gold"}>{u.active ? "Aktiv" : "Deaktiv"}</Pill>
+                  </td>
+                  <td>{u.locked ? <Pill tone="gold">Kilidli</Pill> : u.totpEnabled ? <Pill tone="ok">2FA</Pill> : <Pill tone="muted">Yoxdur</Pill>}</td>
+                  <td>{fmtDate(u.lastLoginAt)}</td>
+                  <td>
+                    <div className={styles.rowActions}>
+                      {can("USERS", "UPDATE") && (
+                        <Link href={`/users/${u.id}`} className={styles.iconBtn} aria-label="Redaktə">
+                          <Pencil size={18} />
+                        </Link>
+                      )}
+                      <RowMenu items={[{ label: "Redaktə et", icon: <Pencil size={16} />, href: `/users/${u.id}`, hidden: !can("USERS", "UPDATE") }]} />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className={styles.tableFoot}>
+          <span>{users.data.length} istifadəçi</span>
+        </div>
+      </section>
     </>
   );
 }
 
-function UserDialog({ user, roles, onClose, onSaved, onChanged }: { user: UserView | null; roles: RoleView[]; onClose: () => void; onSaved: () => void; onChanged: () => void }) {
+/** İstifadəçi redaktəsi: ayrıca səhifə (ümumi məlumat, rollar, təhlükəsizlik) */
+export function UserEditorPage({ id }: { id: string }) {
+  const users = useApi<UserView[]>("iam/users");
+  const roles = useApi<RoleView[]>("iam/roles");
+  const isNew = id === "new";
+  const user = isNew ? null : (users.data?.find((u) => String(u.id) === id) ?? null);
+  useCrumbs([{ label: "Sistem" }, { label: "İstifadəçilər", href: "/users" }, { label: isNew ? "Yeni istifadəçi" : (user?.name ?? "") }]);
+
+  if (users.error || roles.error) return <Notice tone="bad">{users.error ?? roles.error}</Notice>;
+  if (!users.data || !roles.data) return <p className={styles.loading}>Yüklənir…</p>;
+  if (!isNew && !user) return <Notice tone="bad">İstifadəçi tapılmadı.</Notice>;
+  return <UserForm key={user?.id ?? "new"} user={user} roles={roles.data} onChanged={users.reload} />;
+}
+
+function UserForm({ user, roles, onChanged }: { user: UserView | null; roles: RoleView[]; onChanged: () => void }) {
+  const router = useRouter();
   const [name, setName] = useState(user?.name ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [password, setPassword] = useState("");
@@ -121,117 +155,162 @@ function UserDialog({ user, roles, onClose, onSaved, onChanged }: { user: UserVi
     }
   }
 
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
+  async function save() {
+    if (!name.trim() || (!user && (!email.trim() || password.length < 8))) return setError(user ? "Ad boş ola bilməz." : "E-poçt, ad və ən azı 8 simvollu parol lazımdır.");
     const body = user ? { name, active, roleIds: [...roleIds] } : { email, name, password, roleIds: [...roleIds] };
-    const ok = await run(() => api(user ? `iam/users/${user.id}` : "iam/users", { method: user ? "PUT" : "POST", body }));
-    if (ok) onSaved();
+    const ok = await run(() => api(user ? `iam/users/${user.id}` : "iam/users", { method: user ? "PUT" : "POST", body }), user ? "Yadda saxlanıldı." : undefined);
+    if (ok) {
+      if (user) onChanged();
+      else router.push("/users");
+    }
   }
 
   return (
-    <Modal title={user ? "İstifadəçini redaktə et" : "Yeni istifadəçi"} onClose={onClose}>
-      <form className={styles.form} onSubmit={save}>
-        {!user && (
-          <div className={styles.field}>
-            <label htmlFor="u-email">E-poçt</label>
-            <input id="u-email" type="email" className={styles.input} value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </div>
-        )}
-        <div className={styles.field}>
-          <label htmlFor="u-name">Ad, soyad</label>
-          <input id="u-name" className={styles.input} value={name} onChange={(e) => setName(e.target.value)} required maxLength={128} />
-        </div>
-        {!user && (
-          <div className={styles.field}>
-            <label htmlFor="u-pass">İlkin parol</label>
-            <input id="u-pass" type="password" className={styles.input} value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required autoComplete="new-password" />
-            <span className={styles.hint}>Ən azı 8 simvol. İstifadəçi girişdən sonra profildə dəyişə bilər.</span>
-          </div>
-        )}
-        {user && (
-          <label className={styles.check}>
-            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
-            <span>Hesab aktivdir</span>
-          </label>
-        )}
-        <div className={styles.field}>
-          <span className={styles.label}>Rollar</span>
-          <div className={styles.checks}>
-            {roles.map((r) => (
-              <label key={r.id} className={styles.check}>
-                <input type="checkbox" checked={roleIds.has(r.id)} onChange={() => toggle(r.id)} />
-                <span>
-                  {r.name}
-                  {r.description && <span className={styles.hint}> ({r.description})</span>}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-        {error && (
-          <p className={styles.error} role="alert">
-            {error}
-          </p>
-        )}
-        {notice && (
-          <p className={styles.ok} role="status">
-            {notice}
-          </p>
-        )}
-        <div className={styles.modalFoot}>
-          <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={onClose}>
-            Ləğv et
-          </button>
-          <button className={`${styles.btn} ${styles.btnGold}`} disabled={busy}>
-            Yadda saxla
-          </button>
-        </div>
-      </form>
-
-      {user && (
-        <div className={styles.form} style={{ borderTop: "1px solid var(--line)", paddingTop: 18 }}>
-          <span className={styles.label}>Təhlükəsizlik</span>
-          <div className={styles.row}>
-            <input type="password" className={styles.input} style={{ flex: 1, minWidth: 180 }} placeholder="Yeni parol (min. 8)" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" />
-            <button
-              type="button"
-              className={`${styles.btn} ${styles.btnGhost}`}
-              disabled={busy || newPassword.length < 8}
-              onClick={async () => {
-                if (await run(() => api(`iam/users/${user.id}/reset-password`, { method: "POST", body: { newPassword } }), "Parol dəyişdirildi, istifadəçinin bütün sessiyaları bağlandı.")) setNewPassword("");
-              }}
-            >
-              Parolu sıfırla
+    <>
+      <PageHeader
+        back={{ href: "/users" }}
+        title={user?.name || "Yeni istifadəçi"}
+        sub="İstifadəçi məlumatlarını redaktə edin."
+        actions={
+          <>
+            <Link href="/users" className={`${styles.btn} ${styles.btnGhost}`}>
+              Ləğv et
+            </Link>
+            <button type="button" className={`${styles.btn} ${styles.btnGold}`} disabled={busy} onClick={() => void save()}>
+              Yadda saxla
             </button>
-          </div>
-          <div className={styles.row}>
-            {user.totpEnabled && (
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnDanger} ${styles.btnSm}`}
-                disabled={busy}
-                onClick={async () => {
-                  if (confirm("Bu istifadəçinin 2FA-sı sıfırlansın?") && (await run(() => api(`iam/users/${user.id}/reset-2fa`, { method: "POST" }), "2FA sıfırlandı."))) onChanged();
-                }}
-              >
-                2FA-nı sıfırla
-              </button>
-            )}
-            {user.locked && (
-              <button
-                type="button"
-                className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}
-                disabled={busy}
-                onClick={async () => {
-                  if (await run(() => api(`iam/users/${user.id}/unlock`, { method: "POST" }), "Hesabın kilidi açıldı.")) onChanged();
-                }}
-              >
-                Kilidi aç
-              </button>
-            )}
-          </div>
+          </>
+        }
+      />
+      {(error || notice) && (
+        <div style={{ marginBottom: 16 }}>
+          <Notice tone={error ? "bad" : "info"}>{error || notice}</Notice>
         </div>
       )}
-    </Modal>
+      <div className={styles.fieldGrid2} style={{ alignItems: "start" }}>
+        <section className={`${styles.panel} ${styles.panelPad}`}>
+          <h2 className={styles.panelTitle}>Ümumi məlumat</h2>
+          <p className={styles.panelSub} style={{ marginBottom: 18 }}>
+            İstifadəçinin əsas məlumatları və rol təyinatları.
+          </p>
+          <div className={styles.form}>
+            <div className={styles.field}>
+              <label htmlFor="u-name">Ad, soyad</label>
+              <input id="u-name" className={styles.input} value={name} onChange={(e) => setName(e.target.value)} maxLength={128} />
+            </div>
+            <div className={styles.field}>
+              <label htmlFor="u-email">E-poçt</label>
+              <input id="u-email" type="email" className={styles.input} value={email} onChange={(e) => setEmail(e.target.value)} disabled={!!user} style={user ? { background: "#f3f2ee" } : undefined} />
+              {user && <span className={styles.hint}>Bu istifadəçinin e-poçt ünvanı dəyişdirilə bilməz.</span>}
+            </div>
+            {!user && (
+              <div className={styles.field}>
+                <label htmlFor="u-pass">İlkin parol</label>
+                <input id="u-pass" type="password" className={styles.input} value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} autoComplete="new-password" />
+                <span className={styles.hint}>Ən azı 8 simvol. İstifadəçi girişdən sonra profildə dəyişə bilər.</span>
+              </div>
+            )}
+            {user && (
+              <div className={styles.field}>
+                <span className={styles.label}>Hesab statusu</span>
+                <div className={styles.toggleRow}>
+                  <Toggle checked={active} onChange={setActive} label="Hesab aktivdir" />
+                  <span>
+                    <strong style={{ display: "block", fontSize: 15 }}>{active ? "Hesab aktivdir" : "Hesab deaktivdir"}</strong>
+                    <span className={styles.hint}>Deaktiv edilən hesab sistemə daxil ola bilməyəcək.</span>
+                  </span>
+                </div>
+              </div>
+            )}
+            <hr className={styles.divider} style={{ margin: "6px 0" }} />
+            <div className={styles.field}>
+              <h3 className={styles.panelTitle} style={{ fontSize: 18 }}>
+                Rollar
+              </h3>
+              <span className={styles.hint}>İstifadəçiyə bir və ya bir neçə rol təyin edin.</span>
+              <div className={styles.checks} style={{ marginTop: 10 }}>
+                {roles.map((r) => (
+                  <label key={r.id} className={styles.check}>
+                    <input type="checkbox" checked={roleIds.has(r.id)} onChange={() => toggle(r.id)} />
+                    <span>
+                      <span className={styles.checkMain}>{r.name}</span>
+                      {r.description && <span className={styles.checkSub}>{r.description}</span>}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {user && (
+          <section className={`${styles.panel} ${styles.panelPad}`}>
+            <h2 className={styles.panelTitle}>Təhlükəsizlik</h2>
+            <p className={styles.panelSub} style={{ marginBottom: 18 }}>
+              İstifadəçinin parolunu və təhlükəsizlik parametrlərini idarə edin.
+            </p>
+            <div className={styles.form}>
+              <div className={styles.field}>
+                <label htmlFor="u-newpass">Yeni parol</label>
+                <input id="u-newpass" type="password" className={styles.input} placeholder="Yeni parol daxil edin" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" />
+                <span className={styles.hint}>Minimum 8 simvol.</span>
+              </div>
+              <div className={styles.row}>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnGold}`}
+                  disabled={busy || newPassword.length < 8}
+                  onClick={async () => {
+                    if (await run(() => api(`iam/users/${user.id}/reset-password`, { method: "POST", body: { newPassword } }), "Parol dəyişdirildi, istifadəçinin bütün sessiyaları bağlandı.")) setNewPassword("");
+                  }}
+                >
+                  Parolu sıfırla
+                </button>
+                <span className={styles.hint}>Bütün sessiyalar bağlanacaq.</span>
+              </div>
+              <hr className={styles.divider} style={{ margin: "6px 0" }} />
+              <div className={styles.field}>
+                <h3 className={styles.panelTitle} style={{ fontSize: 17 }}>
+                  Hesab kilidi
+                </h3>
+                <span className={styles.hint}>Kilidlənmiş hesab sistemə daxil ola bilməyəcək.</span>
+                <div>
+                  <button
+                    type="button"
+                    className={`${styles.btn} ${styles.btnGhost}`}
+                    disabled={busy || !user.locked}
+                    onClick={async () => {
+                      if (await run(() => api(`iam/users/${user.id}/unlock`, { method: "POST" }), "Hesabın kilidi açıldı.")) onChanged();
+                    }}
+                  >
+                    Kilidi aç
+                  </button>
+                </div>
+              </div>
+              <hr className={styles.divider} style={{ margin: "6px 0" }} />
+              <div className={styles.field}>
+                <h3 className={styles.panelTitle} style={{ fontSize: 17 }}>
+                  İki faktorlu autentifikasiya (2FA)
+                </h3>
+                <span className={styles.hint}>Bu istifadəçi üçün 2FA parametrlərini sıfırlayın.</span>
+                <div className={styles.row}>
+                  <button
+                    type="button"
+                    className={`${styles.btn} ${styles.btnGhost}`}
+                    disabled={busy || !user.totpEnabled}
+                    onClick={async () => {
+                      if (confirm("Bu istifadəçinin 2FA-sı sıfırlansın?") && (await run(() => api(`iam/users/${user.id}/reset-2fa`, { method: "POST" }), "2FA sıfırlandı."))) onChanged();
+                    }}
+                  >
+                    2FA-nı sıfırla
+                  </button>
+                  <span className={styles.hint}>İstifadəçi növbəti daxilolmada 2FA-nı yenidən qurmalı olacaq.</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+      </div>
+    </>
   );
 }

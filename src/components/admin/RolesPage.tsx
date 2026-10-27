@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { Info, Pencil, Plus, Trash2 } from "lucide-react";
 import { ApiError, api, useApi } from "@/lib/admin/client";
 import { ACTION_LABELS, MODULE_LABELS, type Action, type Meta, type RoleView } from "@/lib/admin/types";
 import styles from "./admin.module.css";
 import { useAdmin } from "./AdminApp";
-import { Modal } from "./Modal";
+import { Notice, PageHeader, Pill, RowMenu, SearchBox, useCrumbs } from "./ui";
 
 const ALL = "*";
 const key = (module: string, action: string, site: string) => `${module}:${action}:${site}`;
@@ -13,72 +16,109 @@ const key = (module: string, action: string, site: string) => `${module}:${actio
 export function RolesPage() {
   const { can } = useAdmin();
   const roles = useApi<RoleView[]>("iam/roles");
-  const meta = useApi<Meta>("iam/meta");
-  const [editing, setEditing] = useState<RoleView | "new" | null>(null);
+  const [q, setQ] = useState("");
+  useCrumbs([{ label: "Sistem" }, { label: "Rollar" }]);
+  const rows = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return (roles.data ?? []).filter((r) => !needle || `${r.name} ${r.description ?? ""}`.toLowerCase().includes(needle));
+  }, [roles.data, q]);
 
-  if (roles.error || meta.error) return <p className={styles.error}>{roles.error ?? meta.error}</p>;
-  if (!roles.data || !meta.data) return <p className={styles.loading}>Yüklənir…</p>;
+  if (roles.error) return <Notice tone="bad">{roles.error}</Notice>;
+  if (!roles.data) return <p className={styles.loading}>Yüklənir…</p>;
 
   return (
     <>
-      <div className={styles.head}>
-        <div>
-          <h1 className={styles.h1}>Rollar</h1>
-          <p className={styles.sub}>Rol hansı saytda hansı modulda nə edə biləcəyini müəyyən edir. İstifadəçiyə bir neçə rol vermək olar.</p>
+      <PageHeader
+        title="Rollar"
+        sub="Rol sayt, modul və əməliyyat icazələrini müəyyən edir."
+        actions={
+          can("ROLES", "CREATE") && (
+            <Link href="/roles/new" className={`${styles.btn} ${styles.btnGold}`}>
+              <Plus size={18} /> Yeni rol
+            </Link>
+          )
+        }
+      />
+      <section className={styles.panel}>
+        <div className={styles.toolbar}>
+          <SearchBox value={q} onChange={setQ} placeholder="Rol axtar…" />
+          <span className={styles.toolbarEnd}>
+            Nəticələr: <strong style={{ color: "var(--ink)" }}>{rows.length}</strong>
+          </span>
         </div>
-        {can("ROLES", "CREATE") && (
-          <button className={`${styles.btn} ${styles.btnGold}`} onClick={() => setEditing("new")}>
-            Yeni rol
-          </button>
-        )}
-      </div>
-      <div className={`${styles.panel} ${styles.tableWrap}`}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Rol</th>
-              <th>Təsvir</th>
-              <th>İcazə sayı</th>
-              <th>İstifadəçi</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {roles.data.map((r) => (
-              <tr key={r.id}>
-                <td>
-                  {r.name} {r.system && <span className={`${styles.badge} ${styles.badgeGold}`}>Sistem</span>}
-                </td>
-                <td className={styles.muted}>{r.description ?? "—"}</td>
-                <td>{r.superRole ? "Hamısı" : r.permissions.length}</td>
-                <td>{r.userCount}</td>
-                <td>
-                  <button className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} onClick={() => setEditing(r)}>
-                    {r.system || !can("ROLES", "UPDATE") ? "Bax" : "Redaktə"}
-                  </button>
-                </td>
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Rol</th>
+                <th>Təsvir</th>
+                <th>İcazə sayı</th>
+                <th>İstifadəçi</th>
+                <th style={{ textAlign: "right" }}>Əməliyyatlar</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {editing && (
-        <RoleDialog
-          role={editing === "new" ? null : editing}
-          meta={meta.data}
-          onClose={() => setEditing(null)}
-          onSaved={() => {
-            setEditing(null);
-            roles.reload();
-          }}
-        />
-      )}
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const readOnly = r.system || !can("ROLES", "UPDATE");
+                return (
+                  <tr key={r.id}>
+                    <td>
+                      <Link href={`/roles/${r.id}`} className={styles.cellMain}>
+                        {r.name}
+                      </Link>
+                      {r.system && (
+                        <div style={{ marginTop: 4 }}>
+                          <Pill tone="gold" small>
+                            Sistem
+                          </Pill>
+                        </div>
+                      )}
+                    </td>
+                    <td className={styles.muted}>{r.description ?? "—"}</td>
+                    <td>{r.superRole ? "Hamısı" : r.permissions.length}</td>
+                    <td>{r.userCount}</td>
+                    <td>
+                      <div className={styles.rowActions}>
+                        <Link href={`/roles/${r.id}`} className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`}>
+                          {readOnly ? "Bax" : "Redaktə"}
+                        </Link>
+                        <RowMenu items={[{ label: readOnly ? "Bax" : "Redaktə et", icon: <Pencil size={16} />, href: `/roles/${r.id}` }]} />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div className={styles.tableFoot}>
+          <span>{roles.data.length} rol</span>
+          <span className={styles.footHint}>
+            <Info size={16} /> Bir istifadəçiyə bir neçə rol verilə bilər.
+          </span>
+        </div>
+      </section>
     </>
   );
 }
 
-function RoleDialog({ role, meta, onClose, onSaved }: { role: RoleView | null; meta: Meta; onClose: () => void; onSaved: () => void }) {
+/** Rolun redaktəsi: ad, təsvir və sayt üzrə modul × əməliyyat matrisi */
+export function RoleEditorPage({ id }: { id: string }) {
+  const roles = useApi<RoleView[]>("iam/roles");
+  const meta = useApi<Meta>("iam/meta");
+  const isNew = id === "new";
+  const role = isNew ? null : (roles.data?.find((r) => String(r.id) === id) ?? null);
+  useCrumbs([{ label: "Sistem" }, { label: "Rollar", href: "/roles" }, { label: isNew ? "Yeni rol" : (role?.name ?? "") }]);
+
+  if (roles.error || meta.error) return <Notice tone="bad">{roles.error ?? meta.error}</Notice>;
+  if (!roles.data || !meta.data) return <p className={styles.loading}>Yüklənir…</p>;
+  if (!isNew && !role) return <Notice tone="bad">Rol tapılmadı.</Notice>;
+  return <RoleForm key={role?.id ?? "new"} role={role} meta={meta.data} />;
+}
+
+function RoleForm({ role, meta }: { role: RoleView | null; meta: Meta }) {
   const { can } = useAdmin();
+  const router = useRouter();
   const readOnly = !!role && (role.system || !can("ROLES", "UPDATE"));
   const [name, setName] = useState(role?.name ?? "");
   const [description, setDescription] = useState(role?.description ?? "");
@@ -95,8 +135,7 @@ function RoleDialog({ role, meta, onClose, onSaved }: { role: RoleView | null; m
       return next;
     });
 
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
+  async function save() {
     setBusy(true);
     setError("");
     const permissions = [...granted].map((k) => {
@@ -105,10 +144,9 @@ function RoleDialog({ role, meta, onClose, onSaved }: { role: RoleView | null; m
     });
     try {
       await api(role ? `iam/roles/${role.id}` : "iam/roles", { method: role ? "PUT" : "POST", body: { name, description, permissions } });
-      onSaved();
+      router.push("/roles");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Xəta baş verdi.");
-    } finally {
       setBusy(false);
     }
   }
@@ -118,7 +156,7 @@ function RoleDialog({ role, meta, onClose, onSaved }: { role: RoleView | null; m
     setBusy(true);
     try {
       await api(`iam/roles/${role.id}`, { method: "DELETE" });
-      onSaved();
+      router.push("/roles");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Xəta baş verdi.");
       setBusy(false);
@@ -126,88 +164,109 @@ function RoleDialog({ role, meta, onClose, onSaved }: { role: RoleView | null; m
   }
 
   const scopeCount = (s: string) => [...granted].filter((k) => k.endsWith(`:${s}`)).length;
+  const sites = [{ code: ALL, name: "Bütün saytlar" }, ...meta.sites];
 
   return (
-    <Modal title={role ? (readOnly ? role.name : "Rolu redaktə et") : "Yeni rol"} onClose={onClose}>
-      <form className={styles.form} onSubmit={save}>
+    <>
+      <PageHeader
+        back={{ href: "/roles" }}
+        eyebrow={role ? "Rol redaksiyası" : "Yeni rol"}
+        title={role?.name || "Yeni rol"}
+        sub={role?.description ?? "Rolun adını və icazələrini təyin edin."}
+        actions={
+          <>
+            <Link href="/roles" className={`${styles.btn} ${styles.btnGhost}`}>
+              {readOnly ? "Geri" : "Ləğv et"}
+            </Link>
+            {!readOnly && (
+              <button type="button" className={`${styles.btn} ${styles.btnGold}`} disabled={busy} onClick={() => void save()}>
+                Yadda saxla
+              </button>
+            )}
+          </>
+        }
+      />
+      {error && (
+        <div style={{ marginBottom: 16 }}>
+          <Notice tone="bad">{error}</Notice>
+        </div>
+      )}
+      <section className={`${styles.panel} ${styles.panelPad}`}>
         {role?.superRole ? (
-          <p className={styles.sub}>Super Admin rolu bütün saytlarda və modullarda tam səlahiyyətə malikdir və dəyişdirilə bilməz.</p>
+          <p className={styles.panelSub}>Super Admin rolu bütün saytlarda və modullarda tam səlahiyyətə malikdir və dəyişdirilə bilməz.</p>
         ) : (
           <>
-            <div className={styles.field}>
-              <label htmlFor="r-name">Ad</label>
-              <input id="r-name" className={styles.input} value={name} onChange={(e) => setName(e.target.value)} required maxLength={64} disabled={readOnly} />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="r-desc">Təsvir</label>
-              <input id="r-desc" className={styles.input} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={255} disabled={readOnly} />
-            </div>
-            <div className={styles.field}>
-              <span className={styles.label}>İcazələr</span>
-              <div className={styles.tabs} role="tablist">
-                {[{ code: ALL, name: "Bütün saytlar" }, ...meta.sites].map((s) => (
-                  <button key={s.code} type="button" role="tab" aria-selected={scope === s.code} className={styles.tab} onClick={() => setScope(s.code)}>
-                    {s.name}
-                    {scopeCount(s.code) > 0 && <span className={styles.badge} style={{ marginLeft: 6 }}>{scopeCount(s.code)}</span>}
-                  </button>
-                ))}
+            <div className={styles.fieldGrid2}>
+              <div className={styles.field}>
+                <label htmlFor="r-name">Rolun adı</label>
+                <input id="r-name" className={styles.input} value={name} onChange={(e) => setName(e.target.value)} maxLength={64} disabled={readOnly} />
               </div>
-              <span className={styles.hint}>
-                {scope === ALL
-                  ? "Burada verilən icazə bütün saytlara şamil olur. İstifadəçilər, Rollar və Audit log modulları saytdan asılı deyil, yalnız burada verilir."
-                  : "Burada verilən icazə yalnız bu sayta şamil olur."}
-              </span>
-              <div className={styles.tableWrap}>
-                <table className={styles.matrix}>
-                  <thead>
-                    <tr>
-                      <th>Modul</th>
-                      {meta.actions.map((a) => (
-                        <th key={a}>{ACTION_LABELS[a as Action]}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {modules.map((m) => (
-                      <tr key={m.code}>
-                        <td>{MODULE_LABELS[m.code] ?? m.code}</td>
-                        {meta.actions.map((a) => {
-                          const k = key(m.code, a, scope);
-                          return (
-                            <td key={a}>
-                              <input type="checkbox" checked={granted.has(k)} onChange={() => toggle(k)} disabled={readOnly} aria-label={`${MODULE_LABELS[m.code] ?? m.code}: ${ACTION_LABELS[a as Action]}`} />
-                            </td>
-                          );
-                        })}
-                      </tr>
+              <div className={styles.field}>
+                <label htmlFor="r-desc">Təsvir</label>
+                <textarea id="r-desc" className={styles.input} rows={2} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={255} disabled={readOnly} />
+                <span className={styles.hint} style={{ textAlign: "right" }}>
+                  {description.length}/255
+                </span>
+              </div>
+            </div>
+
+            <h3 className={styles.panelTitle} style={{ fontSize: 17, margin: "24px 0 10px" }}>
+              Sayt əhatəsi
+            </h3>
+            <div className={styles.tabs} role="tablist" style={{ marginBottom: 14 }}>
+              {sites.map((s) => (
+                <button key={s.code} type="button" role="tab" aria-selected={scope === s.code} className={styles.tab} onClick={() => setScope(s.code)}>
+                  {s.name}
+                  {scopeCount(s.code) > 0 && (
+                    <span style={{ marginLeft: 8 }}>
+                      <Pill tone="gold" small>
+                        {scopeCount(s.code)}
+                      </Pill>
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <Notice tone="info">
+              {scope === ALL ? "Burada verilən icazə bütün saytlara şamil olur. İstifadəçilər, Rollar və Audit log modulları saytdan asılı deyil, yalnız burada verilir." : "Bu icazələr yalnız seçilmiş sayta şamil olur."}
+            </Notice>
+            <div className={styles.tableWrap} style={{ marginTop: 14, border: "1px solid var(--line)", borderRadius: 10 }}>
+              <table className={styles.matrix}>
+                <thead>
+                  <tr>
+                    <th>Modul</th>
+                    {meta.actions.map((a) => (
+                      <th key={a}>{ACTION_LABELS[a as Action]}</th>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </tr>
+                </thead>
+                <tbody>
+                  {modules.map((m) => (
+                    <tr key={m.code}>
+                      <td>{MODULE_LABELS[m.code] ?? m.code}</td>
+                      {meta.actions.map((a) => {
+                        const k = key(m.code, a, scope);
+                        return (
+                          <td key={a}>
+                            <input type="checkbox" checked={granted.has(k)} onChange={() => toggle(k)} disabled={readOnly} aria-label={`${MODULE_LABELS[m.code] ?? m.code}: ${ACTION_LABELS[a as Action]}`} />
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </>
         )}
-        {error && (
-          <p className={styles.error} role="alert">
-            {error}
-          </p>
+        {role && !role.system && can("ROLES", "DELETE") && (
+          <div style={{ marginTop: 22, display: "flex", justifyContent: "flex-end" }}>
+            <button type="button" className={`${styles.btn} ${styles.btnDanger}`} onClick={() => void remove()} disabled={busy} style={{ background: "var(--bad-bg)" }}>
+              <Trash2 size={16} /> Rolu sil
+            </button>
+          </div>
         )}
-        <div className={styles.modalFoot}>
-          {role && !role.system && can("ROLES", "DELETE") && (
-            <button type="button" className={`${styles.btn} ${styles.btnDanger}`} onClick={remove} disabled={busy} style={{ marginRight: "auto" }}>
-              Sil
-            </button>
-          )}
-          <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={onClose}>
-            {readOnly ? "Bağla" : "Ləğv et"}
-          </button>
-          {!readOnly && (
-            <button className={`${styles.btn} ${styles.btnGold}`} disabled={busy}>
-              Yadda saxla
-            </button>
-          )}
-        </div>
-      </form>
-    </Modal>
+      </section>
+    </>
   );
 }

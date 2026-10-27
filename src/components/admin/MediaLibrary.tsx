@@ -1,37 +1,48 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { CloudUpload, Plus, X } from "lucide-react";
 import { ApiError, api, useApi } from "@/lib/admin/client";
 import { previewUrl, uploadMedia, type MediaAsset } from "@/lib/admin/upload";
 import styles from "./admin.module.css";
 import { useAdmin } from "./AdminApp";
 import { Modal } from "./Modal";
-import { SiteTabs } from "./SiteTabs";
+import { Notice, PageHeader, Pagination, SearchBox, useCrumbs } from "./ui";
 
 type PageView = { items: MediaAsset[]; total: number; page: number; size: number };
+const SIZE = 12;
 const kb = (n: number) => (n > 1_048_576 ? `${(n / 1_048_576).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
+const dims = (a: MediaAsset) => (a.width && a.height ? `${a.width} × ${a.height}` : "");
 
 function useLibrary(site: string) {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(0);
-  const qs = new URLSearchParams({ page: String(page), size: "30" });
+  const qs = new URLSearchParams({ page: String(page), size: String(SIZE) });
   if (q.trim()) qs.set("q", q.trim());
   const data = useApi<PageView>(`panel/sites/${site}/media?${qs}`);
-  return { q, setQ: (v: string) => { setQ(v); setPage(0); }, page, setPage, data };
+  return {
+    q,
+    setQ: (v: string) => {
+      setQ(v);
+      setPage(0);
+    },
+    page,
+    setPage,
+    data,
+  };
 }
 
-function Grid({ items, onPick }: { items: MediaAsset[]; onPick: (a: MediaAsset) => void }) {
+function Grid({ items, selected, onPick }: { items: MediaAsset[]; selected?: number | null; onPick: (a: MediaAsset) => void }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 }}>
+    <div className={styles.mediaGrid} style={{ padding: 0 }}>
       {items.map((a) => (
-        <button key={a.id} type="button" onClick={() => onPick(a)} style={{ border: "1px solid var(--line)", borderRadius: 6, padding: 8, background: "var(--white)", cursor: "pointer", textAlign: "left", display: "grid", gap: 6 }}>
+        <button key={a.id} type="button" className={styles.mediaItem} aria-pressed={a.id === selected} onClick={() => onPick(a)}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={previewUrl(a.url)} alt={a.alt.az ?? ""} loading="lazy" style={{ width: "100%", height: 100, objectFit: "contain", background: "var(--paper)", borderRadius: 4 }} />
-          <span className={styles.barName} style={{ fontSize: 13 }} title={a.name ?? ""}>
-            {a.name ?? "fayl"}
-          </span>
-          <span className={styles.hint}>
-            {a.width && a.height ? `${a.width}×${a.height}, ` : ""}
+          <img src={previewUrl(a.url)} alt={a.alt.az ?? ""} loading="lazy" />
+          <strong title={a.name ?? ""}>{a.name ?? "fayl"}</strong>
+          <span>
+            {dims(a)}
+            {dims(a) && " · "}
             {kb(a.size)}
           </span>
         </button>
@@ -40,7 +51,7 @@ function Grid({ items, onPick }: { items: MediaAsset[]; onPick: (a: MediaAsset) 
   );
 }
 
-function UploadButton({ site, onDone }: { site: string; onDone: () => void }) {
+function UploadButton({ site, onDone, variant = "gold" }: { site: string; onDone: () => void; variant?: "gold" | "picker" }) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -59,12 +70,13 @@ function UploadButton({ site, onDone }: { site: string; onDone: () => void }) {
     }
   }
   return (
-    <span>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
       <input ref={input} type="file" multiple hidden accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml" onChange={(e) => pick(e.target.files)} />
       <button type="button" className={`${styles.btn} ${styles.btnGold}`} disabled={busy} onClick={() => input.current?.click()}>
+        {variant === "picker" ? <CloudUpload size={18} /> : <Plus size={18} />}
         {busy ? "Yüklənir…" : "Şəkil yüklə"}
       </button>
-      {error && <span className={styles.error}> {error}</span>}
+      {error && <span className={styles.error}>{error}</span>}
     </span>
   );
 }
@@ -73,53 +85,69 @@ export function MediaPage({ code }: { code: string }) {
   const { me, can } = useAdmin();
   const site = me.sites.find((s) => s.code === code);
   const lib = useLibrary(code);
-  const [open, setOpen] = useState<MediaAsset | null>(null);
+  const [openId, setOpenId] = useState<number | null>(null);
+  useCrumbs([{ label: site?.name ?? code }, { label: "Media" }]);
   if (!site || !can("MEDIA", "VIEW", code)) return <p className={styles.error}>Bu bölməyə giriş icazəniz yoxdur.</p>;
-  const pages = lib.data.data ? Math.max(1, Math.ceil(lib.data.data.total / 30)) : 1;
+  const d = lib.data.data;
+  const pages = d ? Math.max(1, Math.ceil(d.total / SIZE)) : 1;
+  const open = d?.items.find((a) => a.id === openId) ?? null;
   return (
     <>
-      <div className={styles.head}>
-        <div>
-          <h1 className={styles.h1}>{site.name}</h1>
-          <p className={styles.sub}>Saytın şəkilləri. Şəkillər yüklənəndə avtomatik kiçildilir.</p>
-        </div>
-        {can("MEDIA", "CREATE", code) && <UploadButton site={code} onDone={lib.data.reload} />}
-      </div>
-      <SiteTabs code={code} current="media" />
-      <div className={styles.filters}>
-        <input className={styles.input} placeholder="Axtar (ad və ya alt mətn)" value={lib.q} onChange={(e) => lib.setQ(e.target.value)} aria-label="Axtar" />
-      </div>
-      {lib.data.error ? (
-        <p className={styles.error}>{lib.data.error}</p>
-      ) : !lib.data.data ? (
-        <p className={styles.loading}>Yüklənir…</p>
-      ) : lib.data.data.items.length === 0 ? (
-        <p className={styles.muted}>Şəkil tapılmadı.</p>
-      ) : (
-        <>
-          <Grid items={lib.data.data.items} onPick={setOpen} />
-          <div className={styles.pager}>
-            <button className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} disabled={lib.page === 0} onClick={() => lib.setPage(lib.page - 1)}>
-              Əvvəlki
-            </button>
-            <span className={styles.muted}>
-              {lib.page + 1} / {pages} ({lib.data.data.total} şəkil)
-            </span>
-            <button className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} disabled={lib.page + 1 >= pages} onClick={() => lib.setPage(lib.page + 1)}>
-              Növbəti
-            </button>
+      <PageHeader title="Media kitabxanası" sub="Saytın şəkillərini və alt mətnlərini idarə edin." actions={can("MEDIA", "CREATE", code) && <UploadButton site={code} onDone={lib.data.reload} />} />
+      <div className={open ? styles.mediaLayout : undefined}>
+        <section className={styles.panel}>
+          <div className={styles.toolbar}>
+            <SearchBox value={lib.q} onChange={lib.setQ} placeholder="Ad və ya alt mətn axtar…" />
           </div>
-        </>
-      )}
-      {open && <AssetDialog site={code} asset={open} onClose={() => setOpen(null)} onChanged={() => { setOpen(null); lib.data.reload(); }} />}
+          {lib.data.error ? (
+            <div style={{ padding: 20 }}>
+              <Notice tone="bad">{lib.data.error}</Notice>
+            </div>
+          ) : !d ? (
+            <p className={styles.loading} style={{ padding: "0 20px" }}>
+              Yüklənir…
+            </p>
+          ) : d.items.length === 0 ? (
+            <p className={styles.muted} style={{ padding: "0 20px 24px" }}>
+              Şəkil tapılmadı.
+            </p>
+          ) : (
+            <div style={{ padding: "0 20px 8px" }}>
+              <Grid items={d.items} selected={openId} onPick={(a) => setOpenId(a.id)} />
+            </div>
+          )}
+          {d && (
+            <div className={styles.tableFoot}>
+              <span>
+                {d.items.length} / {d.total}
+              </span>
+              <Pagination page={lib.page} pages={pages} onChange={lib.setPage} />
+            </div>
+          )}
+        </section>
+        {open && (
+          <AssetPanel
+            key={open.id}
+            site={code}
+            asset={open}
+            onClose={() => setOpenId(null)}
+            onSaved={lib.data.reload}
+            onDeleted={() => {
+              setOpenId(null);
+              lib.data.reload();
+            }}
+          />
+        )}
+      </div>
     </>
   );
 }
 
-function AssetDialog({ site, asset, onClose, onChanged }: { site: string; asset: MediaAsset; onClose: () => void; onChanged: () => void }) {
+function AssetPanel({ site, asset, onClose, onSaved, onDeleted }: { site: string; asset: MediaAsset; onClose: () => void; onSaved: () => void; onDeleted: () => void }) {
   const { can } = useAdmin();
   const [alt, setAlt] = useState<Record<string, string>>({ az: "", en: "", ru: "", ...asset.alt });
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function run(fn: () => Promise<unknown>, ok?: string) {
@@ -138,55 +166,93 @@ function AssetDialog({ site, asset, onClose, onChanged }: { site: string; asset:
   }
 
   return (
-    <Modal title={asset.name ?? "Şəkil"} onClose={onClose}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={previewUrl(asset.url)} alt={alt.az} style={{ maxWidth: "100%", maxHeight: 280, objectFit: "contain", background: "var(--paper)", borderRadius: 6, justifySelf: "center" }} />
-      <div className={styles.field}>
-        <label htmlFor="m-url">Ünvan</label>
-        <div className={styles.row} style={{ flexWrap: "nowrap" }}>
-          <input id="m-url" className={styles.input} readOnly value={asset.url} onFocus={(e) => e.target.select()} />
-          <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={() => navigator.clipboard?.writeText(asset.url)}>
-            Kopyala
-          </button>
-        </div>
-        <span className={styles.hint}>
-          {asset.mime}, {kb(asset.size)}
-          {asset.width && asset.height ? `, ${asset.width}×${asset.height}` : ""}
-          {asset.uploadedBy ? `, yükləyən: ${asset.uploadedBy}` : ""}
-        </span>
+    <aside className={`${styles.panel} ${styles.panelPad} ${styles.sticky}`} aria-label="Şəkil detalları">
+      <div className={styles.panelHead} style={{ marginBottom: 12 }}>
+        <h2 style={{ overflowWrap: "anywhere" }}>{asset.name ?? "Şəkil"}</h2>
+        <button type="button" className={styles.modalClose} onClick={onClose} aria-label="Bağla">
+          <X size={22} />
+        </button>
+      </div>
+      <div className={styles.imageBox}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={previewUrl(asset.url)} alt={alt.az} />
+      </div>
+      <dl className={styles.defList} style={{ margin: "16px 0" }}>
+        <dt>Format</dt>
+        <dd>{asset.mime}</dd>
+        {dims(asset) && (
+          <>
+            <dt>Ölçü</dt>
+            <dd>{dims(asset)}</dd>
+          </>
+        )}
+        <dt>Fayl ölçüsü</dt>
+        <dd>{kb(asset.size)}</dd>
+        {asset.uploadedBy && (
+          <>
+            <dt>Yükləyən</dt>
+            <dd>{asset.uploadedBy}</dd>
+          </>
+        )}
+      </dl>
+      <div className={styles.fieldRow} style={{ gridTemplateColumns: "60px minmax(0,1fr) auto", alignItems: "center", marginBottom: 12 }}>
+        <label htmlFor="m-url" style={{ paddingTop: 0 }}>
+          URL
+        </label>
+        <input id="m-url" className={styles.input} readOnly value={asset.url} onFocus={(e) => e.target.select()} />
+        <button
+          type="button"
+          className={`${styles.btn} ${styles.btnOutlineGold}`}
+          onClick={() => {
+            void navigator.clipboard?.writeText(asset.url);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          }}
+        >
+          {copied ? "Kopyalandı" : "Kopyala"}
+        </button>
       </div>
       {(["az", "en", "ru"] as const).map((l) => (
-        <div key={l} className={styles.field}>
-          <label htmlFor={`alt-${l}`}>Alt mətn ({l.toUpperCase()})</label>
+        <div key={l} className={styles.fieldRow} style={{ gridTemplateColumns: "100px minmax(0,1fr)", alignItems: "center", marginBottom: 12 }}>
+          <label htmlFor={`alt-${l}`} style={{ paddingTop: 0 }}>
+            Alt mətn ({l.toUpperCase()})
+          </label>
           <input id={`alt-${l}`} className={styles.input} maxLength={200} value={alt[l] ?? ""} onChange={(e) => setAlt((p) => ({ ...p, [l]: e.target.value }))} disabled={!can("MEDIA", "UPDATE", site)} />
         </div>
       ))}
-      <span className={styles.hint}>Alt mətn şəkli görə bilməyən istifadəçilərə və axtarış sistemlərinə şəklin nə olduğunu deyir. Qısa və dəqiq yazın.</span>
       {msg && (
-        <p className={msg.ok ? styles.ok : styles.error} role="status">
+        <p className={msg.ok ? styles.ok : styles.error} role="status" style={{ marginBottom: 10 }}>
           {msg.text}
         </p>
       )}
-      <div className={styles.modalFoot}>
-        {can("MEDIA", "DELETE", site) && (
+      {can("MEDIA", "UPDATE", site) && (
+        <button
+          className={`${styles.btn} ${styles.btnGold} ${styles.btnBlock}`}
+          disabled={busy}
+          onClick={() => {
+            void run(() => api(`panel/sites/${site}/media/${asset.id}`, { method: "PUT", body: alt }), "Saxlanıldı.").then((ok) => ok && onSaved());
+          }}
+        >
+          Alt mətni saxla
+        </button>
+      )}
+      {can("MEDIA", "DELETE", site) && (
+        <div style={{ marginTop: 16, background: "var(--bad-bg)", borderRadius: 10, padding: 12, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
           <button
-            className={`${styles.btn} ${styles.btnDanger}`}
-            style={{ marginRight: "auto" }}
+            className={`${styles.btn} ${styles.btnDanger} ${styles.btnSm}`}
             disabled={busy}
-            onClick={async () => {
-              if (confirm("Bu şəkil silinsin?") && (await run(() => api(`panel/sites/${site}/media/${asset.id}`, { method: "DELETE" }))) ) onChanged();
+            onClick={() => {
+              if (confirm("Bu şəkil silinsin?")) void run(() => api(`panel/sites/${site}/media/${asset.id}`, { method: "DELETE" })).then((ok) => ok && onDeleted());
             }}
           >
-            Sil
+            Şəkli sil
           </button>
-        )}
-        {can("MEDIA", "UPDATE", site) && (
-          <button className={`${styles.btn} ${styles.btnGold}`} disabled={busy} onClick={async () => { if (await run(() => api(`panel/sites/${site}/media/${asset.id}`, { method: "PUT", body: alt }), "Saxlanıldı.")) onChanged(); }}>
-            Alt mətni saxla
-          </button>
-        )}
-      </div>
-    </Modal>
+          <span className={styles.error} style={{ fontSize: 13 }}>
+            İstifadə olunan şəkil silinə bilməz.
+          </span>
+        </div>
+      )}
+    </aside>
   );
 }
 
@@ -194,31 +260,60 @@ function AssetDialog({ site, asset, onClose, onChanged }: { site: string; asset:
 export function MediaPicker({ site, onPick, onClose }: { site: string; onPick: (url: string) => void; onClose: () => void }) {
   const { can } = useAdmin();
   const lib = useLibrary(site);
+  const [sel, setSel] = useState<MediaAsset | null>(null);
+  const d = lib.data.data;
   return (
-    <Modal title="Şəkil seç" onClose={onClose}>
-      <div className={styles.row} style={{ alignItems: "center" }}>
-        <input className={styles.input} style={{ flex: 1 }} placeholder="Axtar" value={lib.q} onChange={(e) => lib.setQ(e.target.value)} aria-label="Axtar" />
-        {can("MEDIA", "CREATE", site) && <UploadButton site={site} onDone={lib.data.reload} />}
-      </div>
-      {lib.data.error ? (
-        <p className={styles.error}>{lib.data.error}</p>
-      ) : !lib.data.data ? (
-        <p className={styles.loading}>Yüklənir…</p>
-      ) : lib.data.data.items.length === 0 ? (
-        <p className={styles.muted}>Şəkil yoxdur. Yeni şəkil yükləyin.</p>
-      ) : (
-        <>
-          <Grid items={lib.data.data.items} onPick={(a) => onPick(a.url)} />
-          <div className={styles.pager}>
-            <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} disabled={lib.page === 0} onClick={() => lib.setPage(lib.page - 1)}>
-              Əvvəlki
-            </button>
-            <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} disabled={(lib.page + 1) * 30 >= lib.data.data.total} onClick={() => lib.setPage(lib.page + 1)}>
-              Növbəti
-            </button>
+    <Modal title="Şəkil seç" onClose={onClose} width={1000}>
+      <div className={styles.split} style={{ gridTemplateColumns: "minmax(0, 1fr) 300px" }}>
+        <div>
+          <div className={styles.row} style={{ marginBottom: 14, flexWrap: "nowrap" }}>
+            <SearchBox value={lib.q} onChange={lib.setQ} placeholder="Şəkil axtar…" />
+            {can("MEDIA", "CREATE", site) && <UploadButton site={site} onDone={lib.data.reload} variant="picker" />}
           </div>
-        </>
-      )}
+          {lib.data.error ? (
+            <Notice tone="bad">{lib.data.error}</Notice>
+          ) : !d ? (
+            <p className={styles.loading}>Yüklənir…</p>
+          ) : d.items.length === 0 ? (
+            <p className={styles.muted}>Şəkil yoxdur. Yeni şəkil yükləyin.</p>
+          ) : (
+            <Grid items={d.items} selected={sel?.id} onPick={setSel} />
+          )}
+          {d && (
+            <div className={styles.tableFoot} style={{ padding: "12px 0 0", border: 0 }}>
+              <span />
+              <Pagination page={lib.page} pages={Math.max(1, Math.ceil(d.total / SIZE))} onChange={lib.setPage} />
+            </div>
+          )}
+        </div>
+        <div className={styles.panel} style={{ padding: 16, alignSelf: "start" }}>
+          <strong style={{ display: "block", marginBottom: 10 }}>Seçilmiş şəkil</strong>
+          {sel ? (
+            <>
+              <div className={styles.imageBox}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={previewUrl(sel.url)} alt={sel.alt.az ?? ""} />
+              </div>
+              <p style={{ fontWeight: 600, marginTop: 12, overflowWrap: "anywhere" }}>{sel.name}</p>
+              <p className={styles.muted} style={{ fontSize: 13 }}>
+                {dims(sel)}
+                {dims(sel) && " · "}
+                {kb(sel.size)}
+              </p>
+            </>
+          ) : (
+            <p className={styles.muted}>Soldan şəkil seçin.</p>
+          )}
+        </div>
+      </div>
+      <div className={styles.modalFoot}>
+        <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={onClose}>
+          Ləğv et
+        </button>
+        <button type="button" className={`${styles.btn} ${styles.btnGold}`} disabled={!sel} onClick={() => sel && onPick(sel.url)}>
+          Seçilmiş şəkli istifadə et
+        </button>
+      </div>
     </Modal>
   );
 }

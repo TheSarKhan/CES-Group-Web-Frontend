@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Cropper from "cropperjs";
+import { FolderOpen, GripVertical, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
 import "cropperjs/dist/cropper.css";
 import { uploadImage, uploadMedia, previewUrl } from "@/lib/admin/upload";
 import styles from "./admin.module.css";
@@ -11,8 +12,8 @@ import { Modal } from "./Modal";
 /** Texnika kataloqu köhnə qovluq əsaslı yükləməni saxlayır, digər sahələr media kitabxanasına yazır */
 const send = (file: File, folder: string, site?: string) => (site && !(site === "equipment" && folder !== "misc") ? uploadMedia(file, site).then((a) => a.url) : uploadImage(file, folder));
 
-/** Tək şəkil: yüklə, ünvan yaz və ya sil */
-export function ImageField({ label, value, folder, crop, site, onChange }: { label: string; value: string; folder: string; crop?: number | "free"; site?: string; onChange: (v: string) => void }) {
+/** Tək şəkil: baxış qutusu, "Dəyiş", "Kitabxanadan seç" və silmə düymələri. `label` verilməsə başlıq kartın özündədir. */
+export function ImageField({ label, value, folder, crop, site, onChange, contain = true }: { label?: string; value: string; folder: string; crop?: number | "free"; site?: string; onChange: (v: string) => void; contain?: boolean }) {
   const [library, setLibrary] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -47,7 +48,7 @@ export function ImageField({ label, value, folder, crop, site, onChange }: { lab
 
   return (
     <div className={styles.field}>
-      <span className={styles.label}>{label}</span>
+      {label && <span className={styles.label}>{label}</span>}
       {pending && (
         <CropDialog
           src={pending.url}
@@ -65,41 +66,43 @@ export function ImageField({ label, value, folder, crop, site, onChange }: { lab
           }}
         />
       )}
-      <div className={styles.row} style={{ alignItems: "center" }}>
+      <div className={styles.imageBox} style={{ minHeight: value ? undefined : 150 }}>
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={previewUrl(value)} alt="" style={{ width: 84, height: 64, objectFit: "contain", background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 6 }} />
+          <img src={previewUrl(value)} alt="" className={contain ? undefined : styles.imageBoxCover} />
         ) : (
           <span className={styles.hint}>Şəkil yoxdur</span>
         )}
-        <input ref={input} type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml" hidden onChange={(e) => pick(e.target.files?.[0])} />
-        <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} disabled={busy} onClick={() => input.current?.click()}>
-          {busy ? "Yüklənir…" : value ? "Dəyiş" : "Yüklə"}
+      </div>
+      <input ref={input} type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml" hidden onChange={(e) => pick(e.target.files?.[0])} />
+      <div className={styles.imageActions} style={{ marginTop: 0 }}>
+        <button type="button" className={`${styles.btn} ${styles.btnGhost}`} disabled={busy} onClick={() => input.current?.click()}>
+          <ImageIcon size={18} /> {busy ? "Yüklənir…" : value ? "Dəyiş" : "Yüklə"}
         </button>
         {site && (
-          <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} onClick={() => setLibrary(true)}>
-            Kitabxanadan seç
+          <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setLibrary(true)}>
+            <FolderOpen size={18} /> Kitabxanadan seç
           </button>
         )}
         {value && (
-          <button type="button" className={`${styles.btn} ${styles.btnDanger} ${styles.btnSm}`} onClick={() => onChange("")}>
-            Sil
+          <button type="button" className={`${styles.btn} ${styles.btnDanger}`} style={{ flex: "none", minWidth: 0, padding: "0 14px" }} onClick={() => onChange("")} aria-label="Şəkli sil">
+            <Trash2 size={18} />
           </button>
         )}
       </div>
-      <input className={styles.input} value={value} onChange={(e) => onChange(e.target.value)} placeholder="və ya şəkil ünvanını yazın" aria-label={`${label}, ünvan`} />
       {error && <span className={styles.error}>{error}</span>}
       {library && site && <MediaPicker site={site} onClose={() => setLibrary(false)} onPick={(u) => { onChange(u); setLibrary(false); }} />}
     </div>
   );
 }
 
-/** Qalereya: bir neçə şəkil */
-export function GalleryField({ label, value, folder, site, onChange }: { label: string; value: string[]; folder: string; site?: string; onChange: (v: string[]) => void }) {
+/** Qalereya: şəkillər şəbəkədə, sürüşdürməklə sıralanır; hər birinin silmə düyməsi var */
+export function GalleryField({ value, folder, site, onChange }: { label?: string; value: string[]; folder: string; site?: string; onChange: (v: string[]) => void }) {
   const [library, setLibrary] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [drag, setDrag] = useState<number | null>(null);
 
   async function add(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -118,47 +121,44 @@ export function GalleryField({ label, value, folder, site, onChange }: { label: 
     }
   }
 
-  const move = (i: number, d: -1 | 1) => {
-    const j = i + d;
-    if (j < 0 || j >= value.length) return;
+  function drop(to: number) {
+    if (drag === null || drag === to) return setDrag(null);
     const next = [...value];
-    [next[i], next[j]] = [next[j], next[i]];
+    next.splice(to, 0, next.splice(drag, 1)[0]);
+    setDrag(null);
     onChange(next);
-  };
+  }
 
   return (
     <div className={styles.field}>
-      <span className={styles.label}>{label}</span>
-      <div className={styles.row}>
+      <div className={styles.galleryGrid}>
         {value.map((u, i) => (
-          <div key={u + i} style={{ display: "grid", gap: 4, width: 110 }}>
+          <div key={u + i} className={styles.galleryItem} draggable onDragStart={() => setDrag(i)} onDragOver={(e) => e.preventDefault()} onDrop={() => drop(i)} onDragEnd={() => setDrag(null)} style={drag === i ? { opacity: 0.4 } : undefined}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={previewUrl(u)} alt="" style={{ width: 110, height: 80, objectFit: "cover", borderRadius: 6, border: "1px solid var(--line)" }} />
-            <div className={styles.row} style={{ gap: 4 }}>
-              <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} style={{ padding: "2px 8px" }} onClick={() => move(i, -1)} aria-label="Sola">
-                ←
-              </button>
-              <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} style={{ padding: "2px 8px" }} onClick={() => move(i, 1)} aria-label="Sağa">
-                →
-              </button>
-              <button type="button" className={`${styles.btn} ${styles.btnDanger} ${styles.btnSm}`} style={{ padding: "2px 8px" }} onClick={() => onChange(value.filter((_, k) => k !== i))} aria-label="Sil">
-                ×
+            <img src={previewUrl(u)} alt="" />
+            <div className={styles.galleryItemBar}>
+              <span className={styles.dragHandle} title="Sıranı dəyişmək üçün sürüşdürün">
+                <GripVertical size={18} />
+              </span>
+              <button type="button" className={`${styles.iconBtn} ${styles.iconBtnSm} ${styles.iconBtnDanger}`} onClick={() => onChange(value.filter((_, k) => k !== i))} aria-label="Şəkli sil">
+                <Trash2 size={16} />
               </button>
             </div>
           </div>
         ))}
       </div>
       <input ref={input} type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden onChange={(e) => add(e.target.files)} />
-      <div>
-        <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} disabled={busy} onClick={() => input.current?.click()}>
-          {busy ? "Yüklənir…" : "Şəkil əlavə et"}
-        </button>{" "}
+      <div className={styles.row}>
+        <button type="button" className={`${styles.btn} ${styles.btnOutlineGold}`} disabled={busy} onClick={() => input.current?.click()}>
+          <Plus size={18} /> {busy ? "Yüklənir…" : "Şəkil əlavə et"}
+        </button>
         {site && (
-          <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} onClick={() => setLibrary(true)}>
-            Kitabxanadan əlavə et
+          <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setLibrary(true)}>
+            <FolderOpen size={18} /> Kitabxanadan əlavə et
           </button>
         )}
       </div>
+      {value.length > 1 && <span className={styles.hint}>Şəkillərin sırasını sürükləyərək dəyişin.</span>}
       {library && site && <MediaPicker site={site} onClose={() => setLibrary(false)} onPick={(u) => { onChange([...value, u]); setLibrary(false); }} />}
       {error && <span className={styles.error}>{error}</span>}
     </div>

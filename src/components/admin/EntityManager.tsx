@@ -1,38 +1,50 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
-import { ApiError, api, useApi } from "@/lib/admin/client";
-import styles from "./admin.module.css";
-import { useAdmin } from "./AdminApp";
-import { GalleryField, ImageField } from "./ImageFields";
-import { Modal } from "./Modal";
+/** Texnika (Equipment) saytının kataloq modulları üçün ortaq tiplər və köməkçilər. Siyahı: EntityList, redaktə: EntityEditor. */
+
+import type { ReactNode } from "react";
 
 export type Row = Record<string, unknown>;
-type Lang = "az" | "ru" | "en";
-const LANGS: Lang[] = ["az", "ru", "en"];
+export type Lang = "az" | "en" | "ru";
+export const LANGS: Lang[] = ["az", "en", "ru"];
 
-export type TrField = { name: string; label: string; kind?: "text" | "textarea"; max?: number; required?: boolean; rows?: number };
-type Option = { value: string; label: string };
+export type TrField = { name: string; label: string; kind?: "text" | "textarea"; max?: number; required?: boolean; rows?: number; hint?: string };
+export type Option = { value: string; label: string };
 export type Deps = Record<string, Row[]>;
 
 export type Field =
-  | { kind: "text" | "textarea" | "url" | "number"; name: string; label: string; max?: number; required?: boolean; hint?: string; rows?: number; placeholder?: string }
-  | { kind: "bool"; name: string; label: string }
-  | { kind: "image"; name: string; label: string; folder: string; required?: boolean; crop?: number | "free" }
-  | { kind: "gallery"; name: string; label: string; folder: string }
-  | { kind: "select"; name: string; label: string; required?: boolean; options: (deps: Deps) => Option[] };
+  | { kind: "text" | "textarea" | "url" | "number"; name: string; label: string; max?: number; required?: boolean; hint?: string; rows?: number; placeholder?: string; card?: string }
+  | { kind: "bool"; name: string; label: string; hint?: string }
+  | { kind: "image"; name: string; label: string; folder: string; required?: boolean; crop?: number | "free"; hint?: string; cover?: boolean }
+  | { kind: "gallery"; name: string; label: string; folder: string; hint?: string }
+  | { kind: "select"; name: string; label: string; required?: boolean; options: (deps: Deps) => Option[]; card?: string };
 
 export type EntityConfig = {
   id: string;
-  title: string;
+  /** Sekmə başlığı */
+  tab: string;
+  /** Redaktə səhifəsinin "…ə qayıt" yazısı */
+  backLabel: string;
+  /** Sağ-üst düymə: "Yeni texnika" */
+  newLabel: string;
+  /** Siyahı kartının üstündəki izah */
   sub: string;
+  /** Redaktə səhifəsinin alt başlığı */
+  editSub: string;
+  /** Məzmun kartı başlığı (tərcümə yoxdursa) */
+  formTitle?: string;
   /** İcazə modulu (FAQ, PAGES, PROJECTS, FLEET) */
   module: string;
   /** Backend yolu, məs. admin/faqs */
   path: string;
   key: "id" | "slug";
-  newLabel: string;
-  columns: { head: string; cell: (row: Row) => ReactNode }[];
+  name: (row: Row) => string;
+  sub2?: (row: Row) => string;
+  thumb?: (row: Row) => string;
+  thumbKind?: "photo" | "logo" | "avatar";
+  columns: { head: string; cell: (row: Row) => ReactNode; align?: "right" }[];
+  /** Siyahıda kateqoriya kimi əlavə süzgəc */
+  filter?: { all: string; options: (deps: Deps) => Option[]; match: (row: Row, value: string) => boolean };
   fields: Field[];
   tr?: TrField[];
   /** Redaktə üçün əvvəl tam məlumat yüklənir (parametrlər və s.) */
@@ -40,426 +52,81 @@ export type EntityConfig = {
   specs?: boolean;
   /** Seçim siyahıları üçün əvvəlcədən yüklənən yollar: ad → backend yolu */
   deps?: Record<string, string>;
-  /** Yeni qeyd üçün ilkin dəyərlər */
-  defaults?: Record<string, unknown>;
-  /** Siyahıda "Saytda/Gizli" statusu göstərilmir (məs. yönləndirmələr) */
-  noStatus?: boolean;
   /** Sürüklə-burax sıralama (PATCH {path}/reorder, yalnız slug açarlı kataloq və layihələr) */
   reorder?: boolean;
   /** Siyahıda "Saytda/Gizli" düyməsi (PATCH {path}/{slug}/publish) */
   publishToggle?: boolean;
+  /** "Sıra" siyahıda birbaşa dəyişdirilir */
+  inlineSort?: boolean;
+  /** Şəbəkə görünüşü var */
+  grid?: boolean;
   /** Serverdən gələn sətirdən forma dəyərlərini çıxarır (default: sətrin eyni adlı sahəsi) */
   fromRow?: (row: Row) => Record<string, unknown>;
   confirmName: (row: Row) => string;
   searchText?: (row: Row) => string;
 };
 
-type Spec = { key: Record<string, string>; value: Record<string, string> };
-type TrState = Record<Lang, Record<string, string>>;
+export type Spec = { key: Record<string, string>; value: Record<string, string> };
+export type TrState = Record<Lang, Record<string, string>>;
 
-const str = (v: unknown) => (typeof v === "string" ? v : v == null ? "" : String(v));
-const rowTr = (row: Row | null, lang: Lang, name: string) => {
+export const str = (v: unknown) => (typeof v === "string" ? v : v == null ? "" : String(v));
+export const rowTr = (row: Row | null, lang: Lang, name: string) => {
   const t = (row?.translations as Record<string, Record<string, string>> | undefined)?.[lang];
   return t?.[name] ?? "";
 };
-
 export const azText = (row: Row, name: string) => rowTr(row, "az", name);
+export const cleanMap = (m: Record<string, string>) => Object.fromEntries(Object.entries(m).filter(([, v]) => v && v.trim()).map(([k, v]) => [k, v.trim()]));
 
-export function EntityManager({ cfg, site }: { cfg: EntityConfig; site: string }) {
-  const { can } = useAdmin();
-  const list = useApi<Row[]>(cfg.path);
-  const deps = useDeps(cfg.deps);
-  const [editing, setEditing] = useState<Row | "new" | null>(null);
-  const [filter, setFilter] = useState("");
-  const [dragKey, setDragKey] = useState<string | null>(null);
-
-  const canCreate = can(cfg.module, "CREATE", site);
-  const canEdit = can(cfg.module, "UPDATE", site);
-  const canDelete = can(cfg.module, "DELETE", site);
-  const canPublish = can(cfg.module, "PUBLISH", site);
-
-  // Siyahı həmişə "Sıra" üzrə göstərilir (saytda da belə sıralanır)
-  const sorted = useMemo(() => [...(list.data ?? [])].sort((a, b) => Number(a.sortOrder ?? 0) - Number(b.sortOrder ?? 0)), [list.data]);
-  const rows = useMemo(() => {
-    const q = filter.trim().toLowerCase();
-    if (!q) return sorted;
-    return sorted.filter((r) => (cfg.searchText ? cfg.searchText(r) : JSON.stringify(r)).toLowerCase().includes(q));
-  }, [sorted, filter, cfg]);
-  const reorderable = !!cfg.reorder && canEdit && !filter.trim();
-
-  async function drop(targetKey: string) {
-    if (!dragKey || dragKey === targetKey) return setDragKey(null);
-    const order = sorted.map((r) => String(r[cfg.key]));
-    const from = order.indexOf(dragKey);
-    const to = order.indexOf(targetKey);
-    if (from < 0 || to < 0) return setDragKey(null);
-    order.splice(to, 0, order.splice(from, 1)[0]);
-    setDragKey(null);
-    try {
-      await api(`${cfg.path}/reorder`, { method: "PATCH", body: { slugs: order } });
-    } catch (e) {
-      alert(e instanceof ApiError ? e.message : "Sıra saxlanmadı.");
-    }
-    list.reload();
-  }
-
-  async function togglePublish(row: Row) {
-    try {
-      await api(`${cfg.path}/${row[cfg.key]}/publish`, { method: "PATCH", body: { isPublished: row.isPublished === false } });
-      list.reload();
-    } catch (e) {
-      alert(e instanceof ApiError ? e.message : "Status dəyişmədi.");
-    }
-  }
-
-  async function remove(row: Row) {
-    if (!confirm(`"${cfg.confirmName(row)}" silinsin? Zibil qutusundan bərpa etmək olar.`)) return;
-    try {
-      await api(`${cfg.path}/${row[cfg.key]}`, { method: "DELETE" });
-      list.reload();
-    } catch (e) {
-      alert(e instanceof ApiError ? e.message : "Silinmədi.");
-    }
-  }
-
-  if (list.error) return <p className={styles.error}>{list.error}</p>;
-  if (!list.data || !deps.ready) return <p className={styles.loading}>Yüklənir…</p>;
-
-  const nextSort = Math.max(0, ...list.data.map((r) => Number(r.sortOrder ?? 0))) + 1;
-
-  return (
-    <>
-      <div className={styles.head}>
-        <div>
-          <h2 style={{ fontSize: 22, fontWeight: 600 }}>{cfg.title}</h2>
-          <p className={styles.sub} style={{ marginBottom: 0 }}>
-            {cfg.sub}
-          </p>
-        </div>
-        {canCreate && (
-          <button className={`${styles.btn} ${styles.btnGold}`} onClick={() => setEditing("new")}>
-            {cfg.newLabel}
-          </button>
-        )}
-      </div>
-      {list.data.length > 8 && (
-        <div className={styles.filters}>
-          <input className={styles.input} placeholder="Axtar" value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Axtar" />
-        </div>
-      )}
-      <div className={`${styles.panel} ${styles.tableWrap}`}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              {reorderable && <th aria-label="Sıralama" />}
-              {cfg.columns.map((c) => (
-                <th key={c.head}>{c.head}</th>
-              ))}
-              {!cfg.noStatus && <th>Status</th>}
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={cfg.columns.length + 3} className={styles.muted}>
-                  Heç nə tapılmadı.
-                </td>
-              </tr>
-            )}
-            {rows.map((r) => (
-              <tr
-                key={String(r[cfg.key])}
-                draggable={reorderable}
-                onDragStart={() => setDragKey(String(r[cfg.key]))}
-                onDragOver={(e) => reorderable && e.preventDefault()}
-                onDrop={() => reorderable && drop(String(r[cfg.key]))}
-                onDragEnd={() => setDragKey(null)}
-                style={dragKey === String(r[cfg.key]) ? { opacity: 0.4 } : undefined}
-              >
-                {reorderable && (
-                  <td style={{ cursor: "grab", color: "var(--muted-2)", width: 28 }} title="Sıranı dəyişmək üçün sürüşdürün">
-                    ⠿
-                  </td>
-                )}
-                {cfg.columns.map((c) => (
-                  <td key={c.head}>{c.cell(r)}</td>
-                ))}
-                {!cfg.noStatus && (
-                <td>
-                  {cfg.publishToggle && canPublish ? (
-                    <button
-                      className={`${styles.badge} ${r.isPublished === false ? styles.badgeBad : styles.badgeOk}`}
-                      style={{ border: 0, cursor: "pointer" }}
-                      title="Dəyişmək üçün basın"
-                      onClick={() => togglePublish(r)}
-                    >
-                      {r.isPublished === false ? "Gizli" : "Saytda"}
-                    </button>
-                  ) : (
-                    <span className={`${styles.badge} ${r.isPublished === false ? styles.badgeBad : styles.badgeOk}`}>{r.isPublished === false ? "Gizli" : "Saytda"}</span>
-                  )}
-                </td>
-                )}
-                <td style={{ whiteSpace: "nowrap" }}>
-                  <div className={styles.row} style={{ flexWrap: "nowrap" }}>
-                    {canEdit && (
-                      <button className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} onClick={() => setEditing(r)}>
-                        Redaktə
-                      </button>
-                    )}
-                    {canDelete && (
-                      <button className={`${styles.btn} ${styles.btnDanger} ${styles.btnSm}`} onClick={() => remove(r)}>
-                        Sil
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {editing && (
-        <EntityDialog
-          site={site}
-          cfg={cfg}
-          deps={deps.data}
-          row={editing === "new" ? null : editing}
-          nextSort={nextSort}
-          onClose={() => setEditing(null)}
-          onSaved={() => {
-            setEditing(null);
-            list.reload();
-          }}
-        />
-      )}
-    </>
-  );
-}
-
-/** Seçim siyahıları üçün lazım olan digər siyahıları yükləyir */
-function useDeps(paths?: Record<string, string>) {
-  const entries = Object.entries(paths ?? {});
-  const a = useApi<Row[]>(entries[0]?.[1] ?? null);
-  const b = useApi<Row[]>(entries[1]?.[1] ?? null);
-  if (entries.length === 0) return { ready: true, data: {} as Deps };
-  const data: Deps = {};
-  if (entries[0]) data[entries[0][0]] = a.data ?? [];
-  if (entries[1]) data[entries[1][0]] = b.data ?? [];
-  const ready = (!entries[0] || !!a.data) && (!entries[1] || !!b.data);
-  return { ready, data };
-}
-
-function EntityDialog({ site, cfg, deps, row, nextSort, onClose, onSaved }: { site: string; cfg: EntityConfig; deps: Deps; row: Row | null; nextSort: number; onClose: () => void; onSaved: () => void }) {
-  const detail = useApi<Row>(row && cfg.detail ? `${cfg.path}/${row[cfg.key]}` : null);
-  const loading = !!row && !!cfg.detail && !detail.data && !detail.error;
-  return (
-    <Modal title={row ? "Redaktə" : cfg.newLabel.replace(/^\+\s*/, "")} onClose={onClose}>
-      {detail.error ? (
-        <p className={styles.error}>{detail.error}</p>
-      ) : loading ? (
-        <p className={styles.loading}>Yüklənir…</p>
-      ) : (
-        <EntityForm site={site} cfg={cfg} deps={deps} existing={row} source={detail.data ?? row} nextSort={nextSort} onClose={onClose} onSaved={onSaved} />
-      )}
-    </Modal>
-  );
-}
-
-function EntityForm({ site, cfg, deps, existing, source, nextSort, onClose, onSaved }: { site: string; cfg: EntityConfig; deps: Deps; existing: Row | null; source: Row | null; nextSort: number; onClose: () => void; onSaved: () => void }) {
+/** Sətirdən forma dəyərləri */
+export function valuesFromRow(cfg: EntityConfig, source: Row | null, nextSort: number): Record<string, unknown> {
   const fromRow = source && cfg.fromRow ? cfg.fromRow(source) : {};
-  const [values, setValues] = useState<Record<string, unknown>>(() => {
-    const v: Record<string, unknown> = {};
-    for (const f of cfg.fields) {
-      const raw = source ? (f.name in fromRow ? fromRow[f.name] : source[f.name]) : cfg.defaults?.[f.name];
-      if (f.kind === "bool") v[f.name] = raw === undefined ? true : !!raw;
-      else if (f.kind === "gallery") v[f.name] = Array.isArray(raw) ? raw : [];
-      else if (f.kind === "number") v[f.name] = raw === undefined ? (f.name === "sortOrder" ? nextSort : 0) : Number(raw);
-      else v[f.name] = str(raw);
-    }
-    return v;
-  });
-  const [tr, setTr] = useState<TrState>(() => {
-    const out = {} as TrState;
-    for (const l of LANGS) {
-      out[l] = {};
-      for (const f of cfg.tr ?? []) out[l][f.name] = rowTr(source, l, f.name);
-    }
-    return out;
-  });
-  const [specs, setSpecs] = useState<Spec[]>(() => ((source?.specs as Spec[] | undefined) ?? []).map((s) => ({ key: { ...s.key }, value: { ...s.value } })));
-  const [lang, setLang] = useState<Lang>("az");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  const set = (name: string, v: unknown) => setValues((p) => ({ ...p, [name]: v }));
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    const payload: Record<string, unknown> = {};
-    for (const f of cfg.fields) {
-      const v = values[f.name];
-      if (f.kind === "number") payload[f.name] = Number(v) || 0;
-      else if (f.kind === "bool" || f.kind === "gallery") payload[f.name] = v;
-      else {
-        const t = str(v).trim();
-        if ("required" in f && f.required && !t) return setError(`"${f.label}" boş ola bilməz.`);
-        payload[f.name] = t === "" ? null : t;
-      }
-    }
-    if (cfg.tr) {
-      const translations: Record<string, Record<string, string>> = {};
-      const required = cfg.tr.filter((f) => f.required);
-      for (const l of LANGS) {
-        const filled = required.every((f) => tr[l][f.name]?.trim());
-        // AZ məcburidir; RU və EN yalnız tam doldurulubsa göndərilir
-        if (l === "az" && !filled) return setError("AZ dilində məcburi sahələri doldurun.");
-        if (!filled) continue;
-        translations[l] = Object.fromEntries(cfg.tr.map((f) => [f.name, (tr[l][f.name] ?? "").trim()]));
-      }
-      payload.translations = translations;
-    }
-    if (cfg.specs) {
-      payload.specs = specs
-        .map((s) => ({ key: clean(s.key), value: clean(s.value) }))
-        .filter((s) => Object.keys(s.key).length > 0);
-    }
-    setBusy(true);
-    try {
-      await api(existing ? `${cfg.path}/${existing[cfg.key]}` : cfg.path, { method: existing ? "PUT" : "POST", body: payload });
-      onSaved();
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Xəta baş verdi.");
-      setBusy(false);
-    }
+  const v: Record<string, unknown> = {};
+  for (const f of cfg.fields) {
+    const raw = source ? (f.name in fromRow ? fromRow[f.name] : source[f.name]) : undefined;
+    if (f.kind === "bool") v[f.name] = raw === undefined ? true : !!raw;
+    else if (f.kind === "gallery") v[f.name] = Array.isArray(raw) ? raw : [];
+    else if (f.kind === "number") v[f.name] = raw === undefined ? (f.name === "sortOrder" ? nextSort : 0) : Number(raw);
+    else v[f.name] = str(raw);
   }
-
-  return (
-    <form className={styles.form} onSubmit={submit}>
-      {cfg.fields.map((f) => {
-        switch (f.kind) {
-          case "bool":
-            return (
-              <label key={f.name} className={styles.check}>
-                <input type="checkbox" checked={!!values[f.name]} onChange={(e) => set(f.name, e.target.checked)} />
-                <span>{f.label}</span>
-              </label>
-            );
-          case "image":
-            return <ImageField key={f.name} label={f.label} folder={f.folder} site={site} crop={f.crop} value={str(values[f.name])} onChange={(v) => set(f.name, v)} />;
-          case "gallery":
-            return <GalleryField key={f.name} label={f.label} folder={f.folder} site={site} value={(values[f.name] as string[]) ?? []} onChange={(v) => set(f.name, v)} />;
-          case "select":
-            return (
-              <div key={f.name} className={styles.field}>
-                <label htmlFor={`f-${f.name}`}>{f.label}</label>
-                <select id={`f-${f.name}`} className={styles.input} value={str(values[f.name])} onChange={(e) => set(f.name, e.target.value)} required={f.required}>
-                  <option value="">Seçin</option>
-                  {f.options(deps).map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            );
-          default:
-            return (
-              <div key={f.name} className={styles.field}>
-                <label htmlFor={`f-${f.name}`}>{f.label}</label>
-                {f.kind === "textarea" ? (
-                  <textarea id={`f-${f.name}`} className={styles.input} rows={f.rows ?? 4} maxLength={f.max} value={str(values[f.name])} onChange={(e) => set(f.name, e.target.value)} />
-                ) : (
-                  <input id={`f-${f.name}`} className={styles.input} type={f.kind === "number" ? "number" : "text"} maxLength={f.max} placeholder={f.placeholder} value={str(values[f.name])} onChange={(e) => set(f.name, e.target.value)} />
-                )}
-                {f.hint && <span className={styles.hint}>{f.hint}</span>}
-              </div>
-            );
-        }
-      })}
-
-      {(cfg.tr || cfg.specs) && (
-        <div className={styles.tabs} role="tablist" aria-label="Dil">
-          {LANGS.map((l) => (
-            <button key={l} type="button" role="tab" aria-selected={lang === l} className={styles.tab} onClick={() => setLang(l)}>
-              {l.toUpperCase()}
-            </button>
-          ))}
-        </div>
-      )}
-      {cfg.tr &&
-        cfg.tr.map((f) => (
-          <div key={f.name} className={styles.field}>
-            <label htmlFor={`t-${f.name}`}>
-              {f.label} ({lang.toUpperCase()}){f.required && lang === "az" ? " *" : ""}
-            </label>
-            {f.kind === "textarea" ? (
-              <textarea id={`t-${f.name}`} className={styles.input} rows={f.rows ?? 4} maxLength={f.max} value={tr[lang][f.name] ?? ""} onChange={(e) => setTr((p) => ({ ...p, [lang]: { ...p[lang], [f.name]: e.target.value } }))} />
-            ) : (
-              <input id={`t-${f.name}`} className={styles.input} maxLength={f.max} value={tr[lang][f.name] ?? ""} onChange={(e) => setTr((p) => ({ ...p, [lang]: { ...p[lang], [f.name]: e.target.value } }))} />
-            )}
-          </div>
-        ))}
-      {cfg.tr && <span className={styles.hint}>RU və EN boş qala bilər, bu halda həmin dil üçün məzmun göstərilməyəcək. Məcburi sahələri tam doldurmasanız, dil saxlanmır.</span>}
-
-      {cfg.specs && <SpecsEditor lang={lang} value={specs} onChange={setSpecs} />}
-
-      {error && (
-        <p className={styles.error} role="alert">
-          {error}
-        </p>
-      )}
-      <div className={styles.modalFoot}>
-        <button type="button" className={`${styles.btn} ${styles.btnGhost}`} onClick={onClose}>
-          Ləğv et
-        </button>
-        <button className={`${styles.btn} ${styles.btnGold}`} disabled={busy}>
-          {busy ? "Saxlanılır…" : "Yadda saxla"}
-        </button>
-      </div>
-    </form>
-  );
+  return v;
 }
 
-const clean = (m: Record<string, string>) => Object.fromEntries(Object.entries(m).filter(([, v]) => v && v.trim()).map(([k, v]) => [k, v.trim()]));
+export function trFromRow(cfg: EntityConfig, source: Row | null): TrState {
+  const out = {} as TrState;
+  for (const l of LANGS) {
+    out[l] = {};
+    for (const f of cfg.tr ?? []) out[l][f.name] = rowTr(source, l, f.name);
+  }
+  return out;
+}
 
-/** Texnikanın parametr cədvəli: açar → dəyər cütləri, sıra saxlanılır */
-function SpecsEditor({ lang, value, onChange }: { lang: Lang; value: Spec[]; onChange: (v: Spec[]) => void }) {
-  const update = (i: number, side: "key" | "value", text: string) =>
-    onChange(value.map((s, k) => (k === i ? { ...s, [side]: { ...s[side], [lang]: text } } : s)));
-  const move = (i: number, d: -1 | 1) => {
-    const j = i + d;
-    if (j < 0 || j >= value.length) return;
-    const next = [...value];
-    [next[i], next[j]] = [next[j], next[i]];
-    onChange(next);
-  };
-  return (
-    <div className={styles.field}>
-      <span className={styles.label}>Parametrlər ({lang.toUpperCase()})</span>
-      <span className={styles.hint}>Açar (məs. “Maks. yük”) və dəyər (məs. “40 t”). Dil sekmesini dəyişib digər dillərə də yazın. Açarı boş olan sətir saxlanmır.</span>
-      {value.map((s, i) => (
-        <div key={i} className={styles.row} style={{ flexWrap: "nowrap", alignItems: "center" }}>
-          <input className={styles.input} style={{ flex: 1 }} placeholder="Açar" value={s.key[lang] ?? ""} onChange={(e) => update(i, "key", e.target.value)} aria-label={`Açar ${i + 1}`} />
-          <input className={styles.input} style={{ flex: 1 }} placeholder="Dəyər" value={s.value[lang] ?? ""} onChange={(e) => update(i, "value", e.target.value)} aria-label={`Dəyər ${i + 1}`} />
-          <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} onClick={() => move(i, -1)} aria-label="Yuxarı">
-            ↑
-          </button>
-          <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} onClick={() => move(i, 1)} aria-label="Aşağı">
-            ↓
-          </button>
-          <button type="button" className={`${styles.btn} ${styles.btnDanger} ${styles.btnSm}`} onClick={() => onChange(value.filter((_, k) => k !== i))} aria-label="Sil">
-            ×
-          </button>
-        </div>
-      ))}
-      <div>
-        <button type="button" className={`${styles.btn} ${styles.btnGhost} ${styles.btnSm}`} onClick={() => onChange([...value, { key: {}, value: {} }])}>
-          Sətir əlavə et
-        </button>
-      </div>
-    </div>
-  );
+export const specsFromRow = (source: Row | null): Spec[] => ((source?.specs as Spec[] | undefined) ?? []).map((s) => ({ key: { ...s.key }, value: { ...s.value } }));
+
+/** Forma vəziyyətindən backend-ə göndəriləcək məzmun; səhv varsa mətn qaytarır */
+export function buildPayload(cfg: EntityConfig, values: Record<string, unknown>, tr: TrState, specs: Spec[]): { payload: Record<string, unknown> } | { error: string } {
+  const payload: Record<string, unknown> = {};
+  for (const f of cfg.fields) {
+    const v = values[f.name];
+    if (f.kind === "number") payload[f.name] = Number(v) || 0;
+    else if (f.kind === "bool" || f.kind === "gallery") payload[f.name] = v;
+    else {
+      const t = str(v).trim();
+      if ("required" in f && f.required && !t) return { error: `"${f.label}" boş ola bilməz.` };
+      payload[f.name] = t === "" ? null : t;
+    }
+  }
+  if (cfg.tr) {
+    const translations: Record<string, Record<string, string>> = {};
+    const required = cfg.tr.filter((f) => f.required);
+    for (const l of LANGS) {
+      const filled = required.every((f) => tr[l][f.name]?.trim());
+      // AZ məcburidir; RU və EN yalnız tam doldurulubsa göndərilir
+      if (l === "az" && !filled) return { error: "AZ dilində məcburi sahələri doldurun." };
+      if (!filled) continue;
+      translations[l] = Object.fromEntries(cfg.tr.map((f) => [f.name, (tr[l][f.name] ?? "").trim()]));
+    }
+    payload.translations = translations;
+  }
+  if (cfg.specs) payload.specs = specs.map((s) => ({ key: cleanMap(s.key), value: cleanMap(s.value) })).filter((s) => Object.keys(s.key).length > 0);
+  return { payload };
 }

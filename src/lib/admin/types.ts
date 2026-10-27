@@ -211,4 +211,4 @@ export type ContentEntry = {
   updatedBy: string | null;
 };
 
-export type Revision = { id: number; version: number; note: string | null; createdBy: string | null; createdAt: string };
+export type Revision = { id: number; version: number; note: string | null; createdBy: string | null; createdAt: string; data?: Record<string, unknown> };

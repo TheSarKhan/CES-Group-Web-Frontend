@@ -6,7 +6,9 @@ import { createContext, useCallback, useContext, useState, type ReactNode } from
 import { api, useApi } from "@/lib/admin/client";
 import type { Action, Me, UserInfo } from "@/lib/admin/types";
 import styles from "./admin.module.css";
+import { ShieldAlert } from "lucide-react";
 import { Sidebar } from "./Sidebar";
+import { Topbar } from "./Topbar";
 
 type Ctx = {
   me: Me;
@@ -70,17 +72,12 @@ export function AdminApp({ children }: { children: ReactNode }) {
         <Sidebar open={navOpen} onNavigate={() => setNavOpen(false)} onLogout={logout} />
         {navOpen && <button type="button" className={styles.scrim} aria-label="Menyunu bağla" onClick={() => setNavOpen(false)} />}
         <div className={styles.content}>
-          <header className={styles.topbar}>
-            <button type="button" className={styles.burger} aria-label="Menyunu aç" aria-expanded={navOpen} onClick={() => setNavOpen((v) => !v)}>
-              ☰
-            </button>
-            <Link href="/" className={styles.topbarBrand}>
-              CES <span>Admin</span>
-            </Link>
-          </header>
+          <Topbar onMenu={() => setNavOpen((v) => !v)} menuOpen={navOpen} />
           {user.mfaSetupRequired && (
-            <div className={styles.banner}>
-              Super Admin hesabı üçün iki mərhələli giriş (2FA) tövsiyə olunur. <Link href="/profile">İndi aktiv et</Link>
+            <div className={styles.mfa}>
+              <ShieldAlert size={18} aria-hidden="true" />
+              <span>2FA aktiv deyil</span>
+              <Link href="/profile">Aktiv et</Link>
             </div>
           )}
           <main id="main" className={styles.main}>

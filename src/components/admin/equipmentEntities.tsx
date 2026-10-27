@@ -1,29 +1,23 @@
-import type { EntityConfig, Row } from "./EntityManager";
-import { azText } from "./EntityManager";
+import { azText, type EntityConfig, type Row } from "./EntityManager";
 import styles from "./admin.module.css";
-import { previewUrl } from "@/lib/admin/upload";
 
-const thumb = (url: unknown) =>
-  typeof url === "string" && url ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={previewUrl(url)} alt="" style={{ width: 56, height: 40, objectFit: "contain", background: "var(--paper)", borderRadius: 4 }} />
-  ) : (
-    <span className={styles.muted}>—</span>
-  );
-const sort = { head: "Sıra", cell: (r: Row) => String(r.sortOrder ?? "") };
-const published = { kind: "bool" as const, name: "isPublished", label: "Saytda görünsün" };
-const sortField = { kind: "number" as const, name: "sortOrder", label: "Sıra", hint: "Kiçik rəqəm əvvəldə göstərilir." };
+const sortField = { kind: "number" as const, name: "sortOrder", label: "Sıra", hint: "Kiçik rəqəm əvvəl göstərilir." };
+const published = { kind: "bool" as const, name: "isPublished", label: "Saytda görünsün", hint: "Dəyişikliklər saxlandıqda tətbiq olunur." };
 const nameAz = (r: Row) => azText(r, "name") || String(r.slug ?? "");
 
 export const faqs: EntityConfig = {
   id: "faqs",
-  title: "Sual-cavab",
-  sub: "Saytdakı tez-tez verilən suallar.",
+  tab: "Suallar",
+  backLabel: "Suallara qayıt",
+  newLabel: "Yeni sual",
+  sub: "Saytda göstərilən tez-tez verilən sualların mətnlərini redaktə edin.",
+  editSub: "Sualın mətnini və cavabını redaktə edin.",
   module: "FAQ",
   path: "admin/faqs",
   key: "id",
-  newLabel: "+ Yeni sual",
-  columns: [{ head: "Sual (AZ)", cell: (r) => azText(r, "question") }, sort],
+  inlineSort: true,
+  name: (r) => azText(r, "question"),
+  columns: [{ head: "Cavab (AZ)", cell: (r) => <span className={styles.clamp}>{azText(r, "answer")}</span> }],
   fields: [sortField, published],
   tr: [
     { name: "question", label: "Sual", required: true, max: 512 },
@@ -34,35 +28,46 @@ export const faqs: EntityConfig = {
 
 export const offerings: EntityConfig = {
   id: "offerings",
-  title: "Xidmətlər",
-  sub: "Ana səhifədəki xidmət kartları.",
+  tab: "Xidmətlər",
+  backLabel: "Xidmətlərə qayıt",
+  newLabel: "Yeni xidmət",
+  sub: "Ana səhifədə göstərilən xidmət kartları.",
+  editSub: "Xidmət kartının mətnini, şəklini və görünürlüyünü redaktə edin.",
   module: "PAGES",
   path: "admin/offerings",
   key: "slug",
-  newLabel: "+ Yeni xidmət",
-  columns: [{ head: "", cell: (r) => thumb(r.icon) }, { head: "Başlıq (AZ)", cell: (r) => azText(r, "title") }, sort],
-  fields: [{ kind: "image", name: "icon", label: "Şəkil / ikon", folder: "offerings" }, sortField, published],
+  name: (r) => azText(r, "title"),
+  sub2: (r) => azText(r, "eyebrow").toUpperCase(),
+  thumb: (r) => String(r.icon ?? ""),
+  columns: [{ head: "Təsvir", cell: (r) => <span className={styles.clamp}>{azText(r, "description")}</span> }],
+  fields: [{ kind: "image", name: "icon", label: "Şəkil / ikon", folder: "offerings", hint: "Mətnlər dilə görə, şəkil və sıra bütün dillər üçün dəyişir." }, sortField, published],
   tr: [
-    { name: "eyebrow", label: "Üst yazı", max: 64 },
-    { name: "title", label: "Başlıq", required: true, max: 256 },
-    { name: "description", label: "Təsvir", kind: "textarea", max: 1024 },
+    { name: "eyebrow", label: "Üst yazı", max: 64, hint: "Başlığın üstündə görünən qısa mətn." },
+    { name: "title", label: "Başlıq", required: true, max: 256, hint: "Xidmət kartının əsas başlığı." },
+    { name: "description", label: "Təsvir", kind: "textarea", max: 1024, rows: 5, hint: "Xidmət kartında göstərilən qısa açıqlama." },
   ],
   confirmName: (r) => azText(r, "title"),
 };
 
 export const clients: EntityConfig = {
   id: "clients",
-  title: "Müştərilər",
-  sub: "Saytdakı müştəri loqoları.",
+  tab: "Müştərilər",
+  backLabel: "Müştərilərə qayıt",
+  newLabel: "Yeni müştəri",
+  sub: "Saytda göstərilən müştəri adları və loqoları.",
+  editSub: "Müştəri məlumatlarını redaktə edin.",
+  formTitle: "Müştəri məlumatları",
   module: "PAGES",
   path: "admin/clients",
   key: "id",
-  newLabel: "+ Yeni müştəri",
-  columns: [{ head: "Loqo", cell: (r) => thumb(r.logo) }, { head: "Ad", cell: (r) => String(r.name ?? "") }, sort],
+  name: (r) => String(r.name ?? ""),
+  thumb: (r) => String(r.logo ?? ""),
+  thumbKind: "logo",
+  columns: [{ head: "Sayt ünvanı", cell: (r) => (r.url ? <a href={String(r.url)} target="_blank" rel="noopener noreferrer">{String(r.url).replace(/^https?:\/\//, "")} ↗</a> : <span className={styles.muted}>—</span>) }],
   fields: [
     { kind: "text", name: "name", label: "Ad", required: true, max: 128 },
+    { kind: "text", name: "url", label: "Sayt ünvanı", max: 512, hint: "Məsələn: https://example.com. İsteğə bağlıdır." },
     { kind: "image", name: "logo", label: "Loqo", folder: "clients", required: true },
-    { kind: "text", name: "url", label: "Sayt ünvanı (könüllü)", max: 512 },
     sortField,
     published,
   ],
@@ -71,44 +76,56 @@ export const clients: EntityConfig = {
 
 export const testimonials: EntityConfig = {
   id: "testimonials",
-  title: "Rəylər",
-  sub: "Müştəri rəyləri.",
+  tab: "Rəylər",
+  backLabel: "Rəylərə qayıt",
+  newLabel: "Yeni rəy",
+  sub: "Saytda göstərilən müştəri rəyləri.",
+  editSub: "Rəyin məzmununu və əlavə məlumatlarını redaktə edin.",
   module: "PAGES",
   path: "admin/testimonials",
   key: "id",
-  newLabel: "+ Yeni rəy",
-  columns: [{ head: "Ad", cell: (r) => String(r.name ?? "") }, { head: "Şirkət", cell: (r) => String(r.company ?? "") }, sort],
+  name: (r) => String(r.name ?? ""),
+  thumbKind: "avatar",
+  columns: [
+    { head: "Şirkət", cell: (r) => String(r.company ?? "") },
+    { head: "Rəy", cell: (r) => <span className={styles.clamp}>{azText(r, "quote")}</span> },
+  ],
   fields: [
     { kind: "text", name: "name", label: "Ad", required: true, max: 128 },
     { kind: "text", name: "initials", label: "Baş hərflər", max: 8 },
     { kind: "text", name: "company", label: "Şirkət", max: 128 },
-    { kind: "image", name: "avatar", label: "Şəkil", folder: "testimonials", crop: 1 },
     sortField,
     published,
+    { kind: "image", name: "avatar", label: "Avatar", folder: "testimonials", crop: 1, hint: "Rəy sahibi üçün avatar şəkli." },
   ],
   tr: [
     { name: "role", label: "Vəzifə", max: 256 },
-    { name: "quote", label: "Rəy", kind: "textarea", required: true, max: 2048, rows: 5 },
+    { name: "quote", label: "Rəy", kind: "textarea", required: true, max: 2048, rows: 6 },
   ],
   confirmName: (r) => String(r.name ?? ""),
 };
 
 export const projects: EntityConfig = {
   id: "projects",
-  title: "Layihələr",
-  sub: "Saytdakı layihələr.",
+  tab: "Layihələr",
+  backLabel: "Layihələrə qayıt",
+  newLabel: "Yeni layihə",
+  sub: "Saytda göstərilən layihələri və qalereyalarını idarə edin.",
+  editSub: "Layihənin mətnlərini, şəkillərini və görünürlüyünü idarə edin.",
   module: "PROJECTS",
   path: "admin/projects",
   key: "slug",
   reorder: true,
-  newLabel: "+ Yeni layihə",
-  columns: [{ head: "", cell: (r) => thumb(r.image) }, { head: "Ad (AZ)", cell: (r) => azText(r, "title") }, { head: "İl", cell: (r) => String(r.year ?? "") }, sort],
+  name: (r) => azText(r, "title"),
+  sub2: (r) => `${azText(r, "category")}${azText(r, "category") ? " · " : ""}${r.slug ?? ""}`,
+  thumb: (r) => String(r.image ?? ""),
+  columns: [{ head: "İl", cell: (r) => String(r.year ?? "") }],
   fields: [
     { kind: "text", name: "year", label: "İl", max: 16, placeholder: "2025" },
-    { kind: "image", name: "image", label: "Əsas şəkil", folder: "projects", crop: 4 / 3 },
-    { kind: "gallery", name: "gallery", label: "Qalereya", folder: "projects" },
     sortField,
     published,
+    { kind: "image", name: "image", label: "Əsas şəkil", folder: "projects", crop: 4 / 3, cover: true, hint: "Əsas şəkil siyahıda görünür. Qalereya layihənin əlavə fotolarını göstərir." },
+    { kind: "gallery", name: "gallery", label: "Qalereya", folder: "projects" },
   ],
   tr: [
     { name: "title", label: "Ad", required: true, max: 256 },
@@ -121,42 +138,44 @@ export const projects: EntityConfig = {
 
 export const categories: EntityConfig = {
   id: "categories",
-  title: "Kateqoriyalar",
+  tab: "Kateqoriyalar",
+  backLabel: "Kateqoriyalara qayıt",
+  newLabel: "Yeni kateqoriya",
   sub: "Texnika kataloqunun əsas bölmələri.",
+  editSub: "Kateqoriyanın adını və görünürlüyünü redaktə edin.",
   module: "FLEET",
   path: "admin/fleet/categories",
   key: "slug",
   reorder: true,
   publishToggle: true,
-  newLabel: "+ Yeni kateqoriya",
-  columns: [{ head: "Ad (AZ)", cell: (r) => nameAz(r) }, { head: "Alt kateqoriya", cell: (r) => String((r.subcategories as unknown[] | undefined)?.length ?? 0) }, sort],
-  fields: [{ kind: "text", name: "icon", label: "İkon adı (könüllü)", max: 64 }, sortField, published],
+  name: nameAz,
+  sub2: (r) => String(r.slug ?? ""),
+  columns: [{ head: "Alt kateqoriya", cell: (r) => String((r.subcategories as unknown[] | undefined)?.length ?? 0) }],
+  fields: [{ kind: "text", name: "icon", label: "İkon adı", max: 64, hint: "İsteğə bağlıdır." }, sortField, published],
   tr: [{ name: "name", label: "Ad", required: true, max: 128 }],
   confirmName: nameAz,
 };
 
 export const subcategories: EntityConfig = {
   id: "subcategories",
-  title: "Alt kateqoriyalar",
+  tab: "Alt kateqoriyalar",
+  backLabel: "Alt kateqoriyalara qayıt",
+  newLabel: "Yeni alt kateqoriya",
   sub: "Kateqoriyanın daxilindəki növlər (məs. Avtokran, Forklift).",
+  editSub: "Alt kateqoriyanın adını, kateqoriyasını və görünürlüyünü redaktə edin.",
   module: "FLEET",
   path: "admin/fleet/subcategories",
   key: "slug",
   reorder: true,
   publishToggle: true,
-  newLabel: "+ Yeni alt kateqoriya",
   deps: { cats: "admin/fleet/categories" },
+  name: nameAz,
+  sub2: (r) => String(r.slug ?? ""),
   columns: [
-    { head: "Ad (AZ)", cell: (r) => nameAz(r) },
     { head: "Kateqoriya", cell: (r) => azText(r.category as Row, "name") },
     { head: "Texnika", cell: (r) => String((r.items as unknown[] | undefined)?.length ?? 0) },
-    sort
   ],
-  fields: [
-    { kind: "select", name: "categorySlug", label: "Kateqoriya", required: true, options: (d) => (d.cats ?? []).map((c) => ({ value: String(c.slug), label: nameAz(c) })) },
-    sortField,
-    published,
-  ],
+  fields: [{ kind: "select", name: "categorySlug", label: "Kateqoriya", required: true, options: (d) => (d.cats ?? []).map((c) => ({ value: String(c.slug), label: nameAz(c) })) }, sortField, published],
   tr: [{ name: "name", label: "Ad", required: true, max: 128 }],
   fromRow: (r) => ({ categorySlug: String((r.category as Row | undefined)?.slug ?? "") }),
   confirmName: nameAz,
@@ -164,37 +183,42 @@ export const subcategories: EntityConfig = {
 
 export const items: EntityConfig = {
   id: "items",
-  title: "Texnikalar",
-  sub: "Kataloqdakı texnika vahidləri.",
+  tab: "Texnikalar",
+  backLabel: "Kataloqa qayıt",
+  newLabel: "Yeni texnika",
+  sub: "Texnikaları, kateqoriyaları və görünürlüyü idarə edin.",
+  editSub: "Texnika məlumatlarını və dil versiyalarını redaktə edin.",
   module: "FLEET",
   path: "admin/fleet/items",
   key: "slug",
   reorder: true,
   publishToggle: true,
-  newLabel: "+ Yeni texnika",
+  grid: true,
   detail: true,
   specs: true,
   deps: { subs: "admin/fleet/subcategories" },
-  columns: [
-    { head: "", cell: (r) => thumb(r.image) },
-    { head: "Ad (AZ)", cell: (r) => nameAz(r) },
-    { head: "Model", cell: (r) => String(r.modelNumber ?? "") },
-    { head: "Növ", cell: (r) => String(r.subcategoryName ?? "") },
-    sort
-  ],
+  name: nameAz,
+  sub2: (r) => String(r.slug ?? ""),
+  thumb: (r) => String(r.image ?? ""),
+  columns: [{ head: "Kateqoriya", cell: (r) => String(r.subcategoryName ?? "") }],
+  filter: {
+    all: "Bütün kateqoriyalar",
+    options: (d) => (d.subs ?? []).map((s) => ({ value: String(s.slug), label: nameAz(s) })),
+    match: (r, v) => String((r.subcategory as Row | undefined)?.slug ?? r.subcategorySlug ?? "") === v,
+  },
   fields: [
     { kind: "select", name: "subcategorySlug", label: "Alt kateqoriya", required: true, options: (d) => (d.subs ?? []).map((s) => ({ value: String(s.slug), label: `${nameAz(s)} (${azText(s.category as Row, "name")})` })) },
     { kind: "text", name: "modelNumber", label: "Model", max: 128 },
-    { kind: "image", name: "image", label: "Şəkil", folder: "fleet", crop: 4 / 3 },
-    { kind: "text", name: "price", label: "Qiymət (könüllü)", max: 64, hint: "Boş qalsa sayt “sorğu ilə” göstərir." },
-    { kind: "text", name: "priceUnit", label: "Qiymət vahidi", max: 32, placeholder: "gün" },
     sortField,
     published,
+    { kind: "image", name: "image", label: "Şəkil", folder: "fleet", crop: 4 / 3, cover: true },
+    { kind: "text", name: "price", label: "Qiymət", max: 64, hint: "Boş qalsa, saytda “sorğu ilə” göstərilir.", card: "Qiymət" },
+    { kind: "text", name: "priceUnit", label: "Vahid", max: 32, placeholder: "gün", card: "Qiymət" },
   ],
   tr: [
     { name: "name", label: "Ad", required: true, max: 256 },
-    { name: "description", label: "Təsvir", kind: "textarea", max: 4096, rows: 6 },
-    { name: "badge", label: "Nişan (məs. Yeni)", max: 64 },
+    { name: "description", label: "Təsvir", kind: "textarea", max: 4096, rows: 5 },
+    { name: "badge", label: "Nişan", max: 64, hint: "Məsələn: Yeni" },
   ],
   fromRow: (r) => ({ subcategorySlug: String((r.subcategory as Row | undefined)?.slug ?? r.subcategorySlug ?? "") }),
   searchText: (r) => `${nameAz(r)} ${r.modelNumber ?? ""} ${r.subcategoryName ?? ""} ${r.slug ?? ""}`,
