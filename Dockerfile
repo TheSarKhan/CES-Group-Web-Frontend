@@ -13,6 +13,9 @@ ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 # Turnstile sayt açarı brauzer koduna build zamanı yazılır
 ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY=
 ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY
+# Build zamanı məzmun backend-dən oxunur (ana maşının şəbəkəsi ilə). Əlçatmazdırsa səhifələr src/content fayllarından yığılır.
+ARG BACKEND_URL=
+ENV BACKEND_URL=$BACKEND_URL
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build

@@ -3,7 +3,10 @@ services:
   cesgroup-frontend:
     build:
       context: .
+      # build konteyneri ana maşının şəbəkəsini işlədir ki, səhifələr yığılarkən backend-dən məzmun oxusun
+      network: host
       args:
+        BACKEND_URL: http://127.0.0.1:8080
         NEXT_PUBLIC_SITE_URL: https://cesgroup.az
         # Serverdəki .env faylından oxunur (docker compose bunu build zamanı avtomatik əvəz edir)
         NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}

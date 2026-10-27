@@ -6,7 +6,7 @@ import { ContactBlock } from "@/components/ContactBlock";
 import { Footer } from "@/components/Footer";
 import { ArrowRight } from "@/components/Icons";
 import { JsonLdScript } from "@/components/JsonLd";
-import { faqGroups, faqItems } from "@/content/faq";
+import { faqItemsOf, getFaqGroups } from "@/content/loaders";
 import { pageMetadata } from "@/lib/seo";
 import { faqQuestions, graph, pageNodes } from "@/lib/schema";
 import styles from "./page.module.css";
@@ -16,7 +16,12 @@ const description =
 
 export const metadata: Metadata = pageMetadata({ title: "Tez-tez verilən suallar", description, path: "/suallar" });
 
-export default function FaqPage() {
+/** 5 dəqiqə (Next bu dəyərin sabit rəqəm olmasını tələb edir; src/lib/cms.ts-dəki CMS_REVALIDATE ilə eyni olmalıdır) */
+export const revalidate = 300;
+
+export default async function FaqPage() {
+  const faqGroups = await getFaqGroups();
+  const faqItems = faqItemsOf(faqGroups);
   return (
     <>
       <Header />

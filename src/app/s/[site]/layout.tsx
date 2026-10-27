@@ -9,7 +9,6 @@ import { SubFooter } from "@/components/subsite/SubFooter";
 import { BackToTop } from "@/components/subsite/BackToTop";
 
 // Yalnız tanınan subdomain saytları; digərləri 404
-export const dynamicParams = false;
 
 export function generateStaticParams() {
   return subsiteIds.map((site) => ({ site }));

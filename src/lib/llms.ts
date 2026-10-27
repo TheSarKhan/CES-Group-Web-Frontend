@@ -1,5 +1,5 @@
 import { companies, projects, site, stats } from "@/content/site";
-import { faqItems } from "@/content/faq";
+import { faqItemsOf, getFaqGroups } from "@/content/loaders";
 import { isReadyProject, type SubSite } from "@/content/subsites";
 
 /**
@@ -9,7 +9,8 @@ import { isReadyProject, type SubSite } from "@/content/subsites";
 
 const link = (title: string, url: string, text: string) => `- [${title}](${url}): ${text}`;
 
-export function groupLlmsTxt() {
+export async function groupLlmsTxt() {
+  const faqItems = faqItemsOf(await getFaqGroups());
   const facts = [
     `Hüquqi ad: ${site.legalName}`,
     `Qurulma: ${site.foundingDate} (CES ağır texnika icarəsi ilə başlayıb)`,

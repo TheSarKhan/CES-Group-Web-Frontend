@@ -1,5 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 
 /** Backend məzmunu dərc edəndə saytı bununla yeniləyir. Yalnız ortaq sirri bilən çağıra bilər. */
@@ -14,5 +14,8 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as { tags?: unknown } | null;
   const tags = Array.isArray(body?.tags) ? body.tags.filter((t): t is string => typeof t === "string" && /^content:[a-z0-9:_-]{1,120}$/.test(t)).slice(0, 20) : [];
   for (const t of tags) revalidateTag(t, { expire: 0 });
+  // Səhifə build zamanı (backend-siz) yığılıbsa, onun tag tarixçəsi olmaya bilər. Ona görə bütün səhifələr də
+  // yenilənməyə işarələnir: növbəti sorğuda təzədən yığılır, sayt kiçikdir və bu ucuzdur.
+  if (tags.length > 0) revalidatePath("/", "layout");
   return NextResponse.json({ revalidated: tags.length });
 }

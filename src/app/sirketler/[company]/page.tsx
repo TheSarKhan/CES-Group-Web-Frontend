@@ -8,7 +8,7 @@ import { Footer } from "@/components/Footer";
 import { JsonLdScript } from "@/components/JsonLd";
 import { ArrowRight, ArrowUpRight, CheckIcon } from "@/components/Icons";
 import { companyPages, isCompanyId } from "@/content/companies";
-import { faqGroups } from "@/content/faq";
+import { getFaqGroups } from "@/content/loaders";
 import { companies } from "@/content/site";
 import { pageMetadata } from "@/lib/seo";
 import { companyNode, graph, pageNodes } from "@/lib/schema";
@@ -16,7 +16,8 @@ import styles from "../page.module.css";
 
 type Props = { params: Promise<{ company: string }> };
 
-export const dynamicParams = false;
+/** 5 dəqiqə (Next bu dəyərin sabit rəqəm olmasını tələb edir; src/lib/cms.ts-dəki CMS_REVALIDATE ilə eyni olmalıdır) */
+export const revalidate = 300;
 
 export function generateStaticParams() {
   return companies.map((c) => ({ company: c.id }));
@@ -55,7 +56,7 @@ function LinkOrA({ href, className, children }: { href: string; className?: stri
 
 export default async function CompanyPage(props: Props) {
   const { company, page } = await load(props);
-  const faq = faqGroups.find((g) => g.id === company.id);
+  const faq = (await getFaqGroups()).find((g) => g.id === company.id);
   const others = companies.filter((c) => c.id !== company.id);
   const path = `/sirketler/${company.id}`;
   const facts = [
