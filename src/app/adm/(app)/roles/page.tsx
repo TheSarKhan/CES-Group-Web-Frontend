@@ -1,0 +1,8 @@
+import type { Metadata } from "next";
+import { RolesPage } from "@/components/admin/RolesPage";
+
+export const metadata: Metadata = { title: "Rollar" };
+
+export default function Page() {
+  return <RolesPage />;
+}

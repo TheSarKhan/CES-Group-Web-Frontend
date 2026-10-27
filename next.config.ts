@@ -37,6 +37,17 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      // Admin paneli heç vaxt indekslənməsin
+      {
+        source: "/:path*",
+        has: [{ type: "host" as const, value: "admin.cesgroup.az" }],
+        headers: [
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+          { key: "Cache-Control", value: "no-store" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Referrer-Policy", value: "same-origin" },
+        ],
+      },
       // HTTPS-i brauzerlərdə yadda saxlatdırır (alt domenlərə şamil edilmir)
       { source: "/:path*", headers: [{ key: "Strict-Transport-Security", value: "max-age=31536000" }] },
       // Şəkil və videolar nadir dəyişir: brauzer və CDN uzun müddət saxlasın

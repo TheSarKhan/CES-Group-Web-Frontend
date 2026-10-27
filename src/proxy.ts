@@ -4,6 +4,10 @@ import { isSubSiteId } from "@/content/subsites";
 /** Subdomain saytları ümumi domen və ya lokal `*.localhost` altında işləyir */
 const BASE_HOSTS = new Set(["cesgroup.az", "localhost"]);
 
+/** admin.cesgroup.az eyni tətbiqdən xidmət göstərir: sorğular /adm/... marşrutuna yazılır */
+const ADMIN_HOSTS = new Set(["admin.cesgroup.az", "admin.localhost"]);
+const isAdminHost = (host: string | null) => ADMIN_HOSTS.has((host ?? "").split(":")[0].toLowerCase());
+
 function subsiteOf(host: string | null) {
   const [name, ...rest] = (host ?? "").split(":")[0].toLowerCase().split(".");
   return rest.length > 0 && BASE_HOSTS.has(rest.join(".")) && isSubSiteId(name) ? name : null;
@@ -21,6 +25,19 @@ export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const site = subsiteOf(req.headers.get("host"));
   const marked = req.headers.get("x-subsite");
+
+  // Admin panel: rewrite-dan sonra proxy yenidən işləyir və Host daxili ünvan olur, ona görə x-admin işarəsinə baxılır
+  if (pathname === "/adm" || pathname.startsWith("/adm/")) {
+    if (req.headers.get("x-admin")) return NextResponse.next();
+    return NextResponse.rewrite(new URL("/_not-found", req.url));
+  }
+  if (isAdminHost(req.headers.get("host"))) {
+    const url = req.nextUrl.clone();
+    url.pathname = `/adm${pathname === "/" ? "" : pathname}`;
+    const headers = new Headers(req.headers);
+    headers.set("x-admin", "1");
+    return NextResponse.rewrite(url, { request: { headers } });
+  }
 
   if (pathname === "/s" || pathname.startsWith("/s/")) {
     if (marked && (pathname === `/s/${marked}` || pathname.startsWith(`/s/${marked}/`))) return NextResponse.next();
