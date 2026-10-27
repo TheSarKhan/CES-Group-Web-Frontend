@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { getUi } from "@/i18n/ui";
+import type { Lang } from "@/lib/i18n";
 import { afterLoad, prefersLightMedia } from "@/lib/media";
 import styles from "./SubHero.module.css";
 
-export function SubHero({ title, video, poster }: { title: string; video: string; poster: string }) {
+export function SubHero({ title, video, poster, lang = "az" }: { title: string; video: string; poster: string; lang?: Lang }) {
   const ref = useRef<HTMLVideoElement>(null);
 
   // Mobil brauzerlərdə `muted` atributu bəzən DOM-a düşmür və autoplay bloklanır.
@@ -30,7 +32,7 @@ export function SubHero({ title, video, poster }: { title: string; video: string
       <div className={styles.content}>
         <h1 className={styles.title}>{title}</h1>
         <a href="#haqqimizda" className="btn btn-gold">
-          ƏTRAFLI →
+          {getUi(lang).sub.heroMore}
         </a>
       </div>
     </section>

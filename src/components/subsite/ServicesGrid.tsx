@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import type { SubService } from "@/content/subsites";
+import { getUi } from "@/i18n/ui";
+import { localePath, type Lang } from "@/lib/i18n";
 import { PanelLink } from "./PanelLink";
 import { Reveal } from "./Reveal";
 import styles from "./ServicesGrid.module.css";
 
 /** Masaüstündə panellərin üzərinə gələndə aktiv xidmətin şəkli bütün sıra boyunca panorama kimi açılır. */
-export function ServicesGrid({ services }: { services: SubService[] }) {
+export function ServicesGrid({ services, lang = "az" }: { services: SubService[]; lang?: Lang }) {
   const [active, setActive] = useState(0);
   const [hovering, setHovering] = useState(false);
 
@@ -16,10 +18,10 @@ export function ServicesGrid({ services }: { services: SubService[] }) {
       {services.map((s, i) => (
         <Reveal key={s.slug} delay={i * 100} className={styles.item}>
           <PanelLink
-            href={`/xidmetlerimiz/${s.slug}`}
+            href={localePath(lang, `/xidmetlerimiz/${s.slug}`)}
             image={s.image}
             alt={s.label}
-            kind="Xidmət"
+            kind={getUi(lang).sub.serviceKind}
             title={s.label}
             index={i}
             sizes="(min-width: 768px) 25vw, 100vw"

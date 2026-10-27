@@ -1,3 +1,5 @@
+import { getUi } from "@/i18n/ui";
+import type { Lang } from "@/lib/i18n";
 import { CharTitle } from "./CharTitle";
 import { Parallax } from "./Parallax";
 import anim from "./Anim.module.css";
@@ -10,10 +12,11 @@ type Props = {
   kicker: string;
   title: string;
   links: { href: string; label: string }[];
+  lang?: Lang;
 };
 
 /** Xidmət və layihə detal səhifələrinin üst hissəsi: parallax şəkil, hərf-hərf açılan başlıq, sürüşən yazı zolağı. */
-export function DetailHero({ image, alt, kicker, title, links }: Props) {
+export function DetailHero({ image, alt, kicker, title, links, lang = "az" }: Props) {
   return (
     <>
       <section className={styles.hero} data-header-theme="dark">
@@ -26,7 +29,7 @@ export function DetailHero({ image, alt, kicker, title, links }: Props) {
           </p>
           <CharTitle text={title} delay={300} className={styles.title} />
         </div>
-        <nav className={styles.subnav} aria-label="Bölmələr">
+        <nav className={styles.subnav} aria-label={getUi(lang).sub.sections}>
           {links.map((l) => (
             <a key={l.href} href={l.href}>
               {l.label}

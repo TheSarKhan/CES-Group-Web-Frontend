@@ -155,15 +155,43 @@ export async function availableLangs(ref: PageRef): Promise<Lang[]> {
 
 export const PANEL_SITE: Record<SubSiteId, string> = { construction: "construction", farmart: "agro" };
 
-/** Alt saytın tam məzmunu: əsas məzmun, xidmətlər və layihələr. Panel-də qurulmayıbsa fayldakı məzmun işlənir. */
-export const getSubSiteContent = cache(async (id: SubSiteId): Promise<SubSite> => {
+/** Alt saytın tam məzmunu: əsas məzmun, xidmətlər və layihələr. Panel-də qurulmayıbsa fayldakı məzmun işlənir (yalnız az). */
+const loadSubSite = cache(async (id: SubSiteId, lang: Lang): Promise<SubSite | null> => {
   const base = subsites[id];
   const code = PANEL_SITE[id];
-  const [main, services, projects] = await Promise.all([cmsEntry(code, "subsite", "main"), cmsList(code, "service"), cmsList(code, "sub-project")]);
-  if (!main) return base;
+  const [main, services, projects] = await Promise.all([cmsEntry(code, "subsite", "main", lang), cmsList(code, "service", lang), cmsList(code, "sub-project", lang)]);
+  if (!main) return az(lang) ? base : null;
   return {
     ...subsiteFrom(main.data, base),
-    services: services ? services.map((e) => serviceFrom(e.slug, e.data)) : base.services,
-    projects: projects ? projects.map((e) => subProjectFrom(e.slug, e.data)) : base.projects,
+    services: services ? services.map((e) => serviceFrom(e.slug, e.data)) : az(lang) ? base.services : [],
+    projects: projects ? projects.map((e) => subProjectFrom(e.slug, e.data)) : az(lang) ? base.projects : [],
   };
 });
+export const getSubSiteContent = async (id: SubSiteId, lang: Lang = DEFAULT_LANG) => must(await loadSubSite(id, lang));
+
+export type SubPageRef = { kind: "home" | "services" | "projects" | "contact" } | { kind: "service"; slug: string } | { kind: "project"; slug: string };
+
+/** Alt saytın səhifəsi en/ru-da yalnız saytın, qrupun ayarlarının və şirkət adlarının tərcüməsi tam olduqda açılır */
+async function isSubReady(id: SubSiteId, lang: Lang, ref: SubPageRef): Promise<boolean> {
+  if (az(lang)) return true;
+  const [settings, bundle, site] = await Promise.all([loadSettings(lang), loadBundle(lang), loadSubSite(id, lang)]);
+  if (!settings || !bundle || !site) return false;
+  switch (ref.kind) {
+    case "home":
+    case "services":
+      return site.services.length > 0;
+    case "projects":
+      return site.projects.length > 0;
+    case "service":
+      return site.services.some((x) => x.slug === ref.slug);
+    case "project":
+      return site.projects.some((x) => x.slug === ref.slug);
+    default:
+      return true;
+  }
+}
+
+export async function availableSubLangs(id: SubSiteId, ref: SubPageRef): Promise<Lang[]> {
+  const ok = await Promise.all(LANGS.map((l) => isSubReady(id, l, ref)));
+  return LANGS.filter((_, i) => ok[i]);
+}

@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getUi } from "@/i18n/ui";
+import type { Lang } from "@/lib/i18n";
 import styles from "./BackToTop.module.css";
 
-export function BackToTop() {
+export function BackToTop({ lang = "az" }: { lang?: Lang }) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -21,7 +23,7 @@ export function BackToTop() {
   }, []);
 
   return (
-    <button type="button" aria-label="Yuxarı qayıt" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className={`${styles.btn} ${show ? styles.show : ""}`}>
+    <button type="button" aria-label={getUi(lang).sub.backToTop} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className={`${styles.btn} ${show ? styles.show : ""}`}>
       ↑
     </button>
   );

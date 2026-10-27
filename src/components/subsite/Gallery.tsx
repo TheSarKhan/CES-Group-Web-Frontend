@@ -2,10 +2,13 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { getUi } from "@/i18n/ui";
+import type { Lang } from "@/lib/i18n";
 import { Reveal } from "./Reveal";
 import styles from "./Gallery.module.css";
 
-export function Gallery({ images, title }: { images: string[]; title: string }) {
+export function Gallery({ images, title, lang = "az" }: { images: string[]; title: string; lang?: Lang }) {
+  const g = getUi(lang).sub.gallery;
   const [open, setOpen] = useState<number | null>(null);
 
   useEffect(() => {
@@ -28,7 +31,7 @@ export function Gallery({ images, title }: { images: string[]; title: string }) 
       <div className={styles.grid}>
         {images.map((src, i) => (
           <Reveal key={src} delay={(i % 2) * 100}>
-            <button type="button" className={styles.thumb} onClick={() => setOpen(i)} aria-label={`${title} — şəkil ${i + 1}`}>
+            <button type="button" className={styles.thumb} onClick={() => setOpen(i)} aria-label={g.image(title, i + 1)}>
               <Image src={src} alt="" fill sizes="(min-width: 768px) 50vw, 100vw" quality={70} className={styles.img} />
             </button>
           </Reveal>
@@ -37,7 +40,7 @@ export function Gallery({ images, title }: { images: string[]; title: string }) 
 
       {open !== null && (
         <div className={styles.box} role="dialog" aria-modal="true" aria-label={title} onClick={() => setOpen(null)}>
-          <button type="button" className={styles.close} aria-label="Bağla">
+          <button type="button" className={styles.close} aria-label={g.close}>
             ×
           </button>
           {images.length > 1 && (
@@ -45,7 +48,7 @@ export function Gallery({ images, title }: { images: string[]; title: string }) 
               <button
                 type="button"
                 className={`${styles.nav} ${styles.prev}`}
-                aria-label="Əvvəlki"
+                aria-label={g.prev}
                 onClick={(e) => {
                   e.stopPropagation();
                   setOpen((open - 1 + images.length) % images.length);
@@ -56,7 +59,7 @@ export function Gallery({ images, title }: { images: string[]; title: string }) 
               <button
                 type="button"
                 className={`${styles.nav} ${styles.next}`}
-                aria-label="Növbəti"
+                aria-label={g.next}
                 onClick={(e) => {
                   e.stopPropagation();
                   setOpen((open + 1) % images.length);
@@ -67,7 +70,7 @@ export function Gallery({ images, title }: { images: string[]; title: string }) 
             </>
           )}
           <div className={styles.frame} onClick={(e) => e.stopPropagation()}>
-            <Image src={images[open]} alt={`${title} — şəkil ${open + 1}`} fill sizes="100vw" quality={85} className={styles.full} />
+            <Image src={images[open]} alt={g.image(title, open + 1)} fill sizes="100vw" quality={85} className={styles.full} />
           </div>
         </div>
       )}
