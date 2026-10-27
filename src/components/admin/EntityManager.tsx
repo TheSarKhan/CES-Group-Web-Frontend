@@ -40,6 +40,10 @@ export type EntityConfig = {
   specs?: boolean;
   /** Seçim siyahıları üçün əvvəlcədən yüklənən yollar: ad → backend yolu */
   deps?: Record<string, string>;
+  /** Yeni qeyd üçün ilkin dəyərlər */
+  defaults?: Record<string, unknown>;
+  /** Siyahıda "Saytda/Gizli" statusu göstərilmir (məs. yönləndirmələr) */
+  noStatus?: boolean;
   /** Sürüklə-burax sıralama (PATCH {path}/reorder, yalnız slug açarlı kataloq və layihələr) */
   reorder?: boolean;
   /** Siyahıda "Saytda/Gizli" düyməsi (PATCH {path}/{slug}/publish) */
@@ -151,7 +155,7 @@ export function EntityManager({ cfg, site }: { cfg: EntityConfig; site: string }
               {cfg.columns.map((c) => (
                 <th key={c.head}>{c.head}</th>
               ))}
-              <th>Status</th>
+              {!cfg.noStatus && <th>Status</th>}
               <th />
             </tr>
           </thead>
@@ -181,6 +185,7 @@ export function EntityManager({ cfg, site }: { cfg: EntityConfig; site: string }
                 {cfg.columns.map((c) => (
                   <td key={c.head}>{c.cell(r)}</td>
                 ))}
+                {!cfg.noStatus && (
                 <td>
                   {cfg.publishToggle && canPublish ? (
                     <button
@@ -195,6 +200,7 @@ export function EntityManager({ cfg, site }: { cfg: EntityConfig; site: string }
                     <span className={`${styles.badge} ${r.isPublished === false ? styles.badgeBad : styles.badgeOk}`}>{r.isPublished === false ? "Gizli" : "Saytda"}</span>
                   )}
                 </td>
+                )}
                 <td style={{ whiteSpace: "nowrap" }}>
                   <div className={styles.row} style={{ flexWrap: "nowrap" }}>
                     {canEdit && (
@@ -265,7 +271,7 @@ function EntityForm({ cfg, deps, existing, source, nextSort, onClose, onSaved }:
   const [values, setValues] = useState<Record<string, unknown>>(() => {
     const v: Record<string, unknown> = {};
     for (const f of cfg.fields) {
-      const raw = source ? (f.name in fromRow ? fromRow[f.name] : source[f.name]) : undefined;
+      const raw = source ? (f.name in fromRow ? fromRow[f.name] : source[f.name]) : cfg.defaults?.[f.name];
       if (f.kind === "bool") v[f.name] = raw === undefined ? true : !!raw;
       else if (f.kind === "gallery") v[f.name] = Array.isArray(raw) ? raw : [];
       else if (f.kind === "number") v[f.name] = raw === undefined ? (f.name === "sortOrder" ? nextSort : 0) : Number(raw);

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isSubSiteId } from "@/content/subsites";
+import { findRedirect } from "@/lib/redirects";
 
 /** Subdomain saytları ümumi domen və ya lokal `*.localhost` altında işləyir */
 const BASE_HOSTS = new Set(["cesgroup.az", "localhost"]);
@@ -21,7 +22,7 @@ function subsiteOf(host: string | null) {
  * başlığı daxili ünvan (localhost:PORT) olur. Ona görə /s/... yolunun icazəli olduğunu Host yox,
  * rewrite zamanı qoyulan x-subsite başlığı göstərir. Əsas domendə /s/... birbaşa açılmır (404).
  */
-export function proxy(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const site = subsiteOf(req.headers.get("host"));
   const marked = req.headers.get("x-subsite");
@@ -42,6 +43,13 @@ export function proxy(req: NextRequest) {
   if (pathname === "/s" || pathname.startsWith("/s/")) {
     if (marked && (pathname === `/s/${marked}` || pathname.startsWith(`/s/${marked}/`))) return NextResponse.next();
     return NextResponse.rewrite(new URL("/_not-found", req.url));
+  }
+  // Panel-dən idarə olunan yönləndirmələr (yalnız əsas sayt və construction/farmart üçün)
+  const redirect = await findRedirect(site === "farmart" ? "agro" : (site ?? "group"), pathname);
+  if (redirect) {
+    const target = new URL(redirect.to, req.url);
+    if (redirect.to.startsWith("/") && !target.search) target.search = req.nextUrl.search;
+    return NextResponse.redirect(target, redirect.code);
   }
   if (!site) return NextResponse.next();
 
