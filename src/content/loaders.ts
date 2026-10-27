@@ -3,10 +3,11 @@
  */
 import { cache } from "react";
 import { cmsEntry, cmsList } from "@/lib/cms";
-import { aboutFrom, approachFrom, clientFrom, companyFrom, companyPageFrom, faqGroupFrom, journeyFrom, legalFrom, projectFrom, settingsFrom, statsFrom, type About, type Approach, type Client, type SiteSettings, type Stat } from "./cms-map";
+import { aboutFrom, approachFrom, clientFrom, companyFrom, companyPageFrom, faqGroupFrom, journeyFrom, serviceFrom, subProjectFrom, subsiteFrom, legalFrom, projectFrom, settingsFrom, statsFrom, type About, type Approach, type Client, type SiteSettings, type Stat } from "./cms-map";
 import { faqGroups as faqFallback, type FaqGroup } from "./faq";
 import { privacy, terms, type LegalDoc } from "./legal";
 import { companyPages as pagesFallback, type CompanyPage } from "./companies";
+import { subsites, type SubSite, type SubSiteId } from "./subsites";
 import { about as aboutFallback, clients as clientsFallback, companies as companiesFallback, journey as journeyFallback, type Company, type CompanyId, type JourneyStep, projectApproach as approachFallback, projects as projectsFallback, site, stats as statsFallback, type Project } from "./site";
 
 export async function getFaqGroups(): Promise<FaqGroup[]> {
@@ -86,3 +87,20 @@ const getBundle = cache(async (): Promise<Bundle> => {
 export const getCompanies = async () => (await getBundle()).companies;
 export const getCompanyPages = async () => (await getBundle()).pages;
 export const getJourney = async () => (await getBundle()).journey;
+
+// ---- Construction və Farmart (panel-də Farmart-ın sayt kodu "agro"-dur) ------------------------------------------
+
+export const PANEL_SITE: Record<SubSiteId, string> = { construction: "construction", farmart: "agro" };
+
+/** Alt saytın tam məzmunu: əsas məzmun, xidmətlər və layihələr. Panel-də qurulmayıbsa fayldakı məzmun işlənir. */
+export const getSubSiteContent = cache(async (id: SubSiteId): Promise<SubSite> => {
+  const base = subsites[id];
+  const code = PANEL_SITE[id];
+  const [main, services, projects] = await Promise.all([cmsEntry(code, "subsite", "main"), cmsList(code, "service"), cmsList(code, "sub-project")]);
+  if (!main) return base;
+  return {
+    ...subsiteFrom(main.data, base),
+    services: services ? services.map((e) => serviceFrom(e.slug, e.data)) : base.services,
+    projects: projects ? projects.map((e) => subProjectFrom(e.slug, e.data)) : base.projects,
+  };
+});

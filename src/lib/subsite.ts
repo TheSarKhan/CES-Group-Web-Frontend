@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { getCompanies } from "@/content/loaders";
+import { getCompanies, getSubSiteContent } from "@/content/loaders";
 import { site as group } from "@/content/site";
-import { isSubSiteId, subsites, type SubSite } from "@/content/subsites";
+import { isSubSiteId, type SubSite } from "@/content/subsites";
 
 export type SubSiteParams = { params: Promise<{ site: string }> };
 
@@ -9,7 +9,7 @@ export type SubSiteParams = { params: Promise<{ site: string }> };
 export async function getSubSite({ params }: SubSiteParams): Promise<SubSite> {
   const { site } = await params;
   if (!isSubSiteId(site)) notFound();
-  return subsites[site];
+  return getSubSiteContent(site);
 }
 
 export const groupUrl = group.url;

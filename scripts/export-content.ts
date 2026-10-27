@@ -5,10 +5,12 @@
  * Skript əvvəl yoxlayır: panel formatından geri çevrilən məzmun fayldakı ilə tam eynidir. Fərq olarsa dayanır.
  */
 import { isDeepStrictEqual } from "node:util";
-import { aboutFrom, aboutTo, approachFrom, approachTo, clientFrom, clientTo, faqGroupFrom, faqGroupTo, legalFrom, legalTo, projectFrom, projectTo, settingsFrom, settingsTo, statsFrom, statsTo, companyFrom, companyPageFrom, companyTo, journeyFrom } from "../src/content/cms-map";
+import { aboutFrom, aboutTo, approachFrom, approachTo, clientFrom, clientTo, faqGroupFrom, faqGroupTo, legalFrom, legalTo, projectFrom, projectTo, settingsFrom, settingsTo, statsFrom, statsTo, companyFrom, companyPageFrom, companyTo, journeyFrom, serviceFrom, serviceTo, subProjectFrom, subProjectTo, subsiteFrom, subsiteTo } from "../src/content/cms-map";
 import { faqGroups } from "../src/content/faq";
 import { privacy, terms } from "../src/content/legal";
 import { companyPages } from "../src/content/companies";
+import { PANEL_SITE } from "../src/content/loaders";
+import { subsites } from "../src/content/subsites";
 import { about, clients, companies, journey, projectApproach, projects, site, stats } from "../src/content/site";
 
 type Entry = { site: string; type: string; slug: string; sort: number; data: unknown };
@@ -76,6 +78,24 @@ companies.forEach((c, i) => {
   same(journeyFrom(c.id, data), step, `Layihənin yolu ${c.id}`);
   entries.push({ site: "group", type: "company", slug: c.id, sort: i, data });
 });
+
+for (const sub of Object.values(subsites)) {
+  const code = PANEL_SITE[sub.id];
+  const main = subsiteTo(sub);
+  const back = { ...subsiteFrom(main, sub), services: sub.services, projects: sub.projects };
+  same(back, sub, `Alt sayt ${sub.id}`);
+  entries.push({ site: code, type: "subsite", slug: "main", sort: 0, data: main });
+  sub.services.forEach((svc, i) => {
+    const data = serviceTo(svc);
+    same(serviceFrom(svc.slug, data), svc, `Xidmət ${sub.id}/${svc.slug}`);
+    entries.push({ site: code, type: "service", slug: svc.slug, sort: i, data });
+  });
+  sub.projects.forEach((p, i) => {
+    const data = subProjectTo(p);
+    same(subProjectFrom(p.slug, data), p, `Layihə ${sub.id}/${p.slug}`);
+    entries.push({ site: code, type: "sub-project", slug: p.slug, sort: i, data });
+  });
+}
 
 const q = (s: string) => `'${s.replace(/'/g, "''")}'`;
 const out: string[] = ["-- Avtomatik yaradılıb: scripts/export-content.ts", "BEGIN;"];

@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { isReadyProject, isTbd, subsites } from "@/content/subsites";
+import { getSubSiteContent } from "@/content/loaders";
+import { isReadyProject, isTbd, subsiteIds } from "@/content/subsites";
 import { getSubSite } from "@/lib/subsite";
 import { pageMetadata } from "@/lib/seo";
 import { graph, pageNodes } from "@/lib/schema";
@@ -14,8 +15,9 @@ import styles from "@/components/subsite/Pages.module.css";
 
 type Props = { params: Promise<{ site: string; slug: string }> };
 
-export function generateStaticParams() {
-  return Object.keys(subsites).flatMap((site) => subsites[site as keyof typeof subsites].projects.map((p) => ({ site, slug: p.slug })));
+export async function generateStaticParams() {
+  const all = await Promise.all(subsiteIds.map(async (site) => (await getSubSiteContent(site)).projects.map((p) => ({ site, slug: p.slug }))));
+  return all.flat();
 }
 
 async function load({ params }: Props) {

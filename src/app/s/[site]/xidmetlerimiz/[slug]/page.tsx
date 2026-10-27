@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { subsites } from "@/content/subsites";
+import { getSubSiteContent } from "@/content/loaders";
+import { subsiteIds } from "@/content/subsites";
 import { getSubSite } from "@/lib/subsite";
 import { getCompanies } from "@/content/loaders";
 import { pageMetadata } from "@/lib/seo";
@@ -13,8 +14,9 @@ import styles from "@/components/subsite/Pages.module.css";
 
 type Props = { params: Promise<{ site: string; slug: string }> };
 
-export function generateStaticParams() {
-  return Object.keys(subsites).flatMap((site) => subsites[site as keyof typeof subsites].services.map((s) => ({ site, slug: s.slug })));
+export async function generateStaticParams() {
+  const all = await Promise.all(subsiteIds.map(async (site) => (await getSubSiteContent(site)).services.map((s) => ({ site, slug: s.slug }))));
+  return all.flat();
 }
 
 async function load({ params }: Props) {

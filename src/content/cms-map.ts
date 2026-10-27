@@ -7,6 +7,7 @@ import type { Faq, FaqGroup } from "./faq";
 import type { LegalDoc, LegalSection } from "./legal";
 import type { CompanyPage } from "./companies";
 import type { Company, CompanyId, JourneyStep, Project, site as staticSite } from "./site";
+import type { SubProject, SubService, SubSite } from "./subsites";
 import type { about as staticAbout, projectApproach as staticApproach, stats as staticStats } from "./site";
 
 /** `site` obyektinin panel-dən idarə olunan sahələri */
@@ -245,3 +246,71 @@ export function companyTo(c: Company, page: CompanyPage, step: JourneyStep, jour
     projects: page.projects.map((p) => ({ title: { az: p.title }, category: { az: p.category }, image: p.image, alt: { az: p.alt }, href: p.href })),
   };
 }
+
+// ---- Construction və Farmart alt saytları ---------------------------------------------------------------------
+
+/** Saytın əsas məzmunu. services/projects ayrıca qeydlərdən gəlir; url koddan (mühitdən asılıdır) */
+export function subsiteFrom(d: Data, base: SubSite): SubSite {
+  return {
+    id: base.id,
+    url: base.url,
+    name: str(d.name),
+    tagline: tr(d.tagline),
+    description: tr(d.description),
+    video: str(d.video),
+    poster: str(d.poster),
+    about: lines(tr(d.about), /\n{2,}/),
+    services: [],
+    stats: arr(d.stats).map((x) => ({ label: tr(x.label), value: str(x.value) })),
+    projects: [],
+    cta: { title: tr(d.ctaTitle), text: tr(d.ctaText) },
+  };
+}
+export const subsiteTo = (s: SubSite): Data => ({
+  name: s.name,
+  tagline: { az: s.tagline },
+  description: { az: s.description },
+  video: s.video,
+  poster: s.poster,
+  about: { az: s.about.join("\n\n") },
+  stats: s.stats.map((x) => ({ label: { az: x.label }, value: x.value })),
+  ctaTitle: { az: s.cta.title },
+  ctaText: { az: s.cta.text },
+});
+
+export function serviceFrom(slug: string, d: Data): SubService {
+  const body = lines(tr(d.body), /\n{2,}/);
+  const includes = lines(tr(d.includes), /\n/);
+  return { slug, label: tr(d.label), image: str(d.image), description: tr(d.description), ...(body.length ? { body } : {}), ...(includes.length ? { includes } : {}) };
+}
+export const serviceTo = (s: SubService): Data => ({
+  label: { az: s.label },
+  image: s.image,
+  description: { az: s.description },
+  ...(s.body?.length ? { body: { az: s.body.join("\n\n") } } : {}),
+  ...(s.includes?.length ? { includes: { az: s.includes.join("\n") } } : {}),
+});
+
+export const subProjectFrom = (slug: string, d: Data): SubProject => ({
+  slug,
+  title: tr(d.title),
+  category: tr(d.category),
+  client: tr(d.client),
+  duration: tr(d.duration),
+  area: tr(d.area),
+  description: tr(d.description),
+  image: str(d.image),
+  gallery: Array.isArray(d.gallery) ? (d.gallery as unknown[]).map(String) : [],
+  ...(d.draft === true ? { draft: true } : {}),
+});
+export const subProjectTo = (p: SubProject): Data => ({
+  title: { az: p.title },
+  category: { az: p.category },
+  client: { az: p.client },
+  duration: { az: p.duration },
+  area: { az: p.area },
+  description: { az: p.description },
+  image: p.image,
+  gallery: p.gallery,
+  ...(p.draft ? { draft: true } : {}),
+});
