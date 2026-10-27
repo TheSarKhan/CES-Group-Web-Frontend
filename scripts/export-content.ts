@@ -5,9 +5,10 @@
  * Skript əvvəl yoxlayır: panel formatından geri çevrilən məzmun fayldakı ilə tam eynidir. Fərq olarsa dayanır.
  */
 import { isDeepStrictEqual } from "node:util";
-import { faqGroupFrom, faqGroupTo, legalFrom, legalTo } from "../src/content/cms-map";
+import { faqGroupFrom, faqGroupTo, legalFrom, legalTo, settingsFrom, settingsTo } from "../src/content/cms-map";
 import { faqGroups } from "../src/content/faq";
 import { privacy, terms } from "../src/content/legal";
+import { site } from "../src/content/site";
 
 type Entry = { site: string; type: string; slug: string; sort: number; data: unknown };
 const entries: Entry[] = [];
@@ -22,6 +23,12 @@ for (const [slug, doc] of [["mexfilik-siyaseti", privacy], ["istifade-sertleri",
   const data = legalTo(doc);
   if (!isDeepStrictEqual(legalFrom(data as Record<string, unknown>), doc)) throw new Error(`Hüquqi səhifə çevrilmədi: ${slug}`);
   entries.push({ site: "group", type: "legal-page", slug, sort: 0, data });
+}
+
+{
+  const data = settingsTo(site);
+  if (!isDeepStrictEqual(settingsFrom(data as Record<string, unknown>, site), site)) throw new Error("Sayt ayarları çevrilmədi");
+  entries.push({ site: "group", type: "settings", slug: "main", sort: 0, data });
 }
 
 const q = (s: string) => `'${s.replace(/'/g, "''")}'`;

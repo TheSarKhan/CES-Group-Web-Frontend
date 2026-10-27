@@ -7,15 +7,20 @@ import { Clients } from "@/components/Clients";
 import { ContactBlock } from "@/components/ContactBlock";
 import { Footer } from "@/components/Footer";
 import { JsonLd } from "@/components/JsonLd";
-import { site } from "@/content/site";
+import { getSiteSettings } from "@/content/loaders";
 import { pageMetadata } from "@/lib/seo";
 
-export const metadata = pageMetadata({
-  title: "CES Group Azərbaycan — memarlıq, tikinti, texnika icarəsi və innovativ ekosistem",
-  description: site.description,
-  path: "/",
-  absoluteTitle: true,
-});
+export async function generateMetadata() {
+  return pageMetadata({
+    title: "CES Group Azərbaycan — memarlıq, tikinti, texnika icarəsi və innovativ ekosistem",
+    description: (await getSiteSettings()).description,
+    path: "/",
+    absoluteTitle: true,
+  });
+}
+
+/** 5 dəqiqə (Next bu dəyərin sabit rəqəm olmasını tələb edir) */
+export const revalidate = 300;
 
 export default function HomePage() {
   return (

@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { site } from "@/content/site";
+import { getSiteSettings } from "@/content/loaders";
 import { ArrowRight } from "./Icons";
 import { tel } from "@/lib/tel";
 import styles from "./ContactBlock.module.css";
 
-export function ContactBlock() {
+export async function ContactBlock() {
   return (
     <section className={`section ${styles.wrap}`} aria-labelledby="contact-title">
       <div className={`container ${styles.grid}`}>
@@ -24,7 +24,8 @@ export function ContactBlock() {
 }
 
 /** Bütün şirkətlər üçün ortaq əlaqə məlumatı */
-export function GroupContacts() {
+export async function GroupContacts() {
+  const site = await getSiteSettings();
   return (
     <ul className={styles.list}>
       <li className={styles.row}>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { site as group } from "@/content/site";
+import { getSiteSettings } from "@/content/loaders";
 import { getSubSite, type SubSiteParams } from "@/lib/subsite";
 import { tel } from "@/lib/tel";
 import { pageMetadata } from "@/lib/seo";
@@ -12,6 +12,7 @@ import styles from "@/components/subsite/Pages.module.css";
 
 export async function generateMetadata(props: SubSiteParams): Promise<Metadata> {
   const site = await getSubSite(props);
+  const group = await getSiteSettings();
   return pageMetadata({
     title: "Əlaqə",
     description: `${site.name} ilə əlaqə: müraciət forması, ${group.phone}, ${group.email}. Ünvan: ${group.address}.`,
@@ -23,6 +24,7 @@ export async function generateMetadata(props: SubSiteParams): Promise<Metadata> 
 
 export default async function ContactPage(props: SubSiteParams) {
   const site = await getSubSite(props);
+  const group = await getSiteSettings();
   const q = encodeURIComponent(group.mapQuery);
 
   return (

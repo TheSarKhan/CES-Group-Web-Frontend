@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { site as group } from "@/content/site";
+import { getSiteSettings } from "@/content/loaders";
 import { navFor, type SubSite } from "@/content/subsites";
 import { tel } from "@/lib/tel";
 import { CookieSettingsButton } from "../Analytics";
@@ -8,7 +8,8 @@ import styles from "./SubFooter.module.css";
 
 
 
-export function SubFooter({ site, groupUrl, siblings }: { site: SubSite; groupUrl: string; siblings: { name: string; url: string }[] }) {
+export async function SubFooter({ site, groupUrl, siblings }: { site: SubSite; groupUrl: string; siblings: { name: string; url: string }[] }) {
+  const group = await getSiteSettings();
   return (
     <footer className={styles.footer} data-header-theme="dark">
       <div className={styles.grid}>

@@ -1,3 +1,4 @@
+import type { SiteSettings } from "@/content/cms-map";
 import { companies, journey, projects, site, type Company } from "@/content/site";
 import { defaultOgImage } from "./seo";
 
@@ -9,32 +10,34 @@ export const abs = (path: string, base: string = site.url) => new URL(path, base
 export const orgId = (url: string) => `${url}/#organization`;
 export const websiteId = (url: string) => `${url}/#website`;
 
-const address = {
-  "@type": "PostalAddress",
-  streetAddress: site.addressParts.street,
-  addressLocality: site.addressParts.city,
-  addressRegion: site.addressParts.region,
-  addressCountry: "AZ",
-};
+type Settings = SiteSettings;
 
-const openingHours = {
+const addressOf = (s: Settings) => ({
+  "@type": "PostalAddress",
+  streetAddress: s.addressParts.street,
+  addressLocality: s.addressParts.city,
+  addressRegion: s.addressParts.region,
+  addressCountry: "AZ",
+});
+
+const openingHoursOf = (s: Settings) => ({
   "@type": "OpeningHoursSpecification",
   dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-  opens: site.hours.opens,
-  closes: site.hours.closes,
-};
+  opens: s.hours.opens,
+  closes: s.hours.closes,
+});
 
-const contactPoint = {
+const contactPointOf = (s: Settings) => ({
   "@type": "ContactPoint",
   contactType: "customer service",
-  telephone: site.phone,
-  email: site.email,
+  telephone: s.phone,
+  email: s.email,
   areaServed: "AZ",
   availableLanguage: ["az"],
-};
+});
 
 /** Şirkət qovşağı: qrupun ana səhifəsində də, öz subsaytında da eyni @id ilə işlənir */
-export function companyNode(c: Company, { contact = false }: { contact?: boolean } = {}) {
+export function companyNode(c: Company, { contact = false, settings = site }: { contact?: boolean; settings?: Settings } = {}) {
   // Hələ fəaliyyətə başlamayan istiqamətin xidmətləri schema-ya Service kimi yazılmır
   const services = c.planned ? [] : (journey.find((j) => j.id === c.id)?.points ?? []);
   return {
@@ -47,7 +50,7 @@ export function companyNode(c: Company, { contact = false }: { contact?: boolean
     foundingDate: c.founded,
     parentOrganization: { "@id": orgId(site.url) },
     areaServed: COUNTRY,
-    ...(contact && { telephone: site.phone, email: site.email, address, openingHoursSpecification: openingHours, contactPoint }),
+    ...(contact && { telephone: settings.phone, email: settings.email, address: addressOf(settings), openingHoursSpecification: openingHoursOf(settings), contactPoint: contactPointOf(settings) }),
     makesOffer: services.map((name) => ({
       "@type": "Offer",
       itemOffered: {
@@ -64,7 +67,7 @@ export function companyNode(c: Company, { contact = false }: { contact?: boolean
 export const graph = (nodes: object[]) => ({ "@context": "https://schema.org", "@graph": nodes });
 
 /** Ana səhifə: sayt, qrup (yerli biznes kimi) və dörd şirkət */
-export function groupGraph() {
+export function groupGraph(settings: Settings = site) {
   const id = orgId(site.url);
   return graph([
     { "@type": "WebSite", "@id": websiteId(site.url), url: site.url, name: site.name, inLanguage: "az", publisher: { "@id": id } },
@@ -72,20 +75,20 @@ export function groupGraph() {
       "@type": ["Organization", "LocalBusiness"],
       "@id": id,
       name: site.name,
-      legalName: site.legalName,
+      legalName: settings.legalName,
       alternateName: ["CES", "CES Group Azərbaycan", "CES Azerbaijan", "Construction Equipment Services"],
       url: site.url,
       image: abs(defaultOgImage.url),
-      description: site.description,
+      description: settings.description,
       foundingDate: site.foundingDate,
-      telephone: site.phone,
-      email: site.email,
-      address,
-      hasMap: site.mapUrl,
-      openingHoursSpecification: openingHours,
-      contactPoint,
+      telephone: settings.phone,
+      email: settings.email,
+      address: addressOf(settings),
+      hasMap: settings.mapUrl,
+      openingHoursSpecification: openingHoursOf(settings),
+      contactPoint: contactPointOf(settings),
       areaServed: COUNTRY,
-      sameAs: site.social.map((s) => s.href),
+      sameAs: settings.social.map((s) => s.href),
       numberOfEmployees: { "@type": "QuantitativeValue", minValue: 20 },
       subOrganization: companies.map((c) => ({ "@id": orgId(c.url) })),
     },

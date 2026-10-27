@@ -1,5 +1,5 @@
-import { companies, projects, site, stats } from "@/content/site";
-import { faqItemsOf, getFaqGroups } from "@/content/loaders";
+import { companies, projects, site as staticSite, stats } from "@/content/site";
+import { faqItemsOf, getFaqGroups, getSiteSettings } from "@/content/loaders";
 import { isReadyProject, type SubSite } from "@/content/subsites";
 
 /**
@@ -10,6 +10,7 @@ import { isReadyProject, type SubSite } from "@/content/subsites";
 const link = (title: string, url: string, text: string) => `- [${title}](${url}): ${text}`;
 
 export async function groupLlmsTxt() {
+  const site = { ...staticSite, ...(await getSiteSettings()) };
   const faqItems = faqItemsOf(await getFaqGroups());
   const facts = [
     `Hüquqi ad: ${site.legalName}`,
@@ -56,7 +57,8 @@ ${link("İstifadə şərtləri", `${site.url}/istifade-sertleri`, "Saytdan istif
 `;
 }
 
-export function subsiteLlmsTxt(s: SubSite) {
+export async function subsiteLlmsTxt(s: SubSite) {
+  const site = { ...staticSite, ...(await getSiteSettings()) };
   const company = companies.find((c) => c.id === s.id);
   const ready = s.projects.filter(isReadyProject);
 

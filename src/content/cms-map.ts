@@ -5,6 +5,10 @@
 import { tr } from "@/lib/cms";
 import type { Faq, FaqGroup } from "./faq";
 import type { LegalDoc, LegalSection } from "./legal";
+import type { site as staticSite } from "./site";
+
+/** `site` obyektinin panel-dən idarə olunan sahələri */
+export type SiteSettings = typeof staticSite;
 
 type Data = Record<string, unknown>;
 const arr = (v: unknown): Data[] => (Array.isArray(v) ? (v as Data[]) : []);
@@ -57,5 +61,54 @@ export function legalTo(d: LegalDoc): Data {
       ...(s.paragraphs?.length ? { paragraphs: { az: s.paragraphs.join("\n\n") } } : {}),
       ...(s.items?.length ? { items: { az: s.items.join("\n") } } : {}),
     })),
+  };
+}
+
+const str = (v: unknown) => (typeof v === "string" ? v : "");
+
+/** Panel ayarlarını (JSON) `site` obyektinin formasına çevirir; panel-də olmayan sahələr köhnə dəyərdə qalır */
+export function settingsFrom(d: Data, base: SiteSettings): SiteSettings {
+  const social = arr(d.social).map((s) => ({ label: str(s.label), href: str(s.href) }));
+  return {
+    ...base,
+    description: tr(d.description) || base.description,
+    legalName: str(d.legalName) || base.legalName,
+    address: tr(d.address) || base.address,
+    addressParts: {
+      street: str(d.addressStreet) || base.addressParts.street,
+      region: str(d.addressRegion) || base.addressParts.region,
+      city: str(d.addressCity) || base.addressParts.city,
+    },
+    mapQuery: str(d.mapQuery) || base.mapQuery,
+    mapUrl: str(d.mapUrl) || base.mapUrl,
+    email: str(d.email) || base.email,
+    phone: str(d.phone) || base.phone,
+    whatsapp: str(d.whatsapp) || base.whatsapp,
+    hours: {
+      opens: str(d.hoursOpens) || base.hours.opens,
+      closes: str(d.hoursCloses) || base.hours.closes,
+      label: tr(d.hoursLabel) || base.hours.label,
+    },
+    social: social.length ? social : base.social,
+  };
+}
+
+export function settingsTo(s: SiteSettings): Data {
+  return {
+    legalName: s.legalName,
+    description: { az: s.description },
+    phone: s.phone,
+    email: s.email,
+    whatsapp: s.whatsapp,
+    address: { az: s.address },
+    addressStreet: s.addressParts.street,
+    addressRegion: s.addressParts.region,
+    addressCity: s.addressParts.city,
+    mapQuery: s.mapQuery,
+    mapUrl: s.mapUrl,
+    hoursOpens: s.hours.opens,
+    hoursCloses: s.hours.closes,
+    hoursLabel: { az: s.hours.label },
+    social: s.social.map((x) => ({ label: x.label, href: x.href })),
   };
 }

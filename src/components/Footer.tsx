@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { companies, footerNav, site } from "@/content/site";
+import { getSiteSettings } from "@/content/loaders";
+import { companies, footerNav } from "@/content/site";
 import { CookieSettingsButton } from "./Analytics";
 import { Logo } from "./Logo";
 import styles from "./Footer.module.css";
 
-export function Footer() {
+export async function Footer() {
+  const site = await getSiteSettings();
   return (
     <footer className={styles.footer}>
       <div className="container">

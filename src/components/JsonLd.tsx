@@ -1,3 +1,4 @@
+import { getSiteSettings } from "@/content/loaders";
 import { groupGraph } from "@/lib/schema";
 
 export function JsonLdScript({ data }: { data: object }) {
@@ -6,6 +7,6 @@ export function JsonLdScript({ data }: { data: object }) {
 }
 
 /** Ana səhifə: sayt, qrup və şirkətlər */
-export function JsonLd() {
-  return <JsonLdScript data={groupGraph()} />;
+export async function JsonLd() {
+  return <JsonLdScript data={groupGraph(await getSiteSettings())} />;
 }

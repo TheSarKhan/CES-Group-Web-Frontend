@@ -1,23 +1,30 @@
 import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/manrope";
+import { getSiteSettings } from "@/content/loaders";
 import { site } from "@/content/site";
 import { Analytics } from "@/components/Analytics";
 import { defaultOgImage } from "@/lib/seo";
 import "./globals.css";
 
-export const metadata: Metadata = {
+/** 5 dəqiqə (Next bu dəyərin sabit rəqəm olmasını tələb edir): panel-dəki məzmun ən geci bu vaxtda saytda görünür */
+export const revalidate = 300;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  return {
   metadataBase: new URL(site.url),
   title: {
     default: "CES Group Azərbaycan — memarlıq, tikinti, texnika icarəsi və innovativ ekosistem",
     template: "%s | CES Group",
   },
-  description: site.description,
+  description: settings.description,
   applicationName: site.name,
   // Hər səhifə öz canonical, Open Graph və Twitter məlumatını pageMetadata ilə verir
   openGraph: { type: "website", locale: "az_AZ", siteName: site.name, images: [defaultOgImage] },
   twitter: { card: "summary_large_image", images: [defaultOgImage.url] },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } },
-};
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#1e1e21",

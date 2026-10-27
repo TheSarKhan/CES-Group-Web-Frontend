@@ -5,16 +5,19 @@ import { ContactForm } from "@/components/ContactForm";
 import { GroupContacts } from "@/components/ContactBlock";
 import { Footer } from "@/components/Footer";
 import { JsonLdScript } from "@/components/JsonLd";
-import { site } from "@/content/site";
+import { getSiteSettings } from "@/content/loaders";
 import { pageMetadata } from "@/lib/seo";
 import { graph, pageNodes } from "@/lib/schema";
 import styles from "./page.module.css";
 
-const description = `CES Group ilə əlaqə: müraciət forması, ${site.phone}, ${site.email}. Ünvan: ${site.address}.`;
+const describe = (site: Awaited<ReturnType<typeof getSiteSettings>>) => `CES Group ilə əlaqə: müraciət forması, ${site.phone}, ${site.email}. Ünvan: ${site.address}.`;
 
-export const metadata: Metadata = pageMetadata({ title: "Əlaqə", description, path: "/elaqe" });
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({ title: "Əlaqə", description: describe(await getSiteSettings()), path: "/elaqe" });
+}
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const description = describe(await getSiteSettings());
   return (
     <>
       <Header />
