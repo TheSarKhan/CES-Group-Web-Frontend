@@ -77,7 +77,7 @@ export const companies: Company[] = [
   {
     id: "equipment",
     name: "CES Equipment",
-    shortName: "Equipment",
+    shortName: "Texnika",
     legalName: "Construction Equipment Services MMC",
     founded: site.foundingDate,
     field: "Ağır texnika icarəsi",
@@ -93,7 +93,7 @@ export const companies: Company[] = [
   {
     id: "architect",
     name: "CES Architect",
-    shortName: "Architect",
+    shortName: "Memarlıq",
     legalName: "Arch Construction Engineering Services MMC",
     founded: "2025",
     field: "Memarlıq və dizayn",
@@ -107,7 +107,7 @@ export const companies: Company[] = [
   {
     id: "construction",
     name: "CES Construction",
-    shortName: "Construction",
+    shortName: "Tikinti",
     legalName: "Arch Construction Engineering Services MMC",
     founded: "2025",
     field: "Tikinti və podrat",
@@ -121,7 +121,7 @@ export const companies: Company[] = [
   {
     id: "farmart",
     name: "Farmart",
-    shortName: "Agro",
+    shortName: "Aqro",
     legalName: "Farmart MMC",
     founded: "2026",
     field: "İnnovativ və təbii ekosistem",
