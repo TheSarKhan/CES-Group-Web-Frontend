@@ -1,5 +1,5 @@
-import { companies, projects, site as staticSite, stats } from "@/content/site";
-import { faqItemsOf, getFaqGroups, getSiteSettings } from "@/content/loaders";
+import { companies, site as staticSite } from "@/content/site";
+import { faqItemsOf, getFaqGroups, getProjects, getSiteSettings, getStats } from "@/content/loaders";
 import { isReadyProject, type SubSite } from "@/content/subsites";
 
 /**
@@ -12,6 +12,8 @@ const link = (title: string, url: string, text: string) => `- [${title}](${url})
 export async function groupLlmsTxt() {
   const site = { ...staticSite, ...(await getSiteSettings()) };
   const faqItems = faqItemsOf(await getFaqGroups());
+  const projects = await getProjects();
+  const stats = await getStats();
   const facts = [
     `Hüquqi ad: ${site.legalName}`,
     `Qurulma: ${site.foundingDate} (CES ağır texnika icarəsi ilə başlayıb)`,

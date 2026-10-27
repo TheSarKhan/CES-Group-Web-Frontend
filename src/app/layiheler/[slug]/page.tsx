@@ -7,7 +7,8 @@ import { ContactBlock } from "@/components/ContactBlock";
 import { Footer } from "@/components/Footer";
 import { ArrowRight, ArrowUpRight } from "@/components/Icons";
 import { JsonLdScript } from "@/components/JsonLd";
-import { companies, projectApproach, projects } from "@/content/site";
+import { getProjectApproach, getProjects } from "@/content/loaders";
+import { companies } from "@/content/site";
 import { pageMetadata } from "@/lib/seo";
 import { graph, pageNodes } from "@/lib/schema";
 import styles from "./page.module.css";
@@ -15,13 +16,13 @@ import styles from "./page.module.css";
 type Props = { params: Promise<{ slug: string }> };
 
 
-export function generateStaticParams() {
-  return projects.map((p) => ({ slug: p.slug }));
+export async function generateStaticParams() {
+  return (await getProjects()).map((p) => ({ slug: p.slug }));
 }
 
 async function load({ params }: Props) {
   const { slug } = await params;
-  const project = projects.find((p) => p.slug === slug);
+  const project = (await getProjects()).find((p) => p.slug === slug);
   if (!project) notFound();
   return project;
 }
@@ -34,7 +35,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function ProjectPage(props: Props) {
   const project = await load(props);
   const company = companies.find((c) => c.name === project.company);
-  const others = projects.filter((p) => p.slug !== project.slug).slice(0, 4);
+  const others = (await getProjects()).filter((p) => p.slug !== project.slug).slice(0, 4);
+  const projectApproach = await getProjectApproach();
 
   return (
     <>

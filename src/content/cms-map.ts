@@ -5,7 +5,8 @@
 import { tr } from "@/lib/cms";
 import type { Faq, FaqGroup } from "./faq";
 import type { LegalDoc, LegalSection } from "./legal";
-import type { site as staticSite } from "./site";
+import type { Project, site as staticSite } from "./site";
+import type { about as staticAbout, projectApproach as staticApproach, stats as staticStats } from "./site";
 
 /** `site` obyektinin panel-dən idarə olunan sahələri */
 export type SiteSettings = typeof staticSite;
@@ -112,3 +113,58 @@ export function settingsTo(s: SiteSettings): Data {
     social: s.social.map((x) => ({ label: x.label, href: x.href })),
   };
 }
+
+// ---- Ana səhifə məzmunu ---------------------------------------------------------------------------------------
+
+export type Stat = (typeof staticStats)[number];
+export type About = typeof staticAbout;
+export type Approach = typeof staticApproach;
+export type Client = { name: string; logo: string };
+
+export const statsFrom = (d: Data): Stat[] => arr(d.items).map((i) => ({ value: str(i.value), label: tr(i.label) }));
+export const statsTo = (list: Stat[]): Data => ({ items: list.map((i) => ({ value: i.value, label: { az: i.label } })) });
+
+export const aboutFrom = (d: Data): About => ({
+  lead: tr(d.lead),
+  mission: tr(d.mission),
+  vision: tr(d.vision),
+  values: arr(d.values).map((v) => ({ title: tr(v.title), text: tr(v.text) })),
+  timeline: arr(d.timeline).map((t) => ({ year: str(t.year), text: tr(t.text) })),
+});
+export const aboutTo = (a: About): Data => ({
+  lead: { az: a.lead },
+  mission: { az: a.mission },
+  vision: { az: a.vision },
+  values: a.values.map((v) => ({ title: { az: v.title }, text: { az: v.text } })),
+  timeline: a.timeline.map((t) => ({ year: t.year, text: { az: t.text } })),
+});
+
+export const approachFrom = (d: Data): Approach => arr(d.items).map((i) => ({ title: tr(i.title), text: tr(i.text) }));
+export const approachTo = (list: Approach): Data => ({ items: list.map((i) => ({ title: { az: i.title }, text: { az: i.text } })) });
+
+export const clientFrom = (d: Data): Client => ({ name: str(d.name), logo: str(d.logo) });
+export const clientTo = (c: Client): Data => ({ name: c.name, logo: c.logo });
+
+export const projectFrom = (slug: string, d: Data): Project => ({
+  slug,
+  title: tr(d.title),
+  company: str(d.company),
+  image: str(d.image),
+  alt: tr(d.alt),
+  category: tr(d.category),
+  location: tr(d.location),
+  summary: tr(d.summary),
+  body: lines(tr(d.body), /\n{2,}/),
+  details: arr(d.details).map((x) => ({ label: tr(x.label), value: tr(x.value) })),
+});
+export const projectTo = (p: Project): Data => ({
+  title: { az: p.title },
+  company: p.company,
+  image: p.image,
+  alt: { az: p.alt },
+  category: { az: p.category },
+  location: { az: p.location },
+  summary: { az: p.summary },
+  body: { az: p.body.join("\n\n") },
+  details: p.details.map((x) => ({ label: { az: x.label }, value: { az: x.value } })),
+});

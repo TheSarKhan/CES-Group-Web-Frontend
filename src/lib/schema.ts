@@ -1,5 +1,5 @@
 import type { SiteSettings } from "@/content/cms-map";
-import { companies, journey, projects, site, type Company } from "@/content/site";
+import { companies, journey, site, type Company, type Project } from "@/content/site";
 import { defaultOgImage } from "./seo";
 
 /** schema.org (JSON-LD) qurucuları: Organization, WebSite, səhifə və breadcrumb qovşaqları */
@@ -146,4 +146,4 @@ export const itemList = (items: { name: string; url: string }[]) => ({
 export const faqQuestions = (items: { q: string; a: string }[]) =>
   items.map((it) => ({ "@type": "Question", name: it.q, acceptedAnswer: { "@type": "Answer", text: it.a } }));
 
-export const projectsItemList = () => itemList(projects.map((p) => ({ name: p.title, url: abs(`/layiheler/${p.slug}`) })));
+export const projectsItemList = (projects: Project[]) => itemList(projects.map((p) => ({ name: p.title, url: abs(`/layiheler/${p.slug}`) })));

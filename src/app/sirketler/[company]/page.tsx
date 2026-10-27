@@ -8,7 +8,7 @@ import { Footer } from "@/components/Footer";
 import { JsonLdScript } from "@/components/JsonLd";
 import { ArrowRight, ArrowUpRight, CheckIcon } from "@/components/Icons";
 import { companyPages, isCompanyId } from "@/content/companies";
-import { getFaqGroups, getSiteSettings } from "@/content/loaders";
+import { getFaqGroups, getProjects, getSiteSettings } from "@/content/loaders";
 import { companies } from "@/content/site";
 import { pageMetadata } from "@/lib/seo";
 import { companyNode, graph, pageNodes } from "@/lib/schema";
@@ -27,7 +27,10 @@ async function load({ params }: Props) {
   const { company: id } = await params;
   if (!isCompanyId(id)) notFound();
   const company = companies.find((c) => c.id === id)!;
-  return { company, page: companyPages[id] };
+  const base = companyPages[id];
+  // Equipment-in layihələri qrupun layihələri ilə eynidir: panel-dən gəlir
+  const page = id === "equipment" ? { ...base, projects: (await getProjects()).map((p) => ({ title: p.title, category: p.category, image: p.image, alt: p.alt, href: `/layiheler/${p.slug}` })) } : base;
+  return { company, page };
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {

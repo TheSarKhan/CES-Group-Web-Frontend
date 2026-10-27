@@ -1,7 +1,8 @@
-import { stats } from "@/content/site";
+import { getStats } from "@/content/loaders";
 import styles from "./Stats.module.css";
 
-export function Stats({ title = "Rəqəmlərlə CES Group" }: { title?: string }) {
+export async function Stats({ title = "Rəqəmlərlə CES Group" }: { title?: string }) {
+  const stats = await getStats();
   return (
     <section className={`section ${styles.stats}`} aria-labelledby="stats-title">
       <div className={`container ${styles.inner}`}>

@@ -1,9 +1,10 @@
 import Image from "next/image";
-import { clients } from "@/content/site";
+import { getClients } from "@/content/loaders";
 import styles from "./Clients.module.css";
 
 /** Müştəri loqoları üfüqi sürüşən lent kimi gedir; üzərinə gələndə dayanır. */
-export function Clients() {
+export async function Clients() {
+  const clients = await getClients();
   return (
     <section className="section" aria-labelledby="clients-title">
       <div className="container">

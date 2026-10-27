@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { about, companies, journey } from "@/content/site";
+import { getAbout } from "@/content/loaders";
+import { companies, journey } from "@/content/site";
 import { ArrowRight, EyeIcon, HandshakeIcon, MedalIcon, ShieldIcon } from "./Icons";
 import { JourneyStepper, type StepData } from "./JourneyStepper";
 import styles from "./Journey.module.css";
@@ -12,7 +13,8 @@ const steps: StepData[] = journey.map((j) => {
 const valueIcons = [ShieldIcon, HandshakeIcon, EyeIcon, MedalIcon];
 
 /** Ana səhifənin tanıtım bölməsi: qrupun şirkətləri layihənin mərhələləri kimi və dəyərlər. */
-export function Journey() {
+export async function Journey() {
+  const about = await getAbout();
   return (
     <section id="qrup" className={`section ${styles.wrap}`} aria-labelledby="journey-title">
       <div className="container">
@@ -40,7 +42,7 @@ export function Journey() {
 
         <ul className={styles.values}>
           {about.values.map((v, i) => {
-            const Icon = valueIcons[i];
+            const Icon = valueIcons[i % valueIcons.length];
             return (
               <li key={v.title} className={styles.value}>
                 <span className={styles.valueIcon}>

@@ -5,10 +5,10 @@
  * Skript əvvəl yoxlayır: panel formatından geri çevrilən məzmun fayldakı ilə tam eynidir. Fərq olarsa dayanır.
  */
 import { isDeepStrictEqual } from "node:util";
-import { faqGroupFrom, faqGroupTo, legalFrom, legalTo, settingsFrom, settingsTo } from "../src/content/cms-map";
+import { aboutFrom, aboutTo, approachFrom, approachTo, clientFrom, clientTo, faqGroupFrom, faqGroupTo, legalFrom, legalTo, projectFrom, projectTo, settingsFrom, settingsTo, statsFrom, statsTo } from "../src/content/cms-map";
 import { faqGroups } from "../src/content/faq";
 import { privacy, terms } from "../src/content/legal";
-import { site } from "../src/content/site";
+import { about, clients, projectApproach, projects, site, stats } from "../src/content/site";
 
 type Entry = { site: string; type: string; slug: string; sort: number; data: unknown };
 const entries: Entry[] = [];
@@ -30,6 +30,41 @@ for (const [slug, doc] of [["mexfilik-siyaseti", privacy], ["istifade-sertleri",
   if (!isDeepStrictEqual(settingsFrom(data as Record<string, unknown>, site), site)) throw new Error("Sayt ayarları çevrilmədi");
   entries.push({ site: "group", type: "settings", slug: "main", sort: 0, data });
 }
+
+const same = (a: unknown, b: unknown, what: string) => {
+  if (!isDeepStrictEqual(a, b)) throw new Error(`${what} çevrilmədi`);
+};
+
+{
+  const data = statsTo(stats);
+  same(statsFrom(data), stats, "Rəqəmlər");
+  entries.push({ site: "group", type: "stats", slug: "main", sort: 0, data });
+}
+{
+  const data = aboutTo(about);
+  same(aboutFrom(data), about, "Haqqımızda");
+  entries.push({ site: "group", type: "about", slug: "main", sort: 0, data });
+}
+{
+  const data = approachTo(projectApproach);
+  same(approachFrom(data), projectApproach, "Necə işləyirik");
+  entries.push({ site: "group", type: "project-approach", slug: "main", sort: 0, data });
+}
+const slugify = (n: string) => n.toLowerCase().replace(/ə/g, "e").replace(/ı/g, "i").replace(/ö/g, "o").replace(/ü/g, "u").replace(/ş/g, "s").replace(/ğ/g, "g").replace(/ç/g, "c").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const seen = new Set<string>();
+clients.forEach((c, i) => {
+  let slug = slugify(c.name) || `musteri-${i + 1}`;
+  while (seen.has(slug)) slug += "-2";
+  seen.add(slug);
+  const data = clientTo(c);
+  same(clientFrom(data), c, `Müştəri ${c.name}`);
+  entries.push({ site: "group", type: "client", slug, sort: i, data });
+});
+projects.forEach((p, i) => {
+  const data = projectTo(p);
+  same(projectFrom(p.slug, data), p, `Layihə ${p.slug}`);
+  entries.push({ site: "group", type: "project", slug: p.slug, sort: i, data });
+});
 
 const q = (s: string) => `'${s.replace(/'/g, "''")}'`;
 const out: string[] = ["-- Avtomatik yaradılıb: scripts/export-content.ts", "BEGIN;"];

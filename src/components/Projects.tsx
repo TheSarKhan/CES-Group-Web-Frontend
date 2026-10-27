@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { projects } from "@/content/site";
+import { getProjects } from "@/content/loaders";
 import { ArrowRight, ArrowUpRight } from "./Icons";
 import styles from "./Projects.module.css";
 
-export function Projects() {
+export async function Projects() {
+  const projects = await getProjects();
   return (
     <section id="layiheler" className={styles.projects} aria-labelledby="projects-title">
       <div className="container">
