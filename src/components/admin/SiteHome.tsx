@@ -10,6 +10,7 @@ import { useAdmin } from "./AdminApp";
 const READY: Record<string, (code: string) => string> = {
   SUBMISSIONS: (code) => `/sites/${code}/submissions`,
   NOTIFICATIONS: (code) => `/sites/${code}/notifications`,
+  STATISTICS: (code) => `/sites/${code}/stats`,
 };
 
 export function SiteHome({ code }: { code: string }) {

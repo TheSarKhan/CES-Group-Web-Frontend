@@ -70,6 +70,7 @@ export const MODULE_LABELS: Record<string, string> = {
   REDIRECTS: "Yönləndirmələr",
   SETTINGS: "Ayarlar",
   NOTIFICATIONS: "Bildirişlər",
+  STATISTICS: "Statistika",
   TRASH: "Zibil qutusu",
   USERS: "İstifadəçilər",
   ROLES: "Rollar",
@@ -126,4 +127,29 @@ export type NotificationSettings = {
   telegram: { id: number; username: string; connected: boolean }[];
   botConfigured: boolean;
   botUsername: string | null;
+};
+
+export type StatItem = { name: string; value: number };
+
+export type SiteStats = {
+  days: number;
+  from: string;
+  to: string;
+  totals: { users: number; sessions: number; pageViews: number; engagementRate: number };
+  leads: number;
+  conversionRate: number;
+  daily: { date: string; users: number; pageViews: number }[];
+  pages: StatItem[];
+  sources: StatItem[];
+  aiSessions: number;
+  countries: StatItem[];
+  devices: StatItem[];
+  browsers: StatItem[];
+  generatedAt: string;
+};
+
+export type StatsOverview = {
+  days: number;
+  sites: { code: string; name: string; users: number; pageViews: number; sessions: number; leads: number; conversionRate: number }[];
+  generatedAt: string;
 };

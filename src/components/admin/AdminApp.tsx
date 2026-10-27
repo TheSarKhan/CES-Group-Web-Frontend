@@ -7,7 +7,14 @@ import { api, useApi } from "@/lib/admin/client";
 import type { Action, Me, UserInfo } from "@/lib/admin/types";
 import styles from "./admin.module.css";
 
-type Ctx = { me: Me; user: UserInfo; reloadUser: () => void; can: (module: string, action: Action, site?: string) => boolean };
+type Ctx = {
+  me: Me;
+  user: UserInfo;
+  reloadUser: () => void;
+  can: (module: string, action: Action, site?: string) => boolean;
+  /** Sayt üzrə modulda istənilən saytda icazə varmı */
+  canAnywhere: (module: string, action: Action) => boolean;
+};
 const AdminContext = createContext<Ctx | null>(null);
 
 export function useAdmin() {
@@ -33,6 +40,15 @@ export function AdminApp({ children }: { children: ReactNode }) {
     [meReq.data],
   );
 
+  const canAnywhere = useCallback(
+    (module: string, action: Action) => {
+      const me = meReq.data;
+      if (!me) return false;
+      return me.superAdmin || me.sites.some((s) => s.modules[module]?.includes(action));
+    },
+    [meReq.data],
+  );
+
   if (meReq.error || userReq.error) return <main className={styles.main}><p className={styles.error}>{meReq.error ?? userReq.error}</p></main>;
   if (!meReq.data || !userReq.data) return <p className={styles.loading} style={{ textAlign: "center" }}>Yüklənir…</p>;
 
@@ -40,6 +56,7 @@ export function AdminApp({ children }: { children: ReactNode }) {
   const user = userReq.data;
   const links = [
     { href: "/", label: "Saytlar", show: true },
+    { href: "/stats", label: "Statistika", show: canAnywhere("STATISTICS", "VIEW") },
     { href: "/users", label: "İstifadəçilər", show: can("USERS", "VIEW") },
     { href: "/roles", label: "Rollar", show: can("ROLES", "VIEW") },
     { href: "/audit", label: "Audit log", show: can("AUDIT", "VIEW") },
@@ -51,7 +68,7 @@ export function AdminApp({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AdminContext.Provider value={{ me, user, reloadUser: userReq.reload, can }}>
+    <AdminContext.Provider value={{ me, user, reloadUser: userReq.reload, can, canAnywhere }}>
       <div className={styles.shell}>
         {user.mfaSetupRequired && (
           <div className={styles.banner}>
