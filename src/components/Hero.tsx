@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type PointerEvent } from "react";
 import type { Company, CompanyId } from "@/content/site";
+import { getUi } from "@/i18n/ui";
+import type { Lang } from "@/lib/i18n";
 import { afterLoad, prefersLightMedia } from "@/lib/media";
 import { ArrowUpRight } from "./Icons";
 import styles from "./Hero.module.css";
@@ -12,7 +14,8 @@ const REDUCED_QUERY = "(prefers-reduced-motion: reduce)";
 const CYCLE_MS = 4500;
 const noopSubscribe = () => () => undefined;
 
-export function Hero({ companies }: { companies: Company[] }) {
+export function Hero({ companies, lang = "az" }: { companies: Company[]; lang?: Lang }) {
+  const t = getUi(lang).hero;
   const [active, setActive] = useState<CompanyId | null>(null);
   const [hoverable, setHoverable] = useState(true);
   const [reduced, setReduced] = useState(false);
@@ -108,8 +111,8 @@ export function Hero({ companies }: { companies: Company[] }) {
   };
 
   return (
-    <section id="sirketler" className={styles.hero} aria-label="CES Group şirkətləri">
-      <h1 className="sr-only">CES Group: memarlıq, tikinti, texnika icarəsi və innovativ ekosistem</h1>
+    <section id="sirketler" className={styles.hero} aria-label={t.aria}>
+      <h1 className="sr-only">{t.h1}</h1>
       <div
         ref={root}
         className={styles.row}
@@ -146,7 +149,7 @@ export function Hero({ companies }: { companies: Company[] }) {
             href={c.url}
             className={styles.panel}
             data-on={active === c.id || undefined}
-            aria-label={`${c.name} — ${c.field}. Sayta keç`}
+            aria-label={t.panelAria(c.name, c.field)}
             onPointerEnter={onEnter(c.id)}
             onFocus={() => setActive(c.id)}
             onBlur={() => setActive(null)}
@@ -158,7 +161,7 @@ export function Hero({ companies }: { companies: Company[] }) {
               <span className={styles.name}>{c.shortName}</span>
               <span className={styles.field}>{c.field}</span>
               <span className={styles.go}>
-                Sayta keç <ArrowUpRight size={14} />
+                {t.goToSite} <ArrowUpRight size={14} />
               </span>
             </span>
           </a>

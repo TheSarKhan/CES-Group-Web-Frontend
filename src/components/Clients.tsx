@@ -1,18 +1,21 @@
 import Image from "next/image";
 import { getClients } from "@/content/loaders";
+import { getUi } from "@/i18n/ui";
+import type { Lang } from "@/lib/i18n";
 import styles from "./Clients.module.css";
 
 /** Müştəri loqoları üfüqi sürüşən lent kimi gedir; üzərinə gələndə dayanır. */
-export async function Clients() {
+export async function Clients({ lang = "az" }: { lang?: Lang }) {
   const clients = await getClients();
+  const t = getUi(lang).clients;
   return (
     <section className="section" aria-labelledby="clients-title">
       <div className="container">
         <div className="section-head">
           <h2 id="clients-title" className="h2">
-            Bizə güvənənlər
+            {t.title}
           </h2>
-          <p className="lead">150+ müştəridən ən tanınmışları</p>
+          <p className="lead">{t.lead}</p>
         </div>
       </div>
 

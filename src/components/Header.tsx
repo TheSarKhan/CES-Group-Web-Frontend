@@ -3,12 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { nav } from "@/content/site";
+import { NAV } from "@/i18n/nav";
+import { getUi } from "@/i18n/ui";
+import { localePath, type Lang } from "@/lib/i18n";
 import { Logo } from "./Logo";
 import { CloseIcon, MenuIcon } from "./Icons";
 import styles from "./Header.module.css";
 
-export function Header({ overlay = false }: { overlay?: boolean }) {
+/** Dil seçici: səhifənin yolu (dilsiz) və açıq olduğu dillər. Bir dil varsa göstərilmir. */
+export type LangSwitch = { path: string; langs: Lang[] };
+
+export function Header({ overlay = false, lang = "az", switcher }: { overlay?: boolean; lang?: Lang; switcher?: LangSwitch }) {
+  const t = getUi(lang);
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
@@ -35,27 +41,40 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
     };
   }, [open]);
 
-  const isActive = (href: string) => (href === "/" ? pathname === "/" : !href.includes("#") && pathname.startsWith(href));
+  const isActive = (href: string) => (href === localePath(lang, "/") ? pathname === href : !href.includes("#") && pathname.startsWith(href));
+  const langs = switcher && switcher.langs.length > 1 ? switcher.langs : null;
+  const switchLinks = langs && switcher && (
+    <ul className={styles.langs} aria-label={t.header.language}>
+      {langs.map((l) => (
+        <li key={l}>
+          <Link href={localePath(l, switcher.path)} hrefLang={l} lang={l} aria-current={l === lang ? "true" : undefined} className={styles.lang}>
+            {l.toUpperCase()}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
 
   return (
     <header className={`${styles.header} ${overlay ? styles.overlay : ""} ${scrolled ? styles.scrolled : ""}`}>
       <div className={`container ${styles.bar}`}>
-        <Logo />
-        <nav className={styles.nav} aria-label="Əsas menyu">
-          {nav.map((item) => (
-            <Link key={item.href} href={item.href} className={styles.navLink} aria-current={isActive(item.href) ? "page" : undefined}>
-              {item.label}
+        <Logo lang={lang} />
+        <nav className={styles.nav} aria-label={t.header.mainMenu}>
+          {NAV.map((item) => (
+            <Link key={item.href} href={localePath(lang, item.href)} className={styles.navLink} aria-current={isActive(localePath(lang, item.href)) ? "page" : undefined}>
+              {t.nav[item.key]}
             </Link>
           ))}
         </nav>
         <div className={styles.actions}>
-          <Link href="/elaqe" className={`btn btn-gold ${styles.cta}`}>
-            Əlaqə saxla
+          {switchLinks}
+          <Link href={localePath(lang, "/elaqe")} className={`btn btn-gold ${styles.cta}`}>
+            {t.header.contactCta}
           </Link>
           <button
             type="button"
             className={styles.burger}
-            aria-label={open ? "Menyunu bağla" : "Menyunu aç"}
+            aria-label={open ? t.header.closeMenu : t.header.openMenu}
             aria-expanded={open}
             aria-controls="mobile-menu"
             onClick={() => setOpen((v) => !v)}
@@ -66,18 +85,19 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
       </div>
 
       <div id="mobile-menu" className={`${styles.panel} ${open ? styles.panelOpen : ""}`} hidden={!open}>
-        <nav className="container" aria-label="Mobil menyu">
+        <nav className="container" aria-label={t.header.mobileMenu}>
           <ul className={styles.mList}>
-            {nav.map((item) => (
+            {NAV.map((item) => (
               <li key={item.href}>
-                <Link href={item.href} className={styles.mLink} onClick={() => setOpen(false)}>
-                  {item.label}
+                <Link href={localePath(lang, item.href)} className={styles.mLink} onClick={() => setOpen(false)}>
+                  {t.nav[item.key]}
                 </Link>
               </li>
             ))}
           </ul>
-          <Link href="/elaqe" className="btn btn-gold" style={{ width: "100%" }} onClick={() => setOpen(false)}>
-            Əlaqə saxla
+          {switchLinks}
+          <Link href={localePath(lang, "/elaqe")} className="btn btn-gold" style={{ width: "100%" }} onClick={() => setOpen(false)}>
+            {t.header.contactCta}
           </Link>
         </nav>
       </div>

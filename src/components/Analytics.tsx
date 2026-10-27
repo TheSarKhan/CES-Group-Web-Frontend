@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useSyncExternalStore } from "react";
+import { localePath, type Lang } from "@/lib/i18n";
 import { siteUrl } from "@/lib/urls";
 import styles from "./Analytics.module.css";
 
@@ -89,7 +90,35 @@ export function trackLead(company: string) {
   if (!window[`ga-disable-${GA_ID}`]) window.gtag?.("event", "generate_lead", { company });
 }
 
-export function Analytics() {
+const BANNER: Record<Lang, { aria: string; text: string; more: string; deny: string; accept: string; settings: string }> = {
+  az: {
+    aria: "Cookie seçimləri",
+    text: "Saytın istifadəsini ölçmək və təkmilləşdirmək üçün Google Analytics cookie-lərindən istifadə edirik. Yalnız razılığınızdan sonra işə düşür.",
+    more: "Ətraflı",
+    deny: "Rədd et",
+    accept: "Qəbul et",
+    settings: "Cookie seçimləri",
+  },
+  en: {
+    aria: "Cookie choices",
+    text: "We use Google Analytics cookies to measure and improve how the site is used. They only run after you consent.",
+    more: "Details",
+    deny: "Decline",
+    accept: "Accept",
+    settings: "Cookie settings",
+  },
+  ru: {
+    aria: "Выбор cookie",
+    text: "Мы используем cookie Google Analytics, чтобы измерять и улучшать использование сайта. Они включаются только после вашего согласия.",
+    more: "Подробнее",
+    deny: "Отклонить",
+    accept: "Принять",
+    settings: "Настройки cookie",
+  },
+};
+
+export function Analytics({ lang = "az" }: { lang?: Lang }) {
+  const b = BANNER[lang];
   const state = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
 
   useEffect(() => {
@@ -99,17 +128,17 @@ export function Analytics() {
 
   if (state !== "unset") return null;
   return (
-    <section className={styles.banner} role="region" aria-label="Cookie seçimləri">
+    <section className={styles.banner} role="region" aria-label={b.aria}>
       <p>
-        Saytın istifadəsini ölçmək və təkmilləşdirmək üçün Google Analytics cookie-lərindən istifadə edirik. Yalnız razılığınızdan sonra işə düşür.{" "}
-        <Link href={`${siteUrl}/mexfilik-siyaseti#cookie`}>Ətraflı</Link>
+        {b.text}{" "}
+        <Link href={`${siteUrl}${localePath(lang, "/mexfilik-siyaseti")}#cookie`}>{b.more}</Link>
       </p>
       <div className={styles.actions}>
         <button type="button" className={styles.deny} onClick={() => writeChoice("denied")}>
-          Rədd et
+          {b.deny}
         </button>
         <button type="button" className={styles.accept} onClick={() => writeChoice("granted")}>
-          Qəbul et
+          {b.accept}
         </button>
       </div>
     </section>
@@ -117,10 +146,10 @@ export function Analytics() {
 }
 
 /** Footer-də: seçimi yenidən soruşur */
-export function CookieSettingsButton({ className }: { className?: string }) {
+export function CookieSettingsButton({ className, lang = "az" }: { className?: string; lang?: Lang }) {
   return (
     <button type="button" className={className} onClick={() => writeChoice(null)}>
-      Cookie seçimləri
+      {BANNER[lang].settings}
     </button>
   );
 }

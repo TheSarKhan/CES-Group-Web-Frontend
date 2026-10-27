@@ -8,13 +8,16 @@ import { Footer } from "@/components/Footer";
 import { JsonLdScript } from "@/components/JsonLd";
 import { ArrowRight, ArrowUpRight, CheckIcon } from "@/components/Icons";
 import { isCompanyId } from "@/content/companies";
-import { getCompanies, getCompanyPages, getFaqGroups, getJourney, getSiteSettings } from "@/content/loaders";
+import { availableLangs, getCompanies, getCompanyPages, getFaqGroups, getJourney, getSiteSettings } from "@/content/loaders";
+import { getUi } from "@/i18n/ui";
+import { localHref, localePath } from "@/lib/i18n";
+import { pageContext } from "@/lib/lang";
 import { companies as staticCompanies } from "@/content/site";
 import { pageMetadata } from "@/lib/seo";
 import { companyNode, graph, pageNodes } from "@/lib/schema";
 import styles from "../page.module.css";
 
-type Props = { params: Promise<{ company: string }> };
+type Props = { params: Promise<{ lang: string; company: string }> };
 
 /** 5 dəqiqə (Next bu dəyərin sabit rəqəm olmasını tələb edir; src/lib/cms.ts-dəki CMS_REVALIDATE ilə eyni olmalıdır) */
 export const revalidate = 300;
@@ -26,18 +29,21 @@ export function generateStaticParams() {
 async function load({ params }: Props) {
   const { company: id } = await params;
   if (!isCompanyId(id)) notFound();
-  const [companies, pages] = await Promise.all([getCompanies(), getCompanyPages()]);
+  const ctx = await pageContext(params, { kind: "company", id }, `/sirketler/${id}`);
+  const [companies, pages] = await Promise.all([getCompanies(ctx.lang), getCompanyPages(ctx.lang)]);
   const company = companies.find((c) => c.id === id)!;
-  return { company, page: pages[id], companies };
+  return { ...ctx, company, page: pages[id], companies };
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const { company, page } = await load(props);
+  const { company, page, lang, langs } = await load(props);
   return pageMetadata({
-    title: `${company.name}: ${company.field}`,
+    title: getUi(lang).companyPage.metaTitle(company.name, company.field),
     description: page.metaDescription,
     path: `/sirketler/${company.id}`,
     image: { url: company.image, alt: company.imageAlt },
+    lang,
+    langs,
   });
 }
 
@@ -56,20 +62,23 @@ function LinkOrA({ href, className, children }: { href: string; className?: stri
 }
 
 export default async function CompanyPage(props: Props) {
-  const { company, page, companies } = await load(props);
-  const faq = (await getFaqGroups()).find((g) => g.id === company.id);
-  const settings = await getSiteSettings();
+  const { company, page, companies, lang, switcher } = await load(props);
+  const ui = getUi(lang);
+  const t = ui.companyPage;
+  // Sualların tərcüməsi yoxdursa bu bölmə göstərilmir (səhifənin özü açıq qalır)
+  const faq = (await availableLangs({ kind: "faq" })).includes(lang) ? (await getFaqGroups(lang)).find((g) => g.id === company.id) : undefined;
+  const settings = await getSiteSettings(lang);
   const others = companies.filter((c) => c.id !== company.id);
   const path = `/sirketler/${company.id}`;
   const facts = [
-    { label: "Hüquqi ad", value: company.legalName },
-    { label: "Yaradılıb", value: company.id === "equipment" ? "2020" : company.founded },
+    { label: t.legalName, value: company.legalName },
+    { label: t.founded, value: company.id === "equipment" ? "2020" : company.founded },
     ...page.facts,
   ];
 
   return (
     <>
-      <Header />
+      <Header lang={lang} switcher={switcher} />
       <main id="main">
         <PageHero title={company.name} lead={page.tagline} />
 
@@ -85,11 +94,11 @@ export default async function CompanyPage(props: Props) {
                 </p>
               ))}
               <div className={styles.links}>
-                <Link href={`/elaqe?sirket=${company.id}`} className="btn btn-gold">
-                  Müraciət göndər <ArrowRight />
+                <Link href={`${localePath(lang, "/elaqe")}?sirket=${company.id}`} className="btn btn-gold">
+                  {ui.common.sendRequest} <ArrowRight />
                 </Link>
                 <a href={company.url} className="link-arrow">
-                  {company.name} saytı <ArrowUpRight />
+                  {t.siteOf(company.name)} <ArrowUpRight />
                 </a>
               </div>
             </div>
@@ -112,7 +121,7 @@ export default async function CompanyPage(props: Props) {
             <ul className={styles.cards}>
               {page.services.map((s) => (
                 <li key={s.name} className={styles.card}>
-                  <h3 className={styles.cardTitle}>{s.href ? <a href={s.href}>{s.name}</a> : s.name}</h3>
+                  <h3 className={styles.cardTitle}>{s.href ? <a href={localHref(lang, s.href)}>{s.name}</a> : s.name}</h3>
                   {s.text && <p className={styles.cardText}>{s.text}</p>}
                 </li>
               ))}
@@ -124,7 +133,7 @@ export default async function CompanyPage(props: Props) {
           <section className="section" aria-labelledby="terms-title">
             <div className="container">
               <h2 id="terms-title" className={styles.h2}>
-                İcarə şərtləri
+                {t.terms}
               </h2>
               <ul className={styles.terms}>
                 {page.terms.map((t) => (
@@ -147,7 +156,7 @@ export default async function CompanyPage(props: Props) {
               <ul className={styles.projects}>
                 {page.projects.map((p) => (
                   <li key={p.title} className={styles.project}>
-                    <LinkOrA href={p.href}>
+                    <LinkOrA href={localHref(lang, p.href)}>
                       <span className={styles.pImg}>
                         <Image src={p.image} alt={p.alt} fill sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw" />
                       </span>
@@ -165,7 +174,7 @@ export default async function CompanyPage(props: Props) {
           <section className={`section ${page.projects.length > 0 && !page.terms ? "" : styles.white}`} aria-labelledby="faq-title">
             <div className="container">
               <h2 id="faq-title" className={styles.h2}>
-                Tez-tez verilən suallar
+                {t.faq}
               </h2>
               <ul className={styles.faq}>
                 {faq.items.slice(0, 6).map((f) => (
@@ -176,8 +185,8 @@ export default async function CompanyPage(props: Props) {
                 ))}
               </ul>
               <div className={styles.links}>
-                <Link href={`/suallar#${company.id}`} className="link-arrow">
-                  Bütün suallar <ArrowRight />
+                <Link href={`${localePath(lang, "/suallar")}#${company.id}`} className="link-arrow">
+                  {t.allQuestions} <ArrowRight />
                 </Link>
               </div>
             </div>
@@ -188,15 +197,15 @@ export default async function CompanyPage(props: Props) {
           <div className="container">
             <div className={styles.ctaInner}>
               <h2 id="cta-title" className={styles.ctaTitle}>
-                {company.name} ilə əlaqə
+                {t.contactWith(company.name)}
               </h2>
-              <p className={styles.ctaText}>Müraciətinizi göndərin, sorğunuz birbaşa {company.name} komandasına yönləndirilsin.</p>
+              <p className={styles.ctaText}>{t.contactLead(company.name)}</p>
               <div className={styles.ctaActions}>
-                <Link href={`/elaqe?sirket=${company.id}`} className="btn btn-gold">
-                  Müraciət göndər <ArrowRight />
+                <Link href={`${localePath(lang, "/elaqe")}?sirket=${company.id}`} className="btn btn-gold">
+                  {ui.common.sendRequest} <ArrowRight />
                 </Link>
                 <a href={company.url} className={`link-arrow ${styles.ctaLink}`}>
-                  {company.name} saytına keç <ArrowUpRight />
+                  {t.goToSiteOf(company.name)} <ArrowUpRight />
                 </a>
               </div>
             </div>
@@ -206,12 +215,12 @@ export default async function CompanyPage(props: Props) {
         <section className="section" aria-labelledby="others-title">
           <div className="container">
             <h2 id="others-title" className={styles.h2}>
-              Digər şirkətlər
+              {t.others}
             </h2>
             <ul className={styles.others}>
               {others.map((c) => (
                 <li key={c.id} className={styles.other}>
-                  <Link href={`/sirketler/${c.id}`}>
+                  <Link href={localePath(lang, `/sirketler/${c.id}`)}>
                     <span className={styles.oName} title={c.name}>
                       {c.shortName}
                     </span>
@@ -223,22 +232,23 @@ export default async function CompanyPage(props: Props) {
           </div>
         </section>
       </main>
-      <Footer />
+      <Footer lang={lang} />
       <JsonLdScript
         data={graph([
           ...pageNodes({
+            lang,
             path,
-            name: `${company.name}: ${company.field}`,
+            name: t.metaTitle(company.name, company.field),
             description: page.metaDescription,
             image: company.image,
             crumbs: [
-              { name: "Ana səhifə", path: "/" },
-              { name: "Şirkətlər", path: "/sirketler" },
+              { name: ui.common.home, path: "/" },
+              { name: ui.nav.companies, path: "/sirketler" },
               { name: company.name, path },
             ],
             extra: { about: { "@id": companyNode(company)["@id"] } },
           }),
-          companyNode(company, { contact: true, settings, points: (await getJourney()).find((j) => j.id === company.id)?.points }),
+          companyNode(company, { contact: true, settings, points: (await getJourney(lang)).find((j) => j.id === company.id)?.points }),
         ])}
       />
     </>

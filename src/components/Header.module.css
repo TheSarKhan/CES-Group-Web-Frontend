@@ -153,3 +153,31 @@
     display: none;
   }
 }
+
+/* Dil seçici (yalnız səhifə bir neçə dildə açıqdırsa görünür) */
+.langs {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lang {
+  display: inline-block;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: inherit;
+  opacity: 0.65;
+}
+
+.lang:hover,
+.lang[aria-current="true"] {
+  opacity: 1;
+}
+
+.panel .langs {
+  margin: 8px 0 16px;
+}

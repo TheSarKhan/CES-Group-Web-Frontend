@@ -1,38 +1,41 @@
 import Link from "next/link";
 import { getCompanies, getSiteSettings } from "@/content/loaders";
-import { footerNav } from "@/content/site";
+import { FOOTER_NAV } from "@/i18n/nav";
+import { getUi } from "@/i18n/ui";
+import { localePath, type Lang } from "@/lib/i18n";
 import { CookieSettingsButton } from "./Analytics";
 import { Logo } from "./Logo";
 import styles from "./Footer.module.css";
 
-export async function Footer() {
-  const [site, companies] = await Promise.all([getSiteSettings(), getCompanies()]);
+export async function Footer({ lang = "az" }: { lang?: Lang }) {
+  const [site, companies] = await Promise.all([getSiteSettings(lang), getCompanies(lang)]);
+  const t = getUi(lang);
   return (
     <footer className={styles.footer}>
       <div className="container">
         <div className={styles.grid}>
           <div className={styles.brand}>
-            <Logo />
-            <p>Memarlıq, tikinti, texnika icarəsi və kənd təsərrüfatı. Dörd şirkət, bir qrup.</p>
+            <Logo lang={lang} />
+            <p>{t.footer.tagline}</p>
           </div>
-          <nav aria-label="Şirkətlər" className={styles.col}>
-            <span className={styles.heading}>Şirkətlər</span>
+          <nav aria-label={t.footer.companies} className={styles.col}>
+            <span className={styles.heading}>{t.footer.companies}</span>
             {companies.map((c) => (
-              <Link key={c.id} href={`/sirketler/${c.id}`}>
+              <Link key={c.id} href={localePath(lang, `/sirketler/${c.id}`)}>
                 {c.shortName}
               </Link>
             ))}
           </nav>
-          <nav aria-label="Səhifələr" className={styles.col}>
-            <span className={styles.heading}>Səhifələr</span>
-            {footerNav.map((n) => (
-              <Link key={n.href} href={n.href}>
-                {n.label}
+          <nav aria-label={t.footer.pages} className={styles.col}>
+            <span className={styles.heading}>{t.footer.pages}</span>
+            {FOOTER_NAV.map((n) => (
+              <Link key={n.href} href={localePath(lang, n.href)}>
+                {t.nav[n.key]}
               </Link>
             ))}
           </nav>
           <div className={styles.col}>
-            <span className={styles.heading}>Əlaqə</span>
+            <span className={styles.heading}>{t.footer.contact}</span>
             <span>{site.address}</span>
             <span>{site.email}</span>
             <span>{site.phone}</span>
@@ -49,11 +52,11 @@ export async function Footer() {
           </div>
         </div>
         <div className={styles.bottom}>
-          <span>© {new Date().getFullYear()} CES Group. Bütün hüquqlar qorunur.</span>
+          <span>© {new Date().getFullYear()} CES Group. {t.footer.rights}</span>
           <div className={styles.legal}>
-            <Link href="/mexfilik-siyaseti">Məxfilik siyasəti</Link>
-            <Link href="/istifade-sertleri">İstifadə şərtləri</Link>
-            <CookieSettingsButton className={styles.cookieBtn} />
+            <Link href={localePath(lang, "/mexfilik-siyaseti")}>{t.footer.privacy}</Link>
+            <Link href={localePath(lang, "/istifade-sertleri")}>{t.footer.terms}</Link>
+            <CookieSettingsButton className={styles.cookieBtn} lang={lang} />
           </div>
         </div>
       </div>

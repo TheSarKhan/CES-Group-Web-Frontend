@@ -8,35 +8,43 @@ import { ContactBlock } from "@/components/ContactBlock";
 import { Footer } from "@/components/Footer";
 import { JsonLd } from "@/components/JsonLd";
 import { getCompanies, getSiteSettings } from "@/content/loaders";
+import { getUi } from "@/i18n/ui";
+import { pageContext } from "@/lib/lang";
 import { pageMetadata } from "@/lib/seo";
 
-export async function generateMetadata() {
+type Props = { params: Promise<{ lang: string }> };
+
+export async function generateMetadata(props: Props) {
+  const { lang, langs } = await pageContext(props.params, { kind: "home" }, "/");
   return pageMetadata({
-    title: "CES Group Azərbaycan — memarlıq, tikinti, texnika icarəsi və innovativ ekosistem",
-    description: (await getSiteSettings()).description,
+    title: getUi(lang).home.title,
+    description: (await getSiteSettings(lang)).description,
     path: "/",
     absoluteTitle: true,
+    lang,
+    langs,
   });
 }
 
 /** 5 dəqiqə (Next bu dəyərin sabit rəqəm olmasını tələb edir) */
 export const revalidate = 300;
 
-export default async function HomePage() {
-  const companies = await getCompanies();
+export default async function HomePage(props: Props) {
+  const { lang, switcher } = await pageContext(props.params, { kind: "home" }, "/");
+  const companies = await getCompanies(lang);
   return (
     <>
-      <Header overlay />
+      <Header overlay lang={lang} switcher={switcher} />
       <main id="main" className="home">
-        <Hero companies={companies} />
-        <Journey />
-        <Stats />
-        <Projects />
-        <Clients />
-        <ContactBlock />
+        <Hero companies={companies} lang={lang} />
+        <Journey lang={lang} />
+        <Stats lang={lang} />
+        <Projects lang={lang} />
+        <Clients lang={lang} />
+        <ContactBlock lang={lang} />
       </main>
-      <Footer />
-      <JsonLd />
+      <Footer lang={lang} />
+      <JsonLd lang={lang} />
     </>
   );
 }

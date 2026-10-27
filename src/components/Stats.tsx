@@ -1,8 +1,11 @@
 import { getStats } from "@/content/loaders";
+import { getUi } from "@/i18n/ui";
+import type { Lang } from "@/lib/i18n";
 import styles from "./Stats.module.css";
 
-export async function Stats({ title = "Rəqəmlərlə CES Group" }: { title?: string }) {
-  const stats = await getStats();
+export async function Stats({ title, lang = "az" }: { title?: string; lang?: Lang }) {
+  const stats = await getStats(lang);
+  title ??= getUi(lang).stats.title;
   return (
     <section className={`section ${styles.stats}`} aria-labelledby="stats-title">
       <div className={`container ${styles.inner}`}>

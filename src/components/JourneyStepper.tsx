@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { getUi } from "@/i18n/ui";
+import type { Lang } from "@/lib/i18n";
 import { BuildIcon, CheckIcon, CraneIcon, DesignIcon, WheatIcon, ArrowUpRight } from "./Icons";
 import styles from "./Journey.module.css";
 
@@ -25,7 +27,7 @@ const DURATION = 6500;
  * Solda addımlar (ikonlu, bir-birinə xətlə bağlı), sağda aktiv şirkətin şəkli, təsviri və xidmətləri.
  * Addım kliklə seçilir və ya özü növbə ilə keçir. Üzərinə gələndə, fokusda və ekrandan çıxanda dayanır.
  */
-export function JourneyStepper({ steps }: { steps: StepData[] }) {
+export function JourneyStepper({ steps, lang = "az" }: { steps: StepData[]; lang?: Lang }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [inView, setInView] = useState(false);
@@ -113,7 +115,7 @@ export function JourneyStepper({ steps }: { steps: StepData[] }) {
             ))}
           </ul>
           <a href={cur.url} className={`btn btn-gold ${styles.go}`}>
-            Sayta keç <ArrowUpRight />
+            {getUi(lang).common.goToSite} <ArrowUpRight />
           </a>
         </div>
       </div>

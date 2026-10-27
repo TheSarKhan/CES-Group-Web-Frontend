@@ -1,22 +1,25 @@
 import Link from "next/link";
-import { Header } from "./Header";
+import { Header, type LangSwitch } from "./Header";
 import { PageHero } from "./PageHero";
 import { Footer } from "./Footer";
 import { JsonLdScript } from "./JsonLd";
 import type { LegalDoc } from "@/content/legal";
+import { getUi } from "@/i18n/ui";
+import { localePath, type Lang } from "@/lib/i18n";
 import { graph, pageNodes } from "@/lib/schema";
 import styles from "./LegalPage.module.css";
 
 /** Hüquqi mətn səhifəsi: başlıq, yenilənmə tarixi, mündəricat və bölmələr */
-export function LegalPage({ doc, path }: { doc: LegalDoc; path: string }) {
+export function LegalPage({ doc, path, lang = "az", switcher }: { doc: LegalDoc; path: string; lang?: Lang; switcher?: LangSwitch }) {
+  const t = getUi(lang);
   return (
     <>
-      <Header />
+      <Header lang={lang} switcher={switcher} />
       <main id="main">
-        <PageHero title={doc.title} lead={`Son yenilənmə: ${doc.updated}`} />
+        <PageHero title={doc.title} lead={`${t.legal.updated} ${doc.updated}`} />
         <section className="section">
           <div className={`container ${styles.layout}`}>
-            <nav className={styles.toc} aria-label="Mündəricat">
+            <nav className={styles.toc} aria-label={t.legal.toc}>
               <ul>
                 {doc.sections.map((s) => (
                   <li key={s.id}>
@@ -47,23 +50,24 @@ export function LegalPage({ doc, path }: { doc: LegalDoc; path: string }) {
                 </section>
               ))}
               <p className={styles.p}>
-                <Link href={path === "/mexfilik-siyaseti" ? "/istifade-sertleri" : "/mexfilik-siyaseti"} className="link-underline">
-                  {path === "/mexfilik-siyaseti" ? "İstifadə şərtləri" : "Məxfilik siyasəti"}
+                <Link href={localePath(lang, path === "/mexfilik-siyaseti" ? "/istifade-sertleri" : "/mexfilik-siyaseti")} className="link-underline">
+                  {path === "/mexfilik-siyaseti" ? t.footer.terms : t.footer.privacy}
                 </Link>
               </p>
             </div>
           </div>
         </section>
       </main>
-      <Footer />
+      <Footer lang={lang} />
       <JsonLdScript
         data={graph(
           pageNodes({
+            lang,
             path,
             name: doc.title,
             description: doc.description,
             crumbs: [
-              { name: "Ana səhifə", path: "/" },
+              { name: t.common.home, path: "/" },
               { name: doc.title, path },
             ],
           }),

@@ -1,5 +1,6 @@
 import type { SiteSettings } from "@/content/cms-map";
 import { companies as staticCompanies, journey as staticJourney, site, type Company, type JourneyStep, type Project } from "@/content/site";
+import { htmlLang, localePath, type Lang } from "./i18n";
 import { defaultOgImage } from "./seo";
 
 /** schema.org (JSON-LD) qurucuları: Organization, WebSite, səhifə və breadcrumb qovşaqları */
@@ -67,10 +68,10 @@ export function companyNode(c: Company, { contact = false, settings = site, poin
 export const graph = (nodes: object[]) => ({ "@context": "https://schema.org", "@graph": nodes });
 
 /** Ana səhifə: sayt, qrup (yerli biznes kimi) və dörd şirkət */
-export function groupGraph(settings: Settings = site, companies: Company[] = staticCompanies, journey: JourneyStep[] = staticJourney) {
+export function groupGraph(settings: Settings = site, companies: Company[] = staticCompanies, journey: JourneyStep[] = staticJourney, lang: Lang = "az") {
   const id = orgId(site.url);
   return graph([
-    { "@type": "WebSite", "@id": websiteId(site.url), url: site.url, name: site.name, inLanguage: "az", publisher: { "@id": id } },
+    { "@type": "WebSite", "@id": websiteId(site.url), url: site.url, name: site.name, inLanguage: htmlLang[lang], publisher: { "@id": id } },
     {
       "@type": ["Organization", "LocalBusiness"],
       "@id": id,
@@ -98,11 +99,11 @@ export function groupGraph(settings: Settings = site, companies: Company[] = sta
 
 export type Crumb = { name: string; path: string };
 
-export function breadcrumbNode(items: Crumb[], base: string = site.url) {
+export function breadcrumbNode(items: Crumb[], base: string = site.url, lang: Lang = "az") {
   return {
     "@type": "BreadcrumbList",
-    "@id": `${abs(items[items.length - 1].path, base)}#breadcrumb`,
-    itemListElement: items.map((it, i) => ({ "@type": "ListItem", position: i + 1, name: it.name, item: abs(it.path, base) })),
+    "@id": `${abs(localePath(lang, items[items.length - 1].path), base)}#breadcrumb`,
+    itemListElement: items.map((it, i) => ({ "@type": "ListItem", position: i + 1, name: it.name, item: abs(localePath(lang, it.path), base) })),
   };
 }
 
@@ -115,11 +116,12 @@ type PageNode = {
   image?: string;
   crumbs: Crumb[];
   extra?: object;
+  lang?: Lang;
 };
 
 /** Səhifə + breadcrumb qovşaqları (graph içində istifadə üçün) */
-export function pageNodes({ type = "WebPage", base = site.url, path, name, description, image, crumbs, extra }: PageNode) {
-  const url = abs(path, base);
+export function pageNodes({ type = "WebPage", base = site.url, path, name, description, image, crumbs, extra, lang = "az" }: PageNode) {
+  const url = abs(localePath(lang, path), base);
   return [
     {
       "@type": type,
@@ -127,14 +129,14 @@ export function pageNodes({ type = "WebPage", base = site.url, path, name, descr
       url,
       name,
       description,
-      inLanguage: "az",
+      inLanguage: htmlLang[lang],
       isPartOf: { "@id": websiteId(base) },
       publisher: { "@id": orgId(base) },
-      breadcrumb: { "@id": `${abs(crumbs[crumbs.length - 1].path, base)}#breadcrumb` },
+      breadcrumb: { "@id": `${abs(localePath(lang, crumbs[crumbs.length - 1].path), base)}#breadcrumb` },
       ...(image && { primaryImageOfPage: { "@type": "ImageObject", url: abs(image, base) } }),
       ...extra,
     },
-    breadcrumbNode(crumbs, base),
+    breadcrumbNode(crumbs, base, lang),
   ];
 }
 
@@ -146,4 +148,4 @@ export const itemList = (items: { name: string; url: string }[]) => ({
 export const faqQuestions = (items: { q: string; a: string }[]) =>
   items.map((it) => ({ "@type": "Question", name: it.q, acceptedAnswer: { "@type": "Answer", text: it.a } }));
 
-export const projectsItemList = (projects: Project[]) => itemList(projects.map((p) => ({ name: p.title, url: abs(`/layiheler/${p.slug}`) })));
+export const projectsItemList = (projects: Project[], lang: Lang = "az") => itemList(projects.map((p) => ({ name: p.title, url: abs(localePath(lang, `/layiheler/${p.slug}`)) })));

@@ -2,7 +2,9 @@
  * Səhifələrin məzmun almaq üçün çağırdığı yükləyicilər: əvvəl panel-dən (backend), alınmazsa src/content fayllarından.
  */
 import { cache } from "react";
+import { notFound } from "next/navigation";
 import { cmsEntry, cmsList } from "@/lib/cms";
+import { DEFAULT_LANG, LANGS, type Lang } from "@/lib/i18n";
 import { aboutFrom, approachFrom, clientFrom, companyFrom, companyPageFrom, faqGroupFrom, journeyFrom, serviceFrom, subProjectFrom, subsiteFrom, legalFrom, projectFrom, settingsFrom, statsFrom, type About, type Approach, type Client, type SiteSettings, type Stat } from "./cms-map";
 import { faqGroups as faqFallback, type FaqGroup } from "./faq";
 import { privacy, terms, type LegalDoc } from "./legal";
@@ -10,50 +12,70 @@ import { companyPages as pagesFallback, type CompanyPage } from "./companies";
 import { subsites, type SubSite, type SubSiteId } from "./subsites";
 import { about as aboutFallback, clients as clientsFallback, companies as companiesFallback, journey as journeyFallback, type Company, type CompanyId, type JourneyStep, projectApproach as approachFallback, projects as projectsFallback, site, stats as statsFallback, type Project } from "./site";
 
-export async function getFaqGroups(): Promise<FaqGroup[]> {
-  const list = await cmsList("group", "faq-group");
-  return list ? list.map((e) => faqGroupFrom(e.slug, e.data)) : faqFallback;
-}
+const az = (lang: Lang) => lang === DEFAULT_LANG;
+/** Seçilmiş dildə məzmun yoxdursa səhifə açılmır (tərcümə avtomatik yaradılmır) */
+const must = <T,>(v: T | null): T => v ?? notFound();
+
+// ---- Hər loader iki formada var: load* (yoxdursa null; səhifənin hansı dillərdə açıldığını yoxlamaq üçün) və get* (yoxdursa 404).
+// Az üçün həmişə dəyər var (panel boşdursa src/content-dəki ehtiyat məzmun). En/ru üçün ehtiyat yoxdur.
+
+const loadFaqGroups = cache(async (lang: Lang): Promise<FaqGroup[] | null> => {
+  const list = await cmsList("group", "faq-group", lang);
+  return list ? list.map((e) => faqGroupFrom(e.slug, e.data)) : az(lang) ? faqFallback : null;
+});
+export const getFaqGroups = async (lang: Lang = DEFAULT_LANG) => must(await loadFaqGroups(lang));
 
 export const faqItemsOf = (groups: FaqGroup[]) => groups.flatMap((g) => g.items);
 
 const LEGAL_FALLBACK: Record<string, LegalDoc> = { "mexfilik-siyaseti": privacy, "istifade-sertleri": terms };
+export type LegalSlug = "mexfilik-siyaseti" | "istifade-sertleri";
 
-export async function getLegal(slug: "mexfilik-siyaseti" | "istifade-sertleri"): Promise<LegalDoc> {
-  const e = await cmsEntry("group", "legal-page", slug);
-  return e ? legalFrom(e.data) : LEGAL_FALLBACK[slug];
-}
+const loadLegal = cache(async (lang: Lang, slug: LegalSlug): Promise<LegalDoc | null> => {
+  const e = await cmsEntry("group", "legal-page", slug, lang);
+  return e ? legalFrom(e.data) : az(lang) ? LEGAL_FALLBACK[slug] : null;
+});
+export const getLegal = async (slug: LegalSlug, lang: Lang = DEFAULT_LANG) => must(await loadLegal(lang, slug));
 
 /** Qrupun əlaqə məlumatları (bütün CES saytlarında eynidir): əvvəl panel-dən, alınmazsa `site` faylından */
-export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
-  const e = await cmsEntry("group", "settings", "main");
-  return e ? settingsFrom(e.data, site) : site;
+const loadSettings = cache(async (lang: Lang): Promise<SiteSettings | null> => {
+  const e = await cmsEntry("group", "settings", "main", lang);
+  return e ? settingsFrom(e.data, site) : az(lang) ? site : null;
 });
+/** Yoxdursa null (layout kimi 404 verməməli olan yerlər üçün) */
+export const findSiteSettings = loadSettings;
+export const getSiteSettings = async (lang: Lang = DEFAULT_LANG) => must(await loadSettings(lang));
 
-export const getStats = cache(async (): Promise<Stat[]> => {
-  const e = await cmsEntry("group", "stats", "main");
-  return e ? statsFrom(e.data) : statsFallback;
+const loadStats = cache(async (lang: Lang): Promise<Stat[] | null> => {
+  const e = await cmsEntry("group", "stats", "main", lang);
+  return e ? statsFrom(e.data) : az(lang) ? statsFallback : null;
 });
+export const getStats = async (lang: Lang = DEFAULT_LANG) => must(await loadStats(lang));
 
-export const getAbout = cache(async (): Promise<About> => {
-  const e = await cmsEntry("group", "about", "main");
-  return e ? aboutFrom(e.data) : aboutFallback;
+const loadAbout = cache(async (lang: Lang): Promise<About | null> => {
+  const e = await cmsEntry("group", "about", "main", lang);
+  return e ? aboutFrom(e.data) : az(lang) ? aboutFallback : null;
 });
+export const getAbout = async (lang: Lang = DEFAULT_LANG) => must(await loadAbout(lang));
 
-export const getProjectApproach = cache(async (): Promise<Approach> => {
-  const e = await cmsEntry("group", "project-approach", "main");
-  return e ? approachFrom(e.data) : approachFallback;
+const loadApproach = cache(async (lang: Lang): Promise<Approach | null> => {
+  const e = await cmsEntry("group", "project-approach", "main", lang);
+  return e ? approachFrom(e.data) : az(lang) ? approachFallback : null;
 });
+export const getProjectApproach = async (lang: Lang = DEFAULT_LANG) => must(await loadApproach(lang));
 
+/** Müştəri adları və loqoları dilə bağlı deyil */
 export const getClients = cache(async (): Promise<Client[]> => {
   const list = await cmsList("group", "client");
   return list ? list.map((e) => clientFrom(e.data)) : clientsFallback;
 });
 
-export const getProjects = cache(async (): Promise<Project[]> => {
-  const list = await cmsList("group", "project");
-  return list ? list.map((e) => projectFrom(e.slug, e.data)) : projectsFallback;
+const loadProjects = cache(async (lang: Lang): Promise<Project[] | null> => {
+  const list = await cmsList("group", "project", lang);
+  return list ? list.map((e) => projectFrom(e.slug, e.data)) : az(lang) ? projectsFallback : null;
 });
+/** Seçilmiş dildə heç bir layihə yoxdursa 404 (ana səhifə kimi bölməsi isteğe bağlı olan yerlər üçün `getProjectsOrNone`) */
+export const getProjects = async (lang: Lang = DEFAULT_LANG) => must(await loadProjects(lang));
+export const getProjectsOrNone = async (lang: Lang = DEFAULT_LANG) => (await loadProjects(lang)) ?? [];
 
 // ---- Şirkətlər: hero, şirkətlər səhifəsi, "layihənin yolu" və hər şirkətin səhifəsi bir yerdən gəlir ---------------
 
@@ -61,16 +83,18 @@ type Bundle = { companies: Company[]; pages: Record<CompanyId, CompanyPage>; jou
 const COMPANY_IDS: CompanyId[] = ["equipment", "architect", "construction", "farmart"];
 const isCompanyId = (v: string): v is CompanyId => (COMPANY_IDS as string[]).includes(v);
 
-const getBundle = cache(async (): Promise<Bundle> => {
-  const [list, projects] = await Promise.all([cmsList("group", "company"), getProjects()]);
+const loadBundle = cache(async (lang: Lang): Promise<Bundle | null> => {
+  const [list, projects] = await Promise.all([cmsList("group", "company", lang), getProjectsOrNone(lang)]);
   // Equipment-in layihələri qrupun layihələri ilə eynidir: "Layihələr" bölməsindən avtomatik götürülür
   const equipmentProjects = projects.map((p) => ({ title: p.title, category: p.category, image: p.image, alt: p.alt, href: `/layiheler/${p.slug}` }));
   const withLiveProjects = (pages: Record<CompanyId, CompanyPage>) => ({ ...pages, equipment: { ...pages.equipment, projects: equipmentProjects } });
 
-  if (!list) return { companies: companiesFallback, pages: withLiveProjects(pagesFallback), journey: journeyFallback };
+  if (!list) return az(lang) ? { companies: companiesFallback, pages: withLiveProjects(pagesFallback), journey: journeyFallback } : null;
 
   const entries = list.filter((e) => isCompanyId(e.slug));
   const present = new Set(entries.map((e) => e.slug));
+  // En/ru: dörd şirkətin hamısı tərcümə olunmayınca şirkət bölmələri açılmır (yarımçıq siyahı göstərilməsin)
+  if (!az(lang) && COMPANY_IDS.some((id) => !present.has(id))) return null;
   const companies: Company[] = entries.map((e) => companyFrom(e.data, companiesFallback.find((c) => c.id === e.slug)!));
   const pages = { ...pagesFallback } as Record<CompanyId, CompanyPage>;
   entries.forEach((e) => (pages[e.slug as CompanyId] = companyPageFrom(e.slug as CompanyId, e.data)));
@@ -84,9 +108,48 @@ const getBundle = cache(async (): Promise<Bundle> => {
   return { companies, pages: withLiveProjects(pages), journey: steps };
 });
 
-export const getCompanies = async () => (await getBundle()).companies;
-export const getCompanyPages = async () => (await getBundle()).pages;
-export const getJourney = async () => (await getBundle()).journey;
+const getBundle = async (lang: Lang) => must(await loadBundle(lang));
+export const getCompanies = async (lang: Lang = DEFAULT_LANG) => (await getBundle(lang)).companies;
+export const getCompanyPages = async (lang: Lang = DEFAULT_LANG) => (await getBundle(lang)).pages;
+export const getJourney = async (lang: Lang = DEFAULT_LANG) => (await getBundle(lang)).journey;
+
+// ---- Səhifənin hansı dillərdə açıldığı ------------------------------------------------------------------------------
+
+export type PageRef =
+  | { kind: "home" | "about" | "companies" | "projects" | "faq" | "contact" }
+  | { kind: "company"; id: string }
+  | { kind: "project"; slug: string }
+  | { kind: "legal"; slug: LegalSlug };
+
+/** Az həmişə var. En/ru yalnız səhifənin bütün məzmunu həmin dildə tam tərcümə olunubsa (altbilgi də daxil olmaqla). */
+async function isReady(lang: Lang, ref: PageRef): Promise<boolean> {
+  if (az(lang)) return true;
+  const [settings, bundle] = await Promise.all([loadSettings(lang), loadBundle(lang)]);
+  if (!settings || !bundle) return false;
+  switch (ref.kind) {
+    case "home":
+      return !!(await loadStats(lang)) && !!(await loadAbout(lang));
+    case "about":
+      return !!(await loadStats(lang)) && !!(await loadAbout(lang));
+    case "company":
+      return bundle.companies.some((c) => c.id === ref.id);
+    case "projects":
+      return !!(await loadProjects(lang));
+    case "project":
+      return !!(await loadApproach(lang)) && !!(await loadProjects(lang))?.some((p) => p.slug === ref.slug);
+    case "faq":
+      return !!(await loadFaqGroups(lang));
+    case "legal":
+      return !!(await loadLegal(lang, ref.slug));
+    default:
+      return true;
+  }
+}
+
+export async function availableLangs(ref: PageRef): Promise<Lang[]> {
+  const ok = await Promise.all(LANGS.map((l) => isReady(l, ref)));
+  return LANGS.filter((_, i) => ok[i]);
+}
 
 // ---- Construction və Farmart (panel-də Farmart-ın sayt kodu "agro"-dur) ------------------------------------------
 

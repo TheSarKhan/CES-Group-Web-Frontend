@@ -8,31 +8,39 @@ import { Footer } from "@/components/Footer";
 import { ArrowUpRight } from "@/components/Icons";
 import { JsonLdScript } from "@/components/JsonLd";
 import { getAbout, getCompanies } from "@/content/loaders";
+import { getUi } from "@/i18n/ui";
+import { pageContext } from "@/lib/lang";
 import { pageMetadata } from "@/lib/seo";
 import { graph, pageNodes } from "@/lib/schema";
 import styles from "./page.module.css";
 
-const description =
-  "CES Group 2020-ci ildə ağır texnika icarəsi ilə başlayıb. Bu gün memarlıq, tikinti, texnika icarəsi və innovativ ekosistem üzrə dörd şirkəti birləşdirir.";
+type Props = { params: Promise<{ lang: string }> };
 
-export const metadata: Metadata = pageMetadata({ title: "Haqqımızda", description, path: "/haqqimizda" });
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const { lang, langs } = await pageContext(props.params, { kind: "about" }, "/haqqimizda");
+  const t = getUi(lang).aboutPage;
+  return pageMetadata({ title: t.title, description: t.description, path: "/haqqimizda", lang, langs });
+}
 
-export default async function AboutPage() {
-  const [about, companies] = await Promise.all([getAbout(), getCompanies()]);
+export default async function AboutPage(props: Props) {
+  const { lang, switcher } = await pageContext(props.params, { kind: "about" }, "/haqqimizda");
+  const [about, companies] = await Promise.all([getAbout(lang), getCompanies(lang)]);
+  const ui = getUi(lang);
+  const t = ui.aboutPage;
   return (
     <>
-      <Header />
+      <Header lang={lang} switcher={switcher} />
       <main id="main">
-        <PageHero title="Haqqımızda" lead={about.lead} />
+        <PageHero title={t.title} lead={about.lead} />
 
         <section className="section">
           <div className={`container ${styles.mv}`}>
             <div className={styles.mvItem}>
-              <h2 className={styles.kicker}>Missiyamız</h2>
+              <h2 className={styles.kicker}>{t.mission}</h2>
               <p className={styles.statement}>{about.mission}</p>
             </div>
             <div className={styles.mvItem}>
-              <h2 className={styles.kicker}>Vizyonumuz</h2>
+              <h2 className={styles.kicker}>{t.vision}</h2>
               <p className={styles.statement}>{about.vision}</p>
             </div>
           </div>
@@ -42,10 +50,10 @@ export default async function AboutPage() {
           <div className="container">
             <div className="section-head">
               <h2 id="structure-title" className="h2">
-                Qrupun strukturu
+                {t.structure}
               </h2>
               <p className="lead" style={{ maxWidth: 420 }}>
-                Hər şirkət öz sahəsində müstəqil işləyir, böyük layihələrdə isə bir komanda kimi birləşir.
+                {t.structureLead}
               </p>
             </div>
             <ul className={styles.companies}>
@@ -60,7 +68,7 @@ export default async function AboutPage() {
                     <p className={styles.cText}>{c.description}</p>
                   </div>
                   <a href={c.url} className={`link-arrow ${styles.cLink}`}>
-                    Sayta keç <ArrowUpRight />
+                    {ui.common.goToSite} <ArrowUpRight />
                   </a>
                 </li>
               ))}
@@ -71,7 +79,7 @@ export default async function AboutPage() {
         <section className="section" aria-labelledby="values-title">
           <div className="container">
             <h2 id="values-title" className="h2">
-              Dəyərlərimiz
+              {t.values}
             </h2>
             <ul className={styles.values}>
               {about.values.map((v) => (
@@ -87,7 +95,7 @@ export default async function AboutPage() {
         <section className={`section ${styles.white}`} aria-labelledby="timeline-title">
           <div className={`container ${styles.tlGrid}`}>
             <h2 id="timeline-title" className="h2">
-              Yolumuz
+              {t.timeline}
             </h2>
             <ol className={styles.timeline}>
               {about.timeline.map((t, i) => (
@@ -100,20 +108,21 @@ export default async function AboutPage() {
           </div>
         </section>
 
-        <Stats />
-        <ContactBlock />
+        <Stats lang={lang} />
+        <ContactBlock lang={lang} />
       </main>
-      <Footer />
+      <Footer lang={lang} />
       <JsonLdScript
         data={graph(
           pageNodes({
             type: "AboutPage",
+            lang,
             path: "/haqqimizda",
-            name: "Haqqımızda",
-            description,
+            name: t.title,
+            description: t.description,
             crumbs: [
-              { name: "Ana səhifə", path: "/" },
-              { name: "Haqqımızda", path: "/haqqimizda" },
+              { name: ui.common.home, path: "/" },
+              { name: t.title, path: "/haqqimizda" },
             ],
           }),
         )}

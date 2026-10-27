@@ -7,28 +7,37 @@ import { Footer } from "@/components/Footer";
 import { ArrowRight } from "@/components/Icons";
 import { JsonLdScript } from "@/components/JsonLd";
 import { faqItemsOf, getFaqGroups } from "@/content/loaders";
+import { getUi } from "@/i18n/ui";
+import { localHref } from "@/lib/i18n";
+import { pageContext } from "@/lib/lang";
 import { pageMetadata } from "@/lib/seo";
 import { faqQuestions, graph, pageNodes } from "@/lib/schema";
 import styles from "./page.module.css";
 
-const description =
-  "CES Group, texnika icarəsi, memarlıq, tikinti və Farmart ekosistemi üzrə tez-tez verilən suallar: icarə şərtləri, çatdırılma, ödəniş, xidmət ərazisi və əlaqə.";
+type Props = { params: Promise<{ lang: string }> };
 
-export const metadata: Metadata = pageMetadata({ title: "Tez-tez verilən suallar", description, path: "/suallar" });
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const { lang, langs } = await pageContext(props.params, { kind: "faq" }, "/suallar");
+  const t = getUi(lang).faqPage;
+  return pageMetadata({ title: t.title, description: t.description, path: "/suallar", lang, langs });
+}
 
 /** 5 dəqiqə (Next bu dəyərin sabit rəqəm olmasını tələb edir; src/lib/cms.ts-dəki CMS_REVALIDATE ilə eyni olmalıdır) */
 export const revalidate = 300;
 
-export default async function FaqPage() {
-  const faqGroups = await getFaqGroups();
+export default async function FaqPage(props: Props) {
+  const { lang, switcher } = await pageContext(props.params, { kind: "faq" }, "/suallar");
+  const faqGroups = await getFaqGroups(lang);
+  const ui = getUi(lang);
+  const t = ui.faqPage;
   const faqItems = faqItemsOf(faqGroups);
   return (
     <>
-      <Header />
+      <Header lang={lang} switcher={switcher} />
       <main id="main">
-        <PageHero title="Tez-tez verilən suallar" lead="Texnika icarəsi, layihələndirmə, tikinti və Farmart üzrə ən çox verilən suallara qısa cavablar." />
+        <PageHero title={t.title} lead={t.lead} />
 
-        <section className="section" aria-label="Suallar və cavablar">
+        <section className="section" aria-label={t.aria}>
           <div className="container">
             {faqGroups.map((g) => (
               <section key={g.id} id={g.id} className={styles.group} aria-labelledby={`${g.id}-title`}>
@@ -45,7 +54,7 @@ export default async function FaqPage() {
                       <p className={styles.a}>{item.a}</p>
                       {item.link &&
                         (item.link.href.startsWith("/") ? (
-                          <Link href={item.link.href} className={`link-arrow ${styles.more}`}>
+                          <Link href={localHref(lang, item.link.href)} className={`link-arrow ${styles.more}`}>
                             {item.link.label} <ArrowRight />
                           </Link>
                         ) : (
@@ -61,19 +70,20 @@ export default async function FaqPage() {
           </div>
         </section>
 
-        <ContactBlock />
+        <ContactBlock lang={lang} />
       </main>
-      <Footer />
+      <Footer lang={lang} />
       <JsonLdScript
         data={graph([
           ...pageNodes({
             type: "FAQPage",
+            lang,
             path: "/suallar",
-            name: "Tez-tez verilən suallar",
-            description,
+            name: t.title,
+            description: t.description,
             crumbs: [
-              { name: "Ana səhifə", path: "/" },
-              { name: "Tez-tez verilən suallar", path: "/suallar" },
+              { name: ui.common.home, path: "/" },
+              { name: t.title, path: "/suallar" },
             ],
             extra: { mainEntity: faqQuestions(faqItems) },
           }),

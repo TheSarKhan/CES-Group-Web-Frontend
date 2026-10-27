@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { getAbout, getCompanies, getJourney } from "@/content/loaders";
+import { getUi } from "@/i18n/ui";
+import { localePath, type Lang } from "@/lib/i18n";
 import type { Company, JourneyStep } from "@/content/site";
 import { ArrowRight, EyeIcon, HandshakeIcon, MedalIcon, ShieldIcon } from "./Icons";
 import { JourneyStepper, type StepData } from "./JourneyStepper";
@@ -14,33 +16,31 @@ const stepsOf = (journey: JourneyStep[], companies: Company[]): StepData[] =>
 const valueIcons = [ShieldIcon, HandshakeIcon, EyeIcon, MedalIcon];
 
 /** Ana səhifənin tanıtım bölməsi: qrupun şirkətləri layihənin mərhələləri kimi və dəyərlər. */
-export async function Journey() {
-  const [about, companies, journey] = await Promise.all([getAbout(), getCompanies(), getJourney()]);
+export async function Journey({ lang = "az" }: { lang?: Lang }) {
+  const [about, companies, journey] = await Promise.all([getAbout(lang), getCompanies(lang), getJourney(lang)]);
+  const t = getUi(lang).journey;
   const steps = stepsOf(journey, companies);
   return (
     <section id="qrup" className={`section ${styles.wrap}`} aria-labelledby="journey-title">
       <div className="container">
         <div className={styles.head}>
           <h2 id="journey-title" className="h2">
-            Bir tərəfdaş. Layihənin bütün mərhələləri.
+            {t.title}
           </h2>
           <div className={styles.side}>
-            <p className="lead">
-              Memarlıq, tikinti, texnika icarəsi və kənd təsərrüfatı: dörd şirkət eskizdən təhvilə qədər bir komanda kimi işləyir.
-              Sifarişçi bir neçə podratçı ilə deyil, tək məsuliyyətlə işləyir.
-            </p>
+            <p className="lead">{t.lead}</p>
             <div className={styles.actions}>
-              <Link href="/haqqimizda" className="btn btn-dark">
-                Qrup haqqında <ArrowRight />
+              <Link href={localePath(lang, "/haqqimizda")} className="btn btn-dark">
+                {t.aboutGroup} <ArrowRight />
               </Link>
-              <Link href="/elaqe" className="link-underline">
-                Bizimlə əlaqə
+              <Link href={localePath(lang, "/elaqe")} className="link-underline">
+                {t.contactUs}
               </Link>
             </div>
           </div>
         </div>
 
-        <JourneyStepper steps={steps} />
+        <JourneyStepper steps={steps} lang={lang} />
 
         <ul className={styles.values}>
           {about.values.map((v, i) => {

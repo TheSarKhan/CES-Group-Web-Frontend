@@ -8,30 +8,36 @@ import { Footer } from "@/components/Footer";
 import { JsonLdScript } from "@/components/JsonLd";
 import { ArrowRight, ArrowUpRight, BuildIcon, CraneIcon, DesignIcon } from "@/components/Icons";
 import { getCompanies, getCompanyPages, getJourney } from "@/content/loaders";
+import { getUi } from "@/i18n/ui";
+import { localePath } from "@/lib/i18n";
+import { pageContext } from "@/lib/lang";
 import { pageMetadata } from "@/lib/seo";
 import { abs, graph, itemList, pageNodes } from "@/lib/schema";
 import styles from "./page.module.css";
 
-const description =
-  "CES Group şirkətləri: CES Equipment (texnika icarəsi), CES Architect (memarlıq və dizayn), CES Construction (tikinti və podrat) və Farmart (innovativ və təbii ekosistem).";
+type Props = { params: Promise<{ lang: string }> };
 
-export const metadata: Metadata = pageMetadata({ title: "Şirkətlər", description, path: "/sirketler" });
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const { lang, langs } = await pageContext(props.params, { kind: "companies" }, "/sirketler");
+  const t = getUi(lang).companiesPage;
+  return pageMetadata({ title: t.title, description: t.description, path: "/sirketler", lang, langs });
+}
 
 const pathIcons = { design: DesignIcon, build: BuildIcon, crane: CraneIcon } as const;
 // Layihənin yolu: dizayn, tikinti, texnika (Farmart ayrı istiqamətdir)
-export default async function CompaniesPage() {
-  const [companies, companyPages, journey] = await Promise.all([getCompanies(), getCompanyPages(), getJourney()]);
+export default async function CompaniesPage(props: Props) {
+  const { lang, switcher } = await pageContext(props.params, { kind: "companies" }, "/sirketler");
+  const [companies, companyPages, journey] = await Promise.all([getCompanies(lang), getCompanyPages(lang), getJourney(lang)]);
+  const ui = getUi(lang);
+  const t = ui.companiesPage;
   const pathSteps = journey.filter((j) => j.id !== "farmart" && j.id !== "equipment").concat(journey.filter((j) => j.id === "equipment"));
   return (
     <>
-      <Header />
+      <Header lang={lang} switcher={switcher} />
       <main id="main">
-        <PageHero
-          title="Şirkətlər"
-          lead="CES Group dörd şirkəti birləşdirir. Hər biri öz sahəsində müstəqil işləyir, böyük layihələrdə isə bir komanda kimi çalışır."
-        />
+        <PageHero title={t.title} lead={t.lead} />
 
-        <section className="section" aria-label="Şirkətlərin siyahısı">
+        <section className="section" aria-label={t.listAria}>
           <div className="container">
             <ul className={styles.list}>
               {companies.map((c, i) => (
@@ -54,11 +60,11 @@ export default async function CompaniesPage() {
                     <p className={styles.tagline}>{companyPages[c.id].tagline}</p>
                     <p className={styles.text}>{c.description}</p>
                     <div className={styles.links}>
-                      <Link href={`/sirketler/${c.id}`} className="btn btn-dark">
-                        Ətraflı <ArrowRight />
+                      <Link href={localePath(lang, `/sirketler/${c.id}`)} className="btn btn-dark">
+                        {ui.common.more} <ArrowRight />
                       </Link>
                       <a href={c.url} className="link-arrow">
-                        Şirkətin saytı <ArrowUpRight />
+                        {ui.common.companySite} <ArrowUpRight />
                       </a>
                     </div>
                   </div>
@@ -71,7 +77,7 @@ export default async function CompaniesPage() {
         <section className={`section ${styles.white}`} aria-labelledby="path-title">
           <div className="container">
             <h2 id="path-title" className={styles.h2}>
-              Layihənin yolu
+              {t.pathTitle}
             </h2>
             <ol className={styles.path}>
               {pathSteps.map((s, i) => {
@@ -82,7 +88,7 @@ export default async function CompaniesPage() {
                     <span className={styles.stepIcon}>{Icon && <Icon size={28} />}</span>
                     <span className={styles.stepNo}>{String(i + 1).padStart(2, "0")}</span>
                     <h3 className={styles.stepTitle}>
-                      <Link href={`/sirketler/${c.id}`} title={c.name}>
+                      <Link href={localePath(lang, `/sirketler/${c.id}`)} title={c.name}>
                         {c.shortName}
                       </Link>
                     </h3>
@@ -91,28 +97,26 @@ export default async function CompaniesPage() {
                 );
               })}
             </ol>
-            <p className={styles.pathNote}>
-              Dizayndan təhvilə qədər bütün mərhələlər qrup daxilində əlaqələndirilir, sifarişçi isə tək məsuliyyətlə işləyir. Farmart isə qrupun
-              ayrıca innovativ və təbii ekosistem istiqamətidir.
-            </p>
+            <p className={styles.pathNote}>{t.pathNote}</p>
           </div>
         </section>
 
-        <ContactBlock />
+        <ContactBlock lang={lang} />
       </main>
-      <Footer />
+      <Footer lang={lang} />
       <JsonLdScript
         data={graph(
           pageNodes({
             type: "CollectionPage",
+            lang,
             path: "/sirketler",
-            name: "Şirkətlər",
-            description,
+            name: t.title,
+            description: t.description,
             crumbs: [
-              { name: "Ana səhifə", path: "/" },
-              { name: "Şirkətlər", path: "/sirketler" },
+              { name: ui.common.home, path: "/" },
+              { name: t.title, path: "/sirketler" },
             ],
-            extra: { mainEntity: itemList(companies.map((c) => ({ name: c.name, url: abs(`/sirketler/${c.id}`) }))) },
+            extra: { mainEntity: itemList(companies.map((c) => ({ name: c.name, url: abs(localePath(lang, `/sirketler/${c.id}`)) }))) },
           }),
         )}
       />

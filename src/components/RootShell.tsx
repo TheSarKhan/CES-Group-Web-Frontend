@@ -18,7 +18,7 @@ export function RootShell({ lang = "az", children }: { lang?: Lang; children: Re
           {SKIP[lang]}
         </a>
         {children}
-        <Analytics />
+        <Analytics lang={lang} />
       </body>
     </html>
   );

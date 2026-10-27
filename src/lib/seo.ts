@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { site } from "@/content/site";
+import { DEFAULT_LANG, localePath, ogLocale, type Lang } from "./i18n";
 
 export type OgImage = { url: string; width?: number; height?: number; alt?: string };
 
@@ -21,17 +22,24 @@ type PageSeo = {
   absoluteTitle?: boolean;
   /** Axtarış sistemləri səhifəni indeksləməsin */
   noindex?: boolean;
+  /** Səhifənin dili (canonical və Open Graph buna görə) */
+  lang?: Lang;
+  /** Səhifənin açıq olduğu dillər: birdən çoxdursa hreflang yazılır */
+  langs?: Lang[];
 };
 
 /** Hər səhifə üçün title, description, canonical, Open Graph və Twitter kartı */
-export function pageMetadata({ title, description, path, image = defaultOgImage, siteName = site.name, absoluteTitle = false, noindex = false }: PageSeo): Metadata {
+export function pageMetadata({ title, description, path, image = defaultOgImage, siteName = site.name, absoluteTitle = false, noindex = false, lang = DEFAULT_LANG, langs = [lang] }: PageSeo): Metadata {
   const shareTitle = absoluteTitle ? title : `${title} | ${siteName}`;
+  const here = localePath(lang, path);
+  // hreflang yalnız səhifə bir neçə dildə açıqdırsa yazılır; x-default azərbaycan dilidir
+  const languages = langs.length > 1 ? { ...Object.fromEntries(langs.map((l) => [l, localePath(l, path)])), "x-default": localePath(DEFAULT_LANG, path) } : undefined;
   return {
     title: absoluteTitle ? { absolute: title } : title,
     description,
-    alternates: { canonical: path },
+    alternates: { canonical: here, ...(languages && { languages }) },
     ...(noindex && { robots: { index: false, follow: true } }),
-    openGraph: { type: "website", locale: "az_AZ", siteName, title: shareTitle, description, url: path, images: [image] },
+    openGraph: { type: "website", locale: ogLocale[lang], siteName, title: shareTitle, description, url: here, images: [image] },
     twitter: { card: "summary_large_image", title: shareTitle, description, images: [image.url] },
   };
 }

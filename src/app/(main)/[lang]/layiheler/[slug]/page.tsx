@@ -8,11 +8,14 @@ import { Footer } from "@/components/Footer";
 import { ArrowRight, ArrowUpRight } from "@/components/Icons";
 import { JsonLdScript } from "@/components/JsonLd";
 import { getCompanies, getProjectApproach, getProjects } from "@/content/loaders";
+import { getUi } from "@/i18n/ui";
+import { localePath } from "@/lib/i18n";
+import { pageContext } from "@/lib/lang";
 import { pageMetadata } from "@/lib/seo";
 import { graph, pageNodes } from "@/lib/schema";
 import styles from "./page.module.css";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: Promise<{ lang: string; slug: string }> };
 
 
 export async function generateStaticParams() {
@@ -21,32 +24,35 @@ export async function generateStaticParams() {
 
 async function load({ params }: Props) {
   const { slug } = await params;
-  const project = (await getProjects()).find((p) => p.slug === slug);
+  const ctx = await pageContext(params, { kind: "project", slug }, `/layiheler/${slug}`);
+  const project = (await getProjects(ctx.lang)).find((p) => p.slug === slug);
   if (!project) notFound();
-  return project;
+  return { ...ctx, project };
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
-  const p = await load(props);
-  return pageMetadata({ title: p.title, description: p.summary, path: `/layiheler/${p.slug}`, image: { url: p.image, alt: p.alt } });
+  const { project: p, lang, langs } = await load(props);
+  return pageMetadata({ title: p.title, description: p.summary, path: `/layiheler/${p.slug}`, image: { url: p.image, alt: p.alt }, lang, langs });
 }
 
 export default async function ProjectPage(props: Props) {
-  const project = await load(props);
-  const company = (await getCompanies()).find((c) => c.name === project.company);
-  const others = (await getProjects()).filter((p) => p.slug !== project.slug).slice(0, 4);
-  const projectApproach = await getProjectApproach();
+  const { project, lang, switcher } = await load(props);
+  const ui = getUi(lang);
+  const t = ui.projectPage;
+  const company = (await getCompanies(lang)).find((c) => c.name === project.company);
+  const others = (await getProjects(lang)).filter((p) => p.slug !== project.slug).slice(0, 4);
+  const projectApproach = await getProjectApproach(lang);
 
   return (
     <>
-      <Header />
+      <Header lang={lang} switcher={switcher} />
       <main id="main">
         <section className={styles.hero}>
           <div className="container">
-            <nav aria-label="Breadcrumb" className={styles.crumbs}>
-              <Link href="/">Ana səhifə</Link>
+            <nav aria-label={t.breadcrumb} className={styles.crumbs}>
+              <Link href={localePath(lang, "/")}>{ui.common.home}</Link>
               <span aria-hidden="true">/</span>
-              <Link href="/layiheler">Layihələr</Link>
+              <Link href={localePath(lang, "/layiheler")}>{ui.nav.projects}</Link>
               <span aria-hidden="true">/</span>
               <span aria-current="page">{project.title}</span>
             </nav>
@@ -67,7 +73,7 @@ export default async function ProjectPage(props: Props) {
           <div className={`container ${styles.about}`}>
             <div className={styles.text}>
               <h2 id="about-title" className="h2">
-                Layihə haqqında
+                {t.about}
               </h2>
               {project.body.map((t, i) => (
                 <p key={i} className="lead">
@@ -77,15 +83,15 @@ export default async function ProjectPage(props: Props) {
             </div>
             <dl className={styles.details}>
               <div className={styles.detail}>
-                <dt>Şirkət</dt>
+                <dt>{t.company}</dt>
                 <dd>{project.company}</dd>
               </div>
               <div className={styles.detail}>
-                <dt>Kateqoriya</dt>
+                <dt>{t.category}</dt>
                 <dd>{project.category}</dd>
               </div>
               <div className={styles.detail}>
-                <dt>Yer</dt>
+                <dt>{t.location}</dt>
                 <dd>{project.location}</dd>
               </div>
               {project.details.map((d) => (
@@ -101,7 +107,7 @@ export default async function ProjectPage(props: Props) {
         <section className={`section ${styles.white}`} aria-labelledby="approach-title">
           <div className="container">
             <h2 id="approach-title" className="h2">
-              Necə işləyirik
+              {t.approach}
             </h2>
             <ul className={styles.approach}>
               {projectApproach.map((a, i) => (
@@ -114,7 +120,7 @@ export default async function ProjectPage(props: Props) {
             </ul>
             {company && (
               <a href={company.url} className={`btn btn-dark ${styles.companyBtn}`}>
-                {company.name} saytına keç <ArrowUpRight />
+                {t.goToSiteOf(company.name)} <ArrowUpRight />
               </a>
             )}
           </div>
@@ -123,12 +129,12 @@ export default async function ProjectPage(props: Props) {
         <section className={`section ${styles.more}`} aria-labelledby="more-title">
           <div className="container">
             <h2 id="more-title" className="h2">
-              Digər layihələr
+              {t.others}
             </h2>
             <ul className={styles.moreGrid}>
               {others.map((p) => (
                 <li key={p.slug} className={styles.card}>
-                  <Link href={`/layiheler/${p.slug}`} className={styles.cardLink}>
+                  <Link href={localePath(lang, `/layiheler/${p.slug}`)} className={styles.cardLink}>
                     <span className={styles.cardImg}>
                       <Image src={p.image} alt={p.alt} fill sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 25vw" />
                     </span>
@@ -143,19 +149,20 @@ export default async function ProjectPage(props: Props) {
           </div>
         </section>
 
-        <ContactBlock />
+        <ContactBlock lang={lang} />
       </main>
-      <Footer />
+      <Footer lang={lang} />
       <JsonLdScript
         data={graph(
           pageNodes({
+            lang,
             path: `/layiheler/${project.slug}`,
             name: project.title,
             description: project.summary,
             image: project.image,
             crumbs: [
-              { name: "Ana səhifə", path: "/" },
-              { name: "Layihələr", path: "/layiheler" },
+              { name: ui.common.home, path: "/" },
+              { name: ui.nav.projects, path: "/layiheler" },
               { name: project.title, path: `/layiheler/${project.slug}` },
             ],
           }),

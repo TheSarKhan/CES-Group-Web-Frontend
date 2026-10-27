@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import { COMPANY_OPTIONS, contactSchema, type ContactInput } from "@/lib/contact-schema";
+import { getUi } from "@/i18n/ui";
+import { companyOptions, makeContactSchema, type ContactInput } from "@/lib/contact-schema";
+import { isLang, type Lang } from "@/lib/i18n";
 
 export const runtime = "nodejs";
 
@@ -53,7 +55,8 @@ type Forwarded = { kind: "ok" } | { kind: "rejected"; status: number; message: s
  * Müraciəti backend-ə (vahid müraciətlər + sayt üzrə bildiriş) ötürür. Backend əlçatmaz olarsa və ya 5xx qaytarsa
  * "unavailable" qaytarılır və aşağıdakı birbaşa e-poçt/Telegram yolu işə düşür ki, müraciət itməsin.
  */
-async function forwardToBackend(data: ContactInput, ip: string, host: string | null, userAgent: string | null): Promise<Forwarded> {
+async function forwardToBackend(data: ContactInput, ip: string, host: string | null, userAgent: string | null, lang: Lang): Promise<Forwarded> {
+  const msg = getUi(lang).form.server;
   if (!BACKEND_URL) return { kind: "unavailable" };
   try {
     const headers: Record<string, string> = { "Content-Type": "application/json", "X-Forwarded-For": ip };
@@ -76,8 +79,7 @@ async function forwardToBackend(data: ContactInput, ip: string, host: string | n
     });
     if (res.ok) return { kind: "ok" };
     if (res.status >= 500) return { kind: "unavailable" };
-    const json = (await res.json().catch(() => null)) as { message?: string } | null;
-    return { kind: "rejected", status: res.status, message: res.status === 429 ? "Çox sayda müraciət. Bir az sonra yenidən cəhd edin." : (json?.message ?? "Formada səhv var.") };
+    return { kind: "rejected", status: res.status, message: res.status === 429 ? msg.rate : msg.invalid };
   } catch (err) {
     console.error("[contact] Backend əlçatmazdır, birbaşa kanallara keçilir:", err);
     return { kind: "unavailable" };
@@ -89,20 +91,25 @@ const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", 
 export async function POST(req: Request) {
   const ip = req.headers.get("x-nf-client-connection-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   if (rateLimited(ip)) {
-    return NextResponse.json({ ok: false, error: "Çox sayda müraciət. Bir az sonra yenidən cəhd edin." }, { status: 429 });
+    return NextResponse.json({ ok: false, error: getUi("az").form.server.rate }, { status: 429 });
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ ok: false, error: "Yanlış sorğu." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: getUi("az").form.server.badRequest }, { status: 400 });
   }
 
-  const parsed = contactSchema.safeParse(body);
+  // Formun dili: xəta mesajları həmin dildə qaytarılır
+  const rawLang = (body as { lang?: unknown } | null)?.lang;
+  const lang: Lang = typeof rawLang === "string" && isLang(rawLang) ? rawLang : "az";
+  const msg = getUi(lang).form.server;
+
+  const parsed = makeContactSchema(lang).safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { ok: false, error: "Formada səhv var.", fields: parsed.error.flatten().fieldErrors },
+      { ok: false, error: msg.invalid, fields: parsed.error.flatten().fieldErrors },
       { status: 422 },
     );
   }
@@ -111,15 +118,16 @@ export async function POST(req: Request) {
   // Bot honeypot-u doldurubsa, uğurlu kimi cavab ver, amma heç nə göndərmə
   if (data.website) return NextResponse.json({ ok: true });
 
-  const forwarded = await forwardToBackend(data, ip, req.headers.get("host"), req.headers.get("user-agent"));
+  const forwarded = await forwardToBackend(data, ip, req.headers.get("host"), req.headers.get("user-agent"), lang);
   if (forwarded.kind === "ok") return NextResponse.json({ ok: true });
   if (forwarded.kind === "rejected") return NextResponse.json({ ok: false, error: forwarded.message }, { status: forwarded.status });
 
   if (!(await verifyTurnstile(data.turnstileToken, ip))) {
-    return NextResponse.json({ ok: false, error: "Təhlükəsizlik yoxlaması keçilmədi. Səhifəni yeniləyib yenidən cəhd edin." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: msg.turnstileFailed }, { status: 400 });
   }
 
-  const companyLabel = COMPANY_OPTIONS.find((o) => o.value === data.company)?.label ?? data.company;
+  // Daxili bildirişlər həmişə azərbaycanca yazılır (komanda üçün)
+  const companyLabel = companyOptions("az").find((o) => o.value === data.company)?.label ?? data.company;
   const lines = [
     `Şirkət: ${companyLabel}`,
     `Ad: ${data.name}`,
@@ -174,7 +182,7 @@ export async function POST(req: Request) {
 
   if (tasks.length === 0) {
     console.error("[contact] Heç bir kanal konfiqurasiya olunmayıb (SMTP_* və ya TELEGRAM_* env dəyişənləri).");
-    return NextResponse.json({ ok: false, error: "Müraciət hazırda qəbul olunmur. Zəhmət olmasa telefonla əlaqə saxlayın." }, { status: 503 });
+    return NextResponse.json({ ok: false, error: msg.unavailable }, { status: 503 });
   }
 
   const results = await Promise.allSettled(tasks);
@@ -182,7 +190,7 @@ export async function POST(req: Request) {
   results.forEach((r, i) => r.status === "rejected" && console.error(`[contact] ${channels[i]} xətası:`, r.reason));
 
   if (delivered === 0) {
-    return NextResponse.json({ ok: false, error: "Müraciət göndərilmədi. Bir az sonra yenidən cəhd edin." }, { status: 502 });
+    return NextResponse.json({ ok: false, error: msg.notSent }, { status: 502 });
   }
   return NextResponse.json({ ok: true });
 }
