@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { subsites } from "@/content/subsites";
 import { getSubSite } from "@/lib/subsite";
-import { companies } from "@/content/site";
+import { getCompanies } from "@/content/loaders";
 import { pageMetadata } from "@/lib/seo";
 import { abs, graph, orgId, pageNodes } from "@/lib/schema";
 import { JsonLdScript } from "@/components/JsonLd";
@@ -39,7 +39,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function ServiceDetailPage(props: Props) {
   const { site, service } = await load(props);
   const others = site.services.filter((s) => s.slug !== service.slug);
-  const company = companies.find((c) => c.id === site.id);
+  const company = (await getCompanies()).find((c) => c.id === site.id);
   const path = `/xidmetlerimiz/${service.slug}`;
 
   return (

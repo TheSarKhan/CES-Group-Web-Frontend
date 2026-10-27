@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type PointerEvent } from "react";
-import { companies, type CompanyId } from "@/content/site";
+import type { Company, CompanyId } from "@/content/site";
 import { afterLoad, prefersLightMedia } from "@/lib/media";
 import { ArrowUpRight } from "./Icons";
 import styles from "./Hero.module.css";
@@ -12,7 +12,7 @@ const REDUCED_QUERY = "(prefers-reduced-motion: reduce)";
 const CYCLE_MS = 4500;
 const noopSubscribe = () => () => undefined;
 
-export function Hero() {
+export function Hero({ companies }: { companies: Company[] }) {
   const [active, setActive] = useState<CompanyId | null>(null);
   const [hoverable, setHoverable] = useState(true);
   const [reduced, setReduced] = useState(false);
@@ -77,7 +77,7 @@ export function Hero() {
       window.clearTimeout(first);
       window.clearInterval(t);
     };
-  }, [hoverable, reduced, saver, warm, inView]);
+  }, [hoverable, reduced, saver, warm, inView, companies]);
 
   useEffect(() => {
     for (const [id, el] of Object.entries(videos.current)) {

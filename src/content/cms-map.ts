@@ -5,7 +5,8 @@
 import { tr } from "@/lib/cms";
 import type { Faq, FaqGroup } from "./faq";
 import type { LegalDoc, LegalSection } from "./legal";
-import type { Project, site as staticSite } from "./site";
+import type { CompanyPage } from "./companies";
+import type { Company, CompanyId, JourneyStep, Project, site as staticSite } from "./site";
 import type { about as staticAbout, projectApproach as staticApproach, stats as staticStats } from "./site";
 
 /** `site` obyektinin panel-dən idarə olunan sahələri */
@@ -168,3 +169,79 @@ export const projectTo = (p: Project): Data => ({
   body: { az: p.body.join("\n\n") },
   details: p.details.map((x) => ({ label: { az: x.label }, value: { az: x.value } })),
 });
+
+// ---- Şirkətlər ------------------------------------------------------------------------------------------------
+
+/** Şirkətin ünvanı (url) build mühitindən asılıdır (subdomen/lokal), ona görə koddan gəlir: `base` */
+export function companyFrom(d: Data, base: Company): Company {
+  const focus = str(d.focus);
+  const poster = str(d.poster);
+  return {
+    id: base.id,
+    url: base.url,
+    name: str(d.name),
+    shortName: tr(d.shortName),
+    legalName: str(d.legalName),
+    founded: str(d.founded),
+    field: tr(d.field),
+    description: tr(d.description),
+    ...(d.planned === true ? { planned: true } : {}),
+    image: str(d.image),
+    imageAlt: tr(d.imageAlt),
+    ...(focus ? { focus } : {}),
+    ...(poster ? { poster } : {}),
+    video: str(d.video),
+  };
+}
+
+export function companyPageFrom(id: CompanyId, d: Data): CompanyPage {
+  const terms = lines(tr(d.terms), /\n/);
+  const projectsTitle = tr(d.projectsTitle);
+  return {
+    id,
+    tagline: tr(d.tagline),
+    metaDescription: tr(d.metaDescription),
+    about: lines(tr(d.about), /\n{2,}/),
+    facts: arr(d.facts).map((f) => ({ label: tr(f.label), value: str(f.value) })),
+    servicesTitle: tr(d.servicesTitle),
+    services: arr(d.services).map((x) => {
+      const text = tr(x.text);
+      const href = str(x.href);
+      return { name: tr(x.name), ...(text ? { text } : {}), ...(href ? { href } : {}) };
+    }),
+    ...(terms.length ? { terms } : {}),
+    ...(projectsTitle ? { projectsTitle } : {}),
+    projects: arr(d.projects).map((p) => ({ title: tr(p.title), category: tr(p.category), image: str(p.image), alt: tr(p.alt), href: str(p.href) })),
+  };
+}
+
+export const journeyFrom = (id: CompanyId, d: Data): JourneyStep => ({ id, icon: str(d.journeyIcon) as JourneyStep["icon"], points: lines(tr(d.journeyPoints), /\n/) });
+
+export function companyTo(c: Company, page: CompanyPage, step: JourneyStep, journeyOrder: number): Data {
+  return {
+    name: c.name,
+    shortName: { az: c.shortName },
+    legalName: c.legalName,
+    founded: c.founded,
+    field: { az: c.field },
+    description: { az: c.description },
+    ...(c.planned ? { planned: true } : {}),
+    image: c.image,
+    imageAlt: { az: c.imageAlt },
+    ...(c.focus ? { focus: c.focus } : {}),
+    ...(c.poster ? { poster: c.poster } : {}),
+    video: c.video,
+    journeyIcon: step.icon,
+    journeyOrder,
+    journeyPoints: { az: step.points.join("\n") },
+    tagline: { az: page.tagline },
+    metaDescription: { az: page.metaDescription },
+    about: { az: page.about.join("\n\n") },
+    facts: page.facts.map((f) => ({ label: { az: f.label }, value: f.value })),
+    servicesTitle: { az: page.servicesTitle },
+    services: page.services.map((x) => ({ name: { az: x.name }, ...(x.text ? { text: { az: x.text } } : {}), ...(x.href ? { href: x.href } : {}) })),
+    ...(page.terms?.length ? { terms: { az: page.terms.join("\n") } } : {}),
+    ...(page.projectsTitle ? { projectsTitle: { az: page.projectsTitle } } : {}),
+    projects: page.projects.map((p) => ({ title: { az: p.title }, category: { az: p.category }, image: p.image, alt: { az: p.alt }, href: p.href })),
+  };
+}

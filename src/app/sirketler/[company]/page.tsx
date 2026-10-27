@@ -7,9 +7,9 @@ import { PageHero } from "@/components/PageHero";
 import { Footer } from "@/components/Footer";
 import { JsonLdScript } from "@/components/JsonLd";
 import { ArrowRight, ArrowUpRight, CheckIcon } from "@/components/Icons";
-import { companyPages, isCompanyId } from "@/content/companies";
-import { getFaqGroups, getProjects, getSiteSettings } from "@/content/loaders";
-import { companies } from "@/content/site";
+import { isCompanyId } from "@/content/companies";
+import { getCompanies, getCompanyPages, getFaqGroups, getJourney, getSiteSettings } from "@/content/loaders";
+import { companies as staticCompanies } from "@/content/site";
 import { pageMetadata } from "@/lib/seo";
 import { companyNode, graph, pageNodes } from "@/lib/schema";
 import styles from "../page.module.css";
@@ -20,17 +20,15 @@ type Props = { params: Promise<{ company: string }> };
 export const revalidate = 300;
 
 export function generateStaticParams() {
-  return companies.map((c) => ({ company: c.id }));
+  return staticCompanies.map((c) => ({ company: c.id }));
 }
 
 async function load({ params }: Props) {
   const { company: id } = await params;
   if (!isCompanyId(id)) notFound();
+  const [companies, pages] = await Promise.all([getCompanies(), getCompanyPages()]);
   const company = companies.find((c) => c.id === id)!;
-  const base = companyPages[id];
-  // Equipment-in layihələri qrupun layihələri ilə eynidir: panel-dən gəlir
-  const page = id === "equipment" ? { ...base, projects: (await getProjects()).map((p) => ({ title: p.title, category: p.category, image: p.image, alt: p.alt, href: `/layiheler/${p.slug}` })) } : base;
-  return { company, page };
+  return { company, page: pages[id], companies };
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
@@ -58,7 +56,7 @@ function LinkOrA({ href, className, children }: { href: string; className?: stri
 }
 
 export default async function CompanyPage(props: Props) {
-  const { company, page } = await load(props);
+  const { company, page, companies } = await load(props);
   const faq = (await getFaqGroups()).find((g) => g.id === company.id);
   const settings = await getSiteSettings();
   const others = companies.filter((c) => c.id !== company.id);
@@ -240,7 +238,7 @@ export default async function CompanyPage(props: Props) {
             ],
             extra: { about: { "@id": companyNode(company)["@id"] } },
           }),
-          companyNode(company, { contact: true, settings }),
+          companyNode(company, { contact: true, settings, points: (await getJourney()).find((j) => j.id === company.id)?.points }),
         ])}
       />
     </>

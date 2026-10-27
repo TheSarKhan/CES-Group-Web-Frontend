@@ -5,10 +5,11 @@
  * Skript əvvəl yoxlayır: panel formatından geri çevrilən məzmun fayldakı ilə tam eynidir. Fərq olarsa dayanır.
  */
 import { isDeepStrictEqual } from "node:util";
-import { aboutFrom, aboutTo, approachFrom, approachTo, clientFrom, clientTo, faqGroupFrom, faqGroupTo, legalFrom, legalTo, projectFrom, projectTo, settingsFrom, settingsTo, statsFrom, statsTo } from "../src/content/cms-map";
+import { aboutFrom, aboutTo, approachFrom, approachTo, clientFrom, clientTo, faqGroupFrom, faqGroupTo, legalFrom, legalTo, projectFrom, projectTo, settingsFrom, settingsTo, statsFrom, statsTo, companyFrom, companyPageFrom, companyTo, journeyFrom } from "../src/content/cms-map";
 import { faqGroups } from "../src/content/faq";
 import { privacy, terms } from "../src/content/legal";
-import { about, clients, projectApproach, projects, site, stats } from "../src/content/site";
+import { companyPages } from "../src/content/companies";
+import { about, clients, companies, journey, projectApproach, projects, site, stats } from "../src/content/site";
 
 type Entry = { site: string; type: string; slug: string; sort: number; data: unknown };
 const entries: Entry[] = [];
@@ -64,6 +65,16 @@ projects.forEach((p, i) => {
   const data = projectTo(p);
   same(projectFrom(p.slug, data), p, `Layihə ${p.slug}`);
   entries.push({ site: "group", type: "project", slug: p.slug, sort: i, data });
+});
+
+companies.forEach((c, i) => {
+  const step = journey.find((j) => j.id === c.id)!;
+  const order = journey.indexOf(step);
+  const data = companyTo(c, companyPages[c.id], step, order);
+  same(companyFrom(data, c), c, `Şirkət ${c.id}`);
+  same(companyPageFrom(c.id, data), companyPages[c.id], `Şirkət səhifəsi ${c.id}`);
+  same(journeyFrom(c.id, data), step, `Layihənin yolu ${c.id}`);
+  entries.push({ site: "group", type: "company", slug: c.id, sort: i, data });
 });
 
 const q = (s: string) => `'${s.replace(/'/g, "''")}'`;

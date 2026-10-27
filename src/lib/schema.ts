@@ -1,5 +1,5 @@
 import type { SiteSettings } from "@/content/cms-map";
-import { companies, journey, site, type Company, type Project } from "@/content/site";
+import { companies as staticCompanies, journey as staticJourney, site, type Company, type JourneyStep, type Project } from "@/content/site";
 import { defaultOgImage } from "./seo";
 
 /** schema.org (JSON-LD) qurucuları: Organization, WebSite, səhifə və breadcrumb qovşaqları */
@@ -37,9 +37,9 @@ const contactPointOf = (s: Settings) => ({
 });
 
 /** Şirkət qovşağı: qrupun ana səhifəsində də, öz subsaytında da eyni @id ilə işlənir */
-export function companyNode(c: Company, { contact = false, settings = site }: { contact?: boolean; settings?: Settings } = {}) {
+export function companyNode(c: Company, { contact = false, settings = site, points }: { contact?: boolean; settings?: Settings; points?: string[] } = {}) {
   // Hələ fəaliyyətə başlamayan istiqamətin xidmətləri schema-ya Service kimi yazılmır
-  const services = c.planned ? [] : (journey.find((j) => j.id === c.id)?.points ?? []);
+  const services = c.planned ? [] : (points ?? staticJourney.find((j) => j.id === c.id)?.points ?? []);
   return {
     "@type": "Organization",
     "@id": orgId(c.url),
@@ -67,7 +67,7 @@ export function companyNode(c: Company, { contact = false, settings = site }: { 
 export const graph = (nodes: object[]) => ({ "@context": "https://schema.org", "@graph": nodes });
 
 /** Ana səhifə: sayt, qrup (yerli biznes kimi) və dörd şirkət */
-export function groupGraph(settings: Settings = site) {
+export function groupGraph(settings: Settings = site, companies: Company[] = staticCompanies, journey: JourneyStep[] = staticJourney) {
   const id = orgId(site.url);
   return graph([
     { "@type": "WebSite", "@id": websiteId(site.url), url: site.url, name: site.name, inLanguage: "az", publisher: { "@id": id } },
@@ -92,7 +92,7 @@ export function groupGraph(settings: Settings = site) {
       numberOfEmployees: { "@type": "QuantitativeValue", minValue: 20 },
       subOrganization: companies.map((c) => ({ "@id": orgId(c.url) })),
     },
-    ...companies.map((c) => companyNode(c)),
+    ...companies.map((c) => companyNode(c, { points: journey.find((j) => j.id === c.id)?.points })),
   ]);
 }
 

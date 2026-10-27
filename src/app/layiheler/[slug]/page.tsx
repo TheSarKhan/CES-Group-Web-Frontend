@@ -7,8 +7,7 @@ import { ContactBlock } from "@/components/ContactBlock";
 import { Footer } from "@/components/Footer";
 import { ArrowRight, ArrowUpRight } from "@/components/Icons";
 import { JsonLdScript } from "@/components/JsonLd";
-import { getProjectApproach, getProjects } from "@/content/loaders";
-import { companies } from "@/content/site";
+import { getCompanies, getProjectApproach, getProjects } from "@/content/loaders";
 import { pageMetadata } from "@/lib/seo";
 import { graph, pageNodes } from "@/lib/schema";
 import styles from "./page.module.css";
@@ -34,7 +33,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function ProjectPage(props: Props) {
   const project = await load(props);
-  const company = companies.find((c) => c.name === project.company);
+  const company = (await getCompanies()).find((c) => c.name === project.company);
   const others = (await getProjects()).filter((p) => p.slug !== project.slug).slice(0, 4);
   const projectApproach = await getProjectApproach();
 

@@ -1,4 +1,4 @@
-import { getSiteSettings } from "@/content/loaders";
+import { getCompanies, getJourney, getSiteSettings } from "@/content/loaders";
 import { groupGraph } from "@/lib/schema";
 
 export function JsonLdScript({ data }: { data: object }) {
@@ -8,5 +8,6 @@ export function JsonLdScript({ data }: { data: object }) {
 
 /** Ana səhifə: sayt, qrup və şirkətlər */
 export async function JsonLd() {
-  return <JsonLdScript data={groupGraph(await getSiteSettings())} />;
+  const [settings, companies, journey] = await Promise.all([getSiteSettings(), getCompanies(), getJourney()]);
+  return <JsonLdScript data={groupGraph(settings, companies, journey)} />;
 }

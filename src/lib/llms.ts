@@ -1,5 +1,5 @@
-import { companies, site as staticSite } from "@/content/site";
-import { faqItemsOf, getFaqGroups, getProjects, getSiteSettings, getStats } from "@/content/loaders";
+import { site as staticSite } from "@/content/site";
+import { faqItemsOf, getCompanies, getFaqGroups, getProjects, getSiteSettings, getStats } from "@/content/loaders";
 import { isReadyProject, type SubSite } from "@/content/subsites";
 
 /**
@@ -14,6 +14,7 @@ export async function groupLlmsTxt() {
   const faqItems = faqItemsOf(await getFaqGroups());
   const projects = await getProjects();
   const stats = await getStats();
+  const companies = await getCompanies();
   const facts = [
     `Hüquqi ad: ${site.legalName}`,
     `Qurulma: ${site.foundingDate} (CES ağır texnika icarəsi ilə başlayıb)`,
@@ -61,6 +62,7 @@ ${link("İstifadə şərtləri", `${site.url}/istifade-sertleri`, "Saytdan istif
 
 export async function subsiteLlmsTxt(s: SubSite) {
   const site = { ...staticSite, ...(await getSiteSettings()) };
+  const companies = await getCompanies();
   const company = companies.find((c) => c.id === s.id);
   const ready = s.projects.filter(isReadyProject);
 

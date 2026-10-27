@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { companies, site as group } from "@/content/site";
+import { getCompanies } from "@/content/loaders";
+import { site as group } from "@/content/site";
 import { isSubSiteId, subsites, type SubSite } from "@/content/subsites";
 
 export type SubSiteParams = { params: Promise<{ site: string }> };
@@ -14,5 +15,5 @@ export async function getSubSite({ params }: SubSiteParams): Promise<SubSite> {
 export const groupUrl = group.url;
 
 /** Qrupun bu saytdan başqa şirkətləri (menyu və footer üçün) */
-export const siblingsOf = (id: SubSite["id"]) => companies.filter((c) => c.id !== id).map((c) => ({ name: c.name, url: c.url }));
+export const siblingsOf = async (id: SubSite["id"]) => (await getCompanies()).filter((c) => c.id !== id).map((c) => ({ name: c.name, url: c.url }));
 

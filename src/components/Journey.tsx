@@ -1,20 +1,22 @@
 import Link from "next/link";
-import { getAbout } from "@/content/loaders";
-import { companies, journey } from "@/content/site";
+import { getAbout, getCompanies, getJourney } from "@/content/loaders";
+import type { Company, JourneyStep } from "@/content/site";
 import { ArrowRight, EyeIcon, HandshakeIcon, MedalIcon, ShieldIcon } from "./Icons";
 import { JourneyStepper, type StepData } from "./JourneyStepper";
 import styles from "./Journey.module.css";
 
-const steps: StepData[] = journey.map((j) => {
-  const c = companies.find((x) => x.id === j.id)!;
-  return { ...j, name: c.shortName, field: c.field, description: c.description, url: c.url, image: c.image, imageAlt: c.imageAlt, focus: c.focus };
-});
+const stepsOf = (journey: JourneyStep[], companies: Company[]): StepData[] =>
+  journey.map((j) => {
+    const c = companies.find((x) => x.id === j.id)!;
+    return { ...j, name: c.shortName, field: c.field, description: c.description, url: c.url, image: c.image, imageAlt: c.imageAlt, focus: c.focus };
+  });
 
 const valueIcons = [ShieldIcon, HandshakeIcon, EyeIcon, MedalIcon];
 
 /** Ana səhifənin tanıtım bölməsi: qrupun şirkətləri layihənin mərhələləri kimi və dəyərlər. */
 export async function Journey() {
-  const about = await getAbout();
+  const [about, companies, journey] = await Promise.all([getAbout(), getCompanies(), getJourney()]);
+  const steps = stepsOf(journey, companies);
   return (
     <section id="qrup" className={`section ${styles.wrap}`} aria-labelledby="journey-title">
       <div className="container">

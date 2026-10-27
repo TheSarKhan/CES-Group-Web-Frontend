@@ -7,7 +7,7 @@ import { Clients } from "@/components/Clients";
 import { ContactBlock } from "@/components/ContactBlock";
 import { Footer } from "@/components/Footer";
 import { JsonLd } from "@/components/JsonLd";
-import { getSiteSettings } from "@/content/loaders";
+import { getCompanies, getSiteSettings } from "@/content/loaders";
 import { pageMetadata } from "@/lib/seo";
 
 export async function generateMetadata() {
@@ -22,12 +22,13 @@ export async function generateMetadata() {
 /** 5 dəqiqə (Next bu dəyərin sabit rəqəm olmasını tələb edir) */
 export const revalidate = 300;
 
-export default function HomePage() {
+export default async function HomePage() {
+  const companies = await getCompanies();
   return (
     <>
       <Header overlay />
       <main id="main" className="home">
-        <Hero />
+        <Hero companies={companies} />
         <Journey />
         <Stats />
         <Projects />

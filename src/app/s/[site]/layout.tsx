@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { getSiteSettings } from "@/content/loaders";
-import { companies } from "@/content/site";
+import { getCompanies, getJourney, getSiteSettings } from "@/content/loaders";
 import { subsiteIds } from "@/content/subsites";
 import { getSubSite, groupUrl, siblingsOf, type SubSiteParams } from "@/lib/subsite";
 import { graph, companyNode, websiteId, orgId } from "@/lib/schema";
@@ -33,14 +32,15 @@ export async function generateMetadata(props: SubSiteParams): Promise<Metadata> 
 
 export default async function SubSiteLayout({ children, params }: { children: React.ReactNode } & SubSiteParams) {
   const site = await getSubSite({ params });
-  const siblings = siblingsOf(site.id);
+  const siblings = await siblingsOf(site.id);
   const settings = await getSiteSettings();
+  const [companies, journey] = await Promise.all([getCompanies(), getJourney()]);
 
   // Axtarış sistemləri bu saytın CES Group-un şirkəti olduğunu bilsin (parentOrganization eyni @id ilə qrupa bağlanır)
   const company = companies.find((c) => c.id === site.id);
   const jsonLd = graph([
     { "@type": "WebSite", "@id": websiteId(site.url), url: site.url, name: site.name, inLanguage: "az", publisher: { "@id": orgId(site.url) } },
-    ...(company ? [{ ...companyNode(company, { contact: true, settings }), description: site.description, image: new URL(site.poster, site.url).toString() }] : []),
+    ...(company ? [{ ...companyNode(company, { contact: true, settings, points: journey.find((j) => j.id === company.id)?.points }), description: site.description, image: new URL(site.poster, site.url).toString() }] : []),
   ]);
 
   return (

@@ -7,8 +7,7 @@ import { ContactBlock } from "@/components/ContactBlock";
 import { Footer } from "@/components/Footer";
 import { ArrowUpRight } from "@/components/Icons";
 import { JsonLdScript } from "@/components/JsonLd";
-import { getAbout } from "@/content/loaders";
-import { companies } from "@/content/site";
+import { getAbout, getCompanies } from "@/content/loaders";
 import { pageMetadata } from "@/lib/seo";
 import { graph, pageNodes } from "@/lib/schema";
 import styles from "./page.module.css";
@@ -19,7 +18,7 @@ const description =
 export const metadata: Metadata = pageMetadata({ title: "Haqqımızda", description, path: "/haqqimizda" });
 
 export default async function AboutPage() {
-  const about = await getAbout();
+  const [about, companies] = await Promise.all([getAbout(), getCompanies()]);
   return (
     <>
       <Header />

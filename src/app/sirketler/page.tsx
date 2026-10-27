@@ -7,8 +7,7 @@ import { ContactBlock } from "@/components/ContactBlock";
 import { Footer } from "@/components/Footer";
 import { JsonLdScript } from "@/components/JsonLd";
 import { ArrowRight, ArrowUpRight, BuildIcon, CraneIcon, DesignIcon } from "@/components/Icons";
-import { companyPages } from "@/content/companies";
-import { companies, journey } from "@/content/site";
+import { getCompanies, getCompanyPages, getJourney } from "@/content/loaders";
 import { pageMetadata } from "@/lib/seo";
 import { abs, graph, itemList, pageNodes } from "@/lib/schema";
 import styles from "./page.module.css";
@@ -20,9 +19,9 @@ export const metadata: Metadata = pageMetadata({ title: "Şirkətlər", descript
 
 const pathIcons = { design: DesignIcon, build: BuildIcon, crane: CraneIcon } as const;
 // Layihənin yolu: dizayn, tikinti, texnika (Farmart ayrı istiqamətdir)
-const pathSteps = journey.filter((j) => j.id !== "farmart" && j.id !== "equipment").concat(journey.filter((j) => j.id === "equipment"));
-
-export default function CompaniesPage() {
+export default async function CompaniesPage() {
+  const [companies, companyPages, journey] = await Promise.all([getCompanies(), getCompanyPages(), getJourney()]);
+  const pathSteps = journey.filter((j) => j.id !== "farmart" && j.id !== "equipment").concat(journey.filter((j) => j.id === "equipment"));
   return (
     <>
       <Header />
