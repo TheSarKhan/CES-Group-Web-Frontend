@@ -1,6 +1,6 @@
 /**
  * Məxfilik siyasəti və istifadə şərtləri. Mətn saytın real işinə əsaslanır (müraciət formu, Cloudflare Turnstile,
- * analitika yoxdur). Sayta analitika, yeni forma və ya yeni xidmət əlavə olunanda burada yenilənməlidir.
+ * razılıqdan sonra Google Analytics 4). Sayta yeni izləmə, forma və ya xidmət əlavə olunanda burada yenilənməlidir.
  * Hüquqşünas tərəfindən yoxlanılması tövsiyə olunur.
  */
 
@@ -16,7 +16,7 @@ export const privacy: LegalDoc = {
   title: "Məxfilik siyasəti",
   description:
     "CES Group saytlarında şəxsi məlumatların necə toplandığı, istifadə olunduğu, saxlandığı və qorunduğu, həmçinin sizin hüquqlarınız.",
-  updated: "24 oktyabr 2026",
+  updated: "27 oktyabr 2026",
   intro: `Bu siyasət ${operator} tərəfindən idarə olunan cesgroup.az saytında və onun subdomenlərində (construction.cesgroup.az, farmart.cesgroup.az) şəxsi məlumatlarınızın necə emal olunduğunu izah edir. Məlumatlar Azərbaycan Respublikasının “Fərdi məlumatlar haqqında” Qanununa uyğun emal olunur. equipment.cesgroup.az saytında ayrıca məxfilik səhifəsi də var.`,
   sections: [
     {
@@ -51,6 +51,7 @@ export const privacy: LegalDoc = {
         "xidmət üzrə təklif hazırlamaq və müqavilə münasibətlərini yerinə yetirmək",
         "spam, saxta müraciət və sui-istifadənin qarşısını almaq (Cloudflare Turnstile yoxlaması, sorğu limiti)",
         "saytın və serverin təhlükəsizliyini təmin etmək",
+        "razılığınız olarsa, saytın istifadəsini ölçmək və təkmilləşdirmək (Google Analytics, 9-cu bölməyə baxın)",
         "qanunvericiliyin tələblərini yerinə yetirmək",
       ],
       paragraphs: ["Razılığınız olmadan sizə reklam və ya marketinq mesajları göndərilmir."],
@@ -66,8 +67,8 @@ export const privacy: LegalDoc = {
       id: "oturme",
       title: "6. Məlumatların ötürülməsi",
       paragraphs: [
-        "Müraciətiniz seçdiyiniz şirkətin komandasına e-poçt və daxili bildiriş kanalları ilə göndərilir. Məlumatlarınız satılmır və reklam məqsədilə üçüncü tərəflərə verilmir.",
-        "Saytı işlətmək üçün xidmət təminatçılarından istifadə edirik: server (hosting) xidməti, Cloudflare (şəbəkə, təhlükəsizlik və Turnstile yoxlaması), e-poçt xidməti və Google Maps (əlaqə səhifələrindəki xəritə). Bu tərəflər məlumatları yalnız xidməti göstərmək üçün emal edir. Qanunvericiliyin tələb etdiyi hallarda məlumatlar səlahiyyətli dövlət orqanlarına təqdim oluna bilər.",
+        "Müraciətiniz seçdiyiniz şirkətin komandasına e-poçt və daxili bildiriş kanalları ilə göndərilir və yalnız səlahiyyətli əməkdaşların daxil ola bildiyi idarəetmə panelində saxlanılır. Məlumatlarınız satılmır və reklam məqsədilə üçüncü tərəflərə verilmir.",
+        "Saytı işlətmək üçün xidmət təminatçılarından istifadə edirik: server (hosting) xidməti, Cloudflare (şəbəkə, təhlükəsizlik və Turnstile yoxlaması), e-poçt xidməti, Google Maps (əlaqə səhifələrindəki xəritə) və razılığınızla Google Analytics. Bu tərəflər məlumatları yalnız xidməti göstərmək üçün emal edir. Qanunvericiliyin tələb etdiyi hallarda məlumatlar səlahiyyətli dövlət orqanlarına təqdim oluna bilər.",
       ],
     },
     {
@@ -95,7 +96,9 @@ export const privacy: LegalDoc = {
       id: "cookie",
       title: "9. Cookie və oxşar texnologiyalar",
       paragraphs: [
-        "Saytımız hazırda analitika və reklam cookie-lərindən istifadə etmir. Müraciət formunda Cloudflare Turnstile təhlükəsizlik yoxlaması işləyir və saytın düzgün işləməsi üçün zəruri texniki məlumatlar istifadə edə bilər. Əlaqə səhifələrindəki Google Maps xəritəsi Google-un öz cookie və qeydlərini istifadə edə bilər. Sayta analitika əlavə olunsa, bu siyasət əvvəlcədən yenilənəcək.",
+        "Saytımız reklam cookie-lərindən istifadə etmir. Müraciət formunda Cloudflare Turnstile təhlükəsizlik yoxlaması işləyir və saytın düzgün işləməsi üçün zəruri texniki məlumatlar istifadə edə bilər. Əlaqə səhifələrindəki Google Maps xəritəsi Google-un öz cookie və qeydlərini istifadə edə bilər.",
+        "Saytın necə istifadə olunduğunu anlamaq üçün Google LLC-nin Google Analytics 4 xidmətindən istifadə edirik. Bu xidmət yalnız siz saytdakı bildirişdə “Qəbul et” seçdikdən sonra işə düşür. Rədd etsəniz, Google Analytics yüklənmir və cookie yazılmır. Aktiv olduqda baxdığınız səhifələr, cihaz və brauzer növü, təxmini ölkə və saytı hansı mənbədən tapdığınız kimi ümumiləşdirilmiş statistik məlumatlar toplanır (cookie adları: _ga və _ga_...). Bu məlumatlar Google tərəfindən emal olunur və Azərbaycandan kənarda saxlanıla bilər.",
+        "Seçiminizi istənilən vaxt saytın aşağısındakı “Cookie seçimləri” düyməsi ilə dəyişə bilərsiniz. Razılığı geri götürdükdə Google cookie-ləri bu brauzerdən silinir.",
       ],
     },
     {

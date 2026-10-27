@@ -3,6 +3,7 @@
 import { useRef, useState, useSyncExternalStore } from "react";
 import { COMPANY_OPTIONS } from "@/lib/contact-schema";
 import { siteUrl } from "@/lib/urls";
+import { trackLead } from "./Analytics";
 import { ArrowRight } from "./Icons";
 import { TURNSTILE_ENABLED, Turnstile, type TurnstileHandle } from "./Turnstile";
 import styles from "./ContactForm.module.css";
@@ -43,6 +44,7 @@ export function ContactForm({ company }: { company?: (typeof COMPANY_OPTIONS)[nu
       });
       const json = (await res.json()) as { ok: boolean; error?: string; fields?: FieldErrors };
       if (json.ok) {
+        trackLead(String(new FormData(form).get("company") ?? company ?? ""));
         form.reset();
         setStatus({ kind: "ok" });
       } else {

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { site as group } from "@/content/site";
 import { navFor, type SubSite } from "@/content/subsites";
 import { tel } from "@/lib/tel";
+import { CookieSettingsButton } from "../Analytics";
 import { SubLogo } from "./SubLogo";
 import styles from "./SubFooter.module.css";
 
@@ -53,6 +54,7 @@ export function SubFooter({ site, groupUrl, siblings }: { site: SubSite; groupUr
         <span className={styles.legal}>
           <a href={`${groupUrl}/mexfilik-siyaseti`}>Məxfilik siyasəti</a>
           <a href={`${groupUrl}/istifade-sertleri`}>İstifadə şərtləri</a>
+          <CookieSettingsButton className={styles.cookieBtn} />
           <a href={groupUrl}>CES Group-un şirkətidir</a>
         </span>
       </div>

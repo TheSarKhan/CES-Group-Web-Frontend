@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "@fontsource-variable/manrope";
 import { site } from "@/content/site";
+import { Analytics } from "@/components/Analytics";
 import { defaultOgImage } from "@/lib/seo";
 import "./globals.css";
 
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Əsas məzmuna keç
         </a>
         {children}
+        <Analytics />
       </body>
     </html>
   );

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { companies, footerNav, site } from "@/content/site";
+import { CookieSettingsButton } from "./Analytics";
 import { Logo } from "./Logo";
 import styles from "./Footer.module.css";
 
@@ -50,6 +51,7 @@ export function Footer() {
           <div className={styles.legal}>
             <Link href="/mexfilik-siyaseti">Məxfilik siyasəti</Link>
             <Link href="/istifade-sertleri">İstifadə şərtləri</Link>
+            <CookieSettingsButton className={styles.cookieBtn} />
           </div>
         </div>
       </div>
