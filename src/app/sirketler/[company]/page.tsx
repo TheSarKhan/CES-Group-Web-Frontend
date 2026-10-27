@@ -209,7 +209,9 @@ export default async function CompanyPage(props: Props) {
               {others.map((c) => (
                 <li key={c.id} className={styles.other}>
                   <Link href={`/sirketler/${c.id}`}>
-                    <span className={styles.oName}>{c.name}</span>
+                    <span className={styles.oName} title={c.name}>
+                      {c.shortName}
+                    </span>
                     <span className={styles.oField}>{c.field}</span>
                   </Link>
                 </li>

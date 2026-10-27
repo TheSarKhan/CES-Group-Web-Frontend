@@ -6,7 +6,7 @@ import styles from "./Journey.module.css";
 
 const steps: StepData[] = journey.map((j) => {
   const c = companies.find((x) => x.id === j.id)!;
-  return { ...j, name: c.name, field: c.field, description: c.description, url: c.url, image: c.image, imageAlt: c.imageAlt, focus: c.focus };
+  return { ...j, name: c.shortName, field: c.field, description: c.description, url: c.url, image: c.image, imageAlt: c.imageAlt, focus: c.focus };
 });
 
 const valueIcons = [ShieldIcon, HandshakeIcon, EyeIcon, MedalIcon];

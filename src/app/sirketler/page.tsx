@@ -49,7 +49,9 @@ export default function CompaniesPage() {
                   </div>
                   <div className={styles.body}>
                     <span className={styles.field}>{c.field}</span>
-                    <h2 className={styles.name}>{c.name}</h2>
+                    <h2 className={styles.name} title={c.name}>
+                      {c.shortName}
+                    </h2>
                     <p className={styles.tagline}>{companyPages[c.id].tagline}</p>
                     <p className={styles.text}>{c.description}</p>
                     <div className={styles.links}>
@@ -81,7 +83,9 @@ export default function CompaniesPage() {
                     <span className={styles.stepIcon}>{Icon && <Icon size={28} />}</span>
                     <span className={styles.stepNo}>{String(i + 1).padStart(2, "0")}</span>
                     <h3 className={styles.stepTitle}>
-                      <Link href={`/sirketler/${c.id}`}>{c.name}</Link>
+                      <Link href={`/sirketler/${c.id}`} title={c.name}>
+                        {c.shortName}
+                      </Link>
                     </h3>
                     <p className={styles.stepText}>{s.points.join(", ")}.</p>
                   </li>

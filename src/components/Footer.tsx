@@ -16,7 +16,7 @@ export function Footer() {
             <span className={styles.heading}>Şirkətlər</span>
             {companies.map((c) => (
               <Link key={c.id} href={`/sirketler/${c.id}`}>
-                {c.name}
+                {c.shortName}
               </Link>
             ))}
           </nav>
