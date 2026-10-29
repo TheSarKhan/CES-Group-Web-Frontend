@@ -26,7 +26,7 @@ export function NotificationsPage({ code }: { code: string }) {
         <p className={styles.loading}>Yüklənir…</p>
       ) : (
         <div className={styles.notifGrid}>
-          <EmailBlock key={settings.data.emails.join(",")} code={code} data={settings.data} canEdit={can("NOTIFICATIONS", "UPDATE", code)} onSaved={settings.reload} />
+          <EmailBlock code={code} data={settings.data} canEdit={can("NOTIFICATIONS", "UPDATE", code)} onSaved={settings.reload} />
           <TelegramBlock code={code} data={settings.data} canEdit={can("NOTIFICATIONS", "UPDATE", code)} onChanged={settings.reload} />
           {me.superAdmin && <BotBlock />}
           {can("NOTIFICATIONS", "UPDATE", code) && <TestBlock code={code} />}
@@ -36,52 +36,82 @@ export function NotificationsPage({ code }: { code: string }) {
   );
 }
 
+const MAX_EMAILS = 10;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function EmailBlock({ code, data, canEdit, onSaved }: { code: string; data: NotificationSettings; canEdit: boolean; onSaved: () => void }) {
-  const [text, setText] = useState(data.emails.join("\n"));
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
+  async function save(emails: string[]) {
     setBusy(true);
-    setMsg(null);
+    setError("");
     try {
-      await api(`panel/sites/${code}/notifications/emails`, { method: "PUT", body: { emails: text.split(/[\n,;]+/).map((x) => x.trim()).filter(Boolean) } });
-      setMsg({ ok: true, text: "Yadda saxlanıldı." });
+      await api(`panel/sites/${code}/notifications/emails`, { method: "PUT", body: { emails } });
+      setEmail("");
       onSaved();
     } catch (err) {
-      setMsg({ ok: false, text: err instanceof ApiError ? err.message : "Xəta baş verdi." });
+      setError(err instanceof ApiError ? err.message : "Xəta baş verdi.");
     } finally {
       setBusy(false);
     }
   }
 
+  function add(e: React.FormEvent) {
+    e.preventDefault();
+    const value = email.trim().toLowerCase();
+    if (!value) return;
+    if (!EMAIL_RE.test(value)) return setError("E-poçt ünvanı düzgün deyil.");
+    if (data.emails.some((x) => x.toLowerCase() === value)) return setError("Bu ünvan artıq əlavə edilib.");
+    if (data.emails.length >= MAX_EMAILS) return setError(`Maksimum ${MAX_EMAILS} ünvan əlavə edə bilərsiniz.`);
+    void save([...data.emails, value]);
+  }
+
   return (
-    <form className={`${styles.panel} ${styles.panelPad} ${styles.form}`} onSubmit={save}>
+    <section className={`${styles.panel} ${styles.panelPad} ${styles.form}`}>
       <div>
         <h2 className={styles.panelTitle}>E-poçt</h2>
         <p className={styles.panelSub}>Yeni müraciətlər barədə bildirişlərin göndəriləcəyi e-poçt ünvanları.</p>
       </div>
-      <div className={styles.field}>
-        <label htmlFor="n-emails">Alıcıların e-poçt ünvanları</label>
-        <textarea id="n-emails" className={styles.input} rows={6} value={text} onChange={(e) => setText(e.target.value)} disabled={!canEdit} />
-        <span className={styles.hint}>
-          Hər sətirdə bir e-poçt ünvanı yazın. Maksimum 10 ünvan əlavə edə bilərsiniz. Boş qalsa müraciətlər ümumi ünvana gedir{data.fallbackEmail ? ` (${data.fallbackEmail})` : ""}.
-        </span>
+      {canEdit && (
+        <form className={styles.field} onSubmit={add}>
+          <label htmlFor="n-email">E-poçt ünvanı</label>
+          <div className={styles.row} style={{ flexWrap: "nowrap" }}>
+            <input id="n-email" type="email" className={styles.input} style={{ flex: 1 }} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ad@sirket.az" maxLength={128} />
+            <button className={`${styles.btn} ${styles.btnGold}`} disabled={busy || !email.trim()}>
+              Əlavə et
+            </button>
+          </div>
+        </form>
+      )}
+      <div>
+        <strong style={{ fontSize: 15 }}>Əlavə edilmiş ünvanlar</strong>
+        {data.emails.length === 0 && (
+          <p className={styles.muted} style={{ marginTop: 8 }}>
+            Hələ heç bir ünvan yoxdur. Müraciətlər ümumi ünvana gedir{data.fallbackEmail ? ` (${data.fallbackEmail})` : ""}.
+          </p>
+        )}
+        {data.emails.length > 0 && (
+          <div className={styles.panel} style={{ marginTop: 10 }}>
+            {data.emails.map((r, i) => (
+              <div key={r} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 16px", borderTop: i ? "1px solid var(--line)" : 0 }}>
+                <span style={{ overflowWrap: "anywhere" }}>{r}</span>
+                {canEdit && <RowMenu items={[{ label: "Sil", icon: <Trash2 size={16} />, danger: true, onClick: () => void save(data.emails.filter((x) => x !== r)) }]} />}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      {msg && (
-        <p className={msg.ok ? styles.ok : styles.error} role="status">
-          {msg.text}
+      <p className={styles.hint}>
+        Maksimum {MAX_EMAILS} ünvan. Siyahı boş qalsa müraciətlər ümumi ünvana gedir{data.fallbackEmail ? ` (${data.fallbackEmail})` : ""}.
+      </p>
+      {error && (
+        <p className={styles.error} role="alert">
+          {error}
         </p>
       )}
-      {canEdit && (
-        <div style={{ textAlign: "right" }}>
-          <button className={`${styles.btn} ${styles.btnGold}`} disabled={busy}>
-            Yadda saxla
-          </button>
-        </div>
-      )}
-    </form>
+    </section>
   );
 }
 
