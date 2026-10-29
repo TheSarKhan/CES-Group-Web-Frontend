@@ -61,8 +61,10 @@ function loadGa() {
     return;
   }
   window.dataLayer = window.dataLayer || [];
-  window.gtag = function gtag(...args: unknown[]) {
-    (window.dataLayer as unknown[]).push(args);
+  // gtag.js yalnız `arguments` obyektini tanıyır; massiv (rest parametr) göndərilsə hadisələr ignor olunur
+  window.gtag = function gtag() {
+    // eslint-disable-next-line prefer-rest-params
+    (window.dataLayer as unknown[]).push(arguments);
   };
   window.gtag("js", new Date());
   window.gtag("config", GA_ID);
