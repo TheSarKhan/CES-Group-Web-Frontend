@@ -19,12 +19,31 @@ export async function GET(req: Request) {
   }
 
   const token = url.searchParams.get("token") ?? "";
-  if (!/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(token) || token.length > 600) return new NextResponse("Yanlış işarə", { status: 400 });
+  if (!isValidPreviewTokenFormat(token)) return new NextResponse("Yanlış işarə", { status: 400 });
   dm.enable();
-  jar.set(PREVIEW_COOKIE, token, { httpOnly: true, secure: url.protocol === "https:", sameSite: "lax", path: "/", maxAge: 600 });
+  const isSecure =
+    process.env.NODE_ENV === "production" ||
+    req.headers.get("x-forwarded-proto") === "https" ||
+    url.protocol === "https:";
+  jar.set(PREVIEW_COOKIE, token, { httpOnly: true, secure: isSecure, sameSite: "lax", path: "/", maxAge: 600 });
   const res = NextResponse.redirect(new URL(safePath(url.searchParams.get("path")), url));
   res.headers.set("Cache-Control", "no-store");
   return res;
+}
+
+function isValidPreviewTokenFormat(token: string): boolean {
+  if (!/^[A-Za-z0-9_-]{12,400}\.[A-Za-z0-9_-]{43}$/.test(token)) return false;
+  try {
+    const [payloadB64] = token.split(".");
+    const decoded = Buffer.from(payloadB64, "base64url").toString("utf8");
+    const parts = decoded.split("|");
+    if (parts.length !== 4 || !parts[0] || !parts[1] || !parts[2]) return false;
+    const exp = Number(parts[3]);
+    const nowSec = Math.floor(Date.now() / 1000);
+    return Number.isInteger(exp) && exp >= nowSec && exp <= nowSec + 660;
+  } catch {
+    return false;
+  }
 }
 
 /** Yalnız saytın öz daxili yolu (açıq yönləndirmə olmasın) */

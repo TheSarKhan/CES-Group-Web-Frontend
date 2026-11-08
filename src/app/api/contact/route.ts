@@ -18,6 +18,12 @@ const RECIPIENT_ENV: Record<ContactInput["company"], string | undefined> = {
 const hits = new Map<string, number[]>();
 function rateLimited(ip: string) {
   const now = Date.now();
+  if (hits.size > 5000) {
+    for (const [k, v] of hits.entries()) {
+      if (v.every((t) => now - t >= 60_000)) hits.delete(k);
+    }
+    if (hits.size > 5000) hits.clear();
+  }
   const recent = (hits.get(ip) ?? []).filter((t) => now - t < 60_000);
   recent.push(now);
   hits.set(ip, recent);
@@ -59,7 +65,11 @@ async function forwardToBackend(data: ContactInput, ip: string, host: string | n
   const msg = getUi(lang).form.server;
   if (!BACKEND_URL) return { kind: "unavailable" };
   try {
-    const headers: Record<string, string> = { "Content-Type": "application/json", "X-Forwarded-For": ip };
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "CF-Connecting-IP": ip,
+      "X-Forwarded-For": ip,
+    };
     if (userAgent) headers["User-Agent"] = userAgent;
     const res = await fetch(`${BACKEND_URL}/api/v1/public/submissions`, {
       method: "POST",
@@ -89,7 +99,11 @@ async function forwardToBackend(data: ContactInput, ip: string, host: string | n
 const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 export async function POST(req: Request) {
-  const ip = req.headers.get("x-nf-client-connection-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip =
+    req.headers.get("cf-connecting-ip")?.trim() ||
+    req.headers.get("x-real-ip")?.trim() ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown";
   if (rateLimited(ip)) {
     return NextResponse.json({ ok: false, error: getUi("az").form.server.rate }, { status: 429 });
   }
