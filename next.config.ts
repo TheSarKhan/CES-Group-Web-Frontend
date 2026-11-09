@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
     const sub = (name: string) => [{ type: "host" as const, value: `${name}.cesgroup.az` }];
     const to = (source: string, destination: string, has: { type: "host"; value: string }[]) => ({ source, destination, has, permanent: true });
     return [
+      // Hero videoları kodda uzantısız yazılır (`vid-construction`), brauzer isə -m.mp4 / .mp4 seçir. Bu uzantısız ünvanlar
+      // səhifə məlumatında göründüyü üçün Google onları ayrıca səhifə kimi taramağa çalışıb 404 alırdı: real fayla yönləndirilir.
+      // Nöqtəsiz ad olduğu üçün mövcud .mp4/.jpg fayllarına toxunmur.
+      { source: "/media/video/:name([a-z0-9-]+)", destination: "/media/video/:name.mp4", permanent: true },
       to("/mexfilik", "/mexfilik-siyaseti", group),
       to("/privacy", "/mexfilik-siyaseti", group),
       to("/sertler", "/istifade-sertleri", group),
